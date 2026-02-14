@@ -9,18 +9,9 @@ enum GuidVersionType {
     V7,
 }
 
-#[derive(clap::ValueEnum, Clone, Parser, Debug, PartialEq, Copy)]
-#[clap(rename_all = "kebab-case")]
-enum GuidFormatType {
-    Hyphenated,
-    UppercaseHyphenated,
-    Digits,
-    UppercaseDigits,
-}
-
-/// Generate GUID(s)
+/// Generate GUID(s) with controlled output and formatting
 #[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
+#[command(version, about, after_help = "NOTE: \noutput-format supports: {uuid}, {sequence} dynamic values")]
 struct Args {
     /// Number of times to generate
     #[arg(short, long, default_value_t = 1)]
@@ -30,26 +21,39 @@ struct Args {
     #[arg(short = 'v', long, default_value = "v4")]
     guid_version: GuidVersionType,
 
-    // How to format the generated Guid
-    #[arg(short = 'f', long, default_value = "hyphenated")]
-    guid_format: GuidFormatType,
+    /// Format the GUID without Hyphens
+    #[arg(short = 'y', long, default_value_t = false)]
+    non_hyphenated: bool,
+
+    /// Covert the GUID to Upper case values
+    #[arg(short = 'u', long, default_value_t = false)]
+    uppercase: bool,
 
     // The format to use when writing the output
     #[arg(short = 'o', long, default_value = "{uuid}")]
     output_format: String
 }
 
+struct FormatOptions {
+    hyphenated: bool,
+    uppercase: bool,
+}
+
 fn main() {
     let args = Args::parse();
 
     let guid_version = args.guid_version;
-    let guid_format = args.guid_format;
+    let format_options = FormatOptions
+    {
+        hyphenated: !args.non_hyphenated,
+        uppercase: args.uppercase,
+    };
     let output_format = args.output_format;
 
     for sequence in 1..=args.count {
         let uuid = generate_guid(guid_version);
 
-        let uuid_formatted = format_guid(uuid, guid_format);
+        let uuid_formatted = format_guid(uuid, &format_options);
 
         let output = format_output(&output_format, &uuid_formatted.clone(), sequence);
 
@@ -71,25 +75,26 @@ fn generate_guid(guid_version_type: GuidVersionType) -> Uuid
     Uuid::new_v4()
 }
 
-fn format_guid(uuid: Uuid, format: GuidFormatType) -> String
+fn format_guid(uuid: Uuid, format_options: &FormatOptions) -> String
 {
-    if format == GuidFormatType::Hyphenated {
-        return uuid.hyphenated().to_string().to_lowercase();
+    let value: String = if format_options.hyphenated
+    {
+        uuid.hyphenated().to_string()
     }
+    else
+    {
+        uuid.simple().to_string()
+    };
 
-    if format == GuidFormatType::UppercaseHyphenated {
-        return uuid.hyphenated().to_string().to_uppercase();
+    let value = if format_options.uppercase
+    {
+        value.to_uppercase()
     }
+    else {
+        value.to_lowercase()
+    };
 
-    if format == GuidFormatType::Digits {
-        return uuid.simple().to_string().to_lowercase();
-    }
-
-    if format == GuidFormatType::UppercaseDigits {
-        return uuid.simple().to_string().to_uppercase();
-    }
-
-    return uuid.to_string();
+    return value;
 }
 
 fn format_output(output_format: &String, formatted_uuid: &String, sequence: u8) -> String {
