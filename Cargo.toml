@@ -7,6 +7,7 @@ edition = "2024"
 [dependencies]
 nanoid = "0.4.0"
 clap = { version = "4.5.58", features = ["derive", "wrap_help"] }
+strfmt = "0.2.5"
 
 [dependencies.uuid]
 version = "1.21.0"

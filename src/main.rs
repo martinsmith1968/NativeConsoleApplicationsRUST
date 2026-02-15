@@ -1,6 +1,8 @@
 use clap::Parser;
 use uuid::Uuid;
 use nanoid::nanoid;
+use strfmt::strfmt;
+use std::collections::HashMap;
 
 #[derive(clap::ValueEnum, Clone, Parser, Debug, PartialEq, Copy)]
 #[clap(rename_all = "kebab-case")]
@@ -20,7 +22,7 @@ enum UUIDType
 
 /// Generate Unique IDs (UUIDs) with controlled output and formatting
 #[derive(Parser, Debug)]
-#[command(version, about, author, help_expected = true, after_help = "NOTE: \noutput-template supports: {uuid}, {sequence} dynamic values")]
+#[command(version, about, author, help_expected = true, after_help = "NOTE:\noutput-template supports: {uuid}, {sequence} dynamic values\n(See also : https://github.com/vitiral/strfmt)")]
 struct Args {
     /// Number of times to generate
     #[arg(short = 'c', long, default_value_t = 1)]
@@ -141,12 +143,11 @@ fn format_output(output_format: &String, formatted_uuid: &String, sequence: u8) 
         return formatted_uuid.clone();
     }
 
-    let sequence_str = sequence.to_string();
+    let mut vars = HashMap::new();
+    vars.insert("sequence".to_string(), sequence.to_string());
+    vars.insert("uuid".to_string(), formatted_uuid.to_string());
 
-    let result  = output_format;
-
-    let result = result.replace("{sequence}", &sequence_str);
-    let result = result.replace("{uuid}", &formatted_uuid);
+    let result  = strfmt(&output_format, &vars).unwrap();
 
     result
 }
