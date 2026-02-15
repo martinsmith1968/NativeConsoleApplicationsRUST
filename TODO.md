@@ -18,7 +18,10 @@
   - https://www.walknsqualk.com/020-rust-unit-test-layout/
 - [ ] Introduce some app output tests
 - [ ] Invoke via CI
+- [ ] Add Windows File Properties
+  - See : https://stackoverflow.com/questions/74509880/add-exe-file-details-to-binary-of-compiled-rust-code
 
 ## Enhancements
 
 - [ ] All App implementations
+~~~~
