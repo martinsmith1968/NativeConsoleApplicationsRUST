@@ -1,5 +1,6 @@
 use clap::Parser;
 use uuid::Uuid;
+use nanoid::nanoid;
 
 #[derive(clap::ValueEnum, Clone, Parser, Debug, PartialEq, Copy)]
 #[clap(rename_all = "kebab-case")]
@@ -9,23 +10,39 @@ enum GuidVersionType {
     V7,
 }
 
-/// Generate GUID(s) with controlled output and formatting
+#[derive(clap::ValueEnum, Clone, Parser, Debug, PartialEq, Copy)]
+#[clap(rename_all = "lowercase")]
+enum UUIDType
+{
+    Guid,
+    NanoId
+}
+
+/// Generate Unique IDs (UUIDs) with controlled output and formatting
 #[derive(Parser, Debug)]
 #[command(version, about, after_help = "NOTE: \noutput-format supports: {uuid}, {sequence} dynamic values")]
 struct Args {
     /// Number of times to generate
-    #[arg(short, long, default_value_t = 1)]
+    #[arg(short = 'c', long, default_value_t = 1)]
     count: u8,
+
+    /// The type of UUID to generate
+    #[arg(short = 't', long, default_value = "guid")]
+    uuid_type: UUIDType,
 
     /// The version of GUID to generate
     #[arg(short = 'v', long, default_value = "v4")]
     guid_version: GuidVersionType,
 
-    /// Format the GUID without Hyphens
+    /// The size of NanoId to generate
+    #[arg(short = 'l', long, default_value = "21")]
+    nanoid_length: usize,
+
+    /// Format the GUID without Hyphens (GUID only)
     #[arg(short = 'y', long, default_value_t = false)]
     non_hyphenated: bool,
 
-    /// Covert the GUID to Upper case values
+    /// Covert the GUID to Upper case values (GUID only)
     #[arg(short = 'u', long, default_value_t = false)]
     uppercase: bool,
 
@@ -42,23 +59,40 @@ struct FormatOptions {
 fn main() {
     let args = Args::parse();
 
-    let guid_version = args.guid_version;
-    let format_options = FormatOptions
+    let output_format = args.output_format.clone();
+
+    for sequence in 1..=args.count
     {
-        hyphenated: !args.non_hyphenated,
-        uppercase: args.uppercase,
-    };
-    let output_format = args.output_format;
+        let uuid_formatted = generate_uuid(&args);
+        let output = format_output(&output_format, &uuid_formatted, sequence);
 
-    for sequence in 1..=args.count {
-        let uuid = generate_guid(guid_version);
-
-        let uuid_formatted = format_guid(uuid, &format_options);
-
-        let output = format_output(&output_format, &uuid_formatted.clone(), sequence);
-
-        println!("{}", output);
+        println!("{output}");
     }
+}
+
+fn generate_uuid(args: &Args) -> String
+{
+    if args.uuid_type == UUIDType::Guid
+    {
+        let format_options = FormatOptions
+        {
+            hyphenated: !args.non_hyphenated,
+            uppercase: args.uppercase,
+        };
+
+        let uuid = generate_guid(args.guid_version);
+        let uuid_formatted = format_guid(&uuid, &format_options);
+
+        return uuid_formatted.clone();
+    }
+    else if args.uuid_type == UUIDType::NanoId
+    {
+        let uuid = generate_nanoid(args.nanoid_length);
+
+        return uuid.clone();
+    }
+
+    String::new()
 }
 
 fn generate_guid(guid_version_type: GuidVersionType) -> Uuid
@@ -75,7 +109,14 @@ fn generate_guid(guid_version_type: GuidVersionType) -> Uuid
     Uuid::new_v4()
 }
 
-fn format_guid(uuid: Uuid, format_options: &FormatOptions) -> String
+fn generate_nanoid(nanoid_length: usize) -> String
+{
+    let uuid = nanoid!(nanoid_length);
+
+    uuid
+}
+
+fn format_guid(uuid: &Uuid, format_options: &FormatOptions) -> String
 {
     let value: String = if format_options.hyphenated
     {
@@ -94,7 +135,7 @@ fn format_guid(uuid: Uuid, format_options: &FormatOptions) -> String
         value.to_lowercase()
     };
 
-    return value;
+    value
 }
 
 fn format_output(output_format: &String, formatted_uuid: &String, sequence: u8) -> String {
@@ -109,5 +150,5 @@ fn format_output(output_format: &String, formatted_uuid: &String, sequence: u8) 
     let result = result.replace("{sequence}", &sequence_str);
     let result = result.replace("{uuid}", &formatted_uuid);
 
-    return result;
+    result
 }
