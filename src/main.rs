@@ -20,7 +20,7 @@ enum UUIDType
 
 /// Generate Unique IDs (UUIDs) with controlled output and formatting
 #[derive(Parser, Debug)]
-#[command(version, about, after_help = "NOTE: \noutput-format supports: {uuid}, {sequence} dynamic values")]
+#[command(version, about, author, help_expected = true, after_help = "NOTE: \noutput-template supports: {uuid}, {sequence} dynamic values")]
 struct Args {
     /// Number of times to generate
     #[arg(short = 'c', long, default_value_t = 1)]
@@ -46,9 +46,9 @@ struct Args {
     #[arg(short = 'u', long, default_value_t = false)]
     uppercase: bool,
 
-    // The format to use when writing the output
+    /// The template to use when writing the output
     #[arg(short = 'o', long, default_value = "{uuid}")]
-    output_format: String
+    output_template: String,
 }
 
 struct FormatOptions {
@@ -59,12 +59,10 @@ struct FormatOptions {
 fn main() {
     let args = Args::parse();
 
-    let output_format = args.output_format.clone();
-
     for sequence in 1..=args.count
     {
         let uuid_formatted = generate_uuid(&args);
-        let output = format_output(&output_format, &uuid_formatted, sequence);
+        let output = format_output(&args.output_template, &uuid_formatted, sequence);
 
         println!("{output}");
     }

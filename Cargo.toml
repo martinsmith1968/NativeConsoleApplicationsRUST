@@ -1,11 +1,12 @@
 [package]
 name = "NativeConsoleApplicationsRUST"
+authors = [ "Martin Smith" ]
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-clap = { version = "4.5.58", features = ["derive", "wrap_help"] }
 nanoid = "0.4.0"
+clap = { version = "4.5.58", features = ["derive", "wrap_help"] }
 
 [dependencies.uuid]
 version = "1.21.0"
