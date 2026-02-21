@@ -51,11 +51,20 @@ struct Args {
     /// The template to use when writing the output
     #[arg(short = 'o', long, default_value = "{uuid}")]
     output_template: String,
+
+    /// The seed to use when generating a v6 Guid (6 values)
+    #[arg(short = '6', long, default_value = "1,2,3,4,5,6")]
+    guid_v6_seed: String,
 }
 
 struct FormatOptions {
     hyphenated: bool,
     uppercase: bool,
+}
+
+struct GuidGenerateOptions {
+    guid_version: GuidVersionType,
+    v6_seed: String,
 }
 
 fn main() {
@@ -80,7 +89,13 @@ fn generate_uuid(args: &Args) -> String
             uppercase: args.uppercase,
         };
 
-        let uuid = generate_guid(args.guid_version);
+        let generate_options = GuidGenerateOptions
+        {
+            guid_version: args.guid_version,
+            v6_seed: args.guid_v6_seed.clone(),
+        };
+
+        let uuid = generate_guid(generate_options);
         let uuid_formatted = format_guid(&uuid, &format_options);
 
         return uuid_formatted.clone();
@@ -95,14 +110,44 @@ fn generate_uuid(args: &Args) -> String
     String::new()
 }
 
-fn generate_guid(guid_version_type: GuidVersionType) -> Uuid
+fn parse_text_to_u8(str: String) -> u8 {
+    let value = str.parse::<u8>()
+        .expect("shit");
+
+    value
+}
+
+fn generate_guid(options: GuidGenerateOptions) -> Uuid
 {
-    if guid_version_type == GuidVersionType::V6 {
+    if options.guid_version == GuidVersionType::V6 {
         let node = &[1, 2, 3, 4, 5, 6];
+
+        if !options.v6_seed.is_empty() {
+            //let seed_values = options.v6_seed.split(",")
+            //    .map(|str| str.trim().parse::<u8>().unwrap_or_default())
+            //    .collect::<Vec<u8>>();
+
+            let mut seed_values: Vec<u8> = Vec::new();
+            let mut invalid_values: Vec<&str> = Vec::new();
+
+            for str in options.v6_seed.split(",") {
+                let parsed_value = match str.trim().parse::<u8>() {
+                    Ok(value) => seed_values.push(value),
+                    Err(err) => invalid_values.push(&str),
+                };
+            }
+
+            if seed_values.len() == 6 {
+                let _node: &[u8] = &seed_values;
+            }
+            if invalid_values.len() > 0 {
+                println!("Warning: unable to use seed values - {}", invalid_values.join(", "));
+            }
+        }
 
         return Uuid::now_v6(node);
     }
-    if guid_version_type == GuidVersionType::V7 {
+    if options.guid_version == GuidVersionType::V7 {
         return Uuid::now_v7();
     }
 
