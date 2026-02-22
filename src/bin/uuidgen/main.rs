@@ -4,6 +4,9 @@ use std::collections::HashMap;
 use strfmt::strfmt;
 use uuid::Uuid;
 
+// Notes:
+// - https://medium.com/@mattpatchava/std-fmt-56c412e30d74
+
 #[derive(clap::ValueEnum, Clone, Parser, Debug, PartialEq, Copy)]
 #[clap(rename_all = "kebab-case")]
 enum GuidVersionType {
@@ -128,7 +131,7 @@ fn generate_guid(options: GuidGenerateOptions) -> Uuid {
             if seed_values.len() == 6 {
                 let _node: &[u8] = &seed_values;
             }
-            
+
             if invalid_values.len() > 0 {
                 println!(
                     "Warning: unable to use seed values - {}",

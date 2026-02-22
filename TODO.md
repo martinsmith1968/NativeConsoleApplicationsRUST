@@ -6,6 +6,12 @@
 
 ### General
 
+- [ ] Rename Help short char to '?'
+  - May need to be done via fluent builder as derive doesn't seem to work
+  - See :
+    - https://github.com/clap-rs/clap/issues/1127
+    - https://stackoverflow.com/questions/78354022/when-i-disable-the-default-help-option-and-add-it-as-a-custom-arg-it-says-that
+
 - [ ] Project / Solution Structure for Executables, libraries, tests, externals, etc
 - [ ] Tests
   - https://doc.rust-lang.org/rust-by-example/testing/unit_testing.html
@@ -20,11 +26,6 @@
 - [ ] Invoke via CI
 - [ ] Add Windows File Properties
   - See : https://stackoverflow.com/questions/74509880/add-exe-file-details-to-binary-of-compiled-rust-code
-- [ ] Rename Help short char to '?'
-  - May need to be done via fluent builder as derive doesn't seem to work
-  - See : 
-    - https://github.com/clap-rs/clap/issues/1127
-    - https://stackoverflow.com/questions/78354022/when-i-disable-the-default-help-option-and-add-it-as-a-custom-arg-it-says-that
 
 ## Enhancements
 
