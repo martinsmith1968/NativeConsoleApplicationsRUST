@@ -35,3 +35,5 @@ target
 # Added by cargo
 
 /target
+
+.idea/workspace.xml
