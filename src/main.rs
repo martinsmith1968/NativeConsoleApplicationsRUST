@@ -110,13 +110,6 @@ fn generate_uuid(args: &Args) -> String
     String::new()
 }
 
-fn parse_text_to_u8(str: String) -> u8 {
-    let value = str.parse::<u8>()
-        .expect("shit");
-
-    value
-}
-
 fn generate_guid(options: GuidGenerateOptions) -> Uuid
 {
     if options.guid_version == GuidVersionType::V6 {
@@ -131,9 +124,9 @@ fn generate_guid(options: GuidGenerateOptions) -> Uuid
             let mut invalid_values: Vec<&str> = Vec::new();
 
             for str in options.v6_seed.split(",") {
-                let parsed_value = match str.trim().parse::<u8>() {
+                match str.trim().parse::<u8>() {
                     Ok(value) => seed_values.push(value),
-                    Err(err) => invalid_values.push(&str),
+                    Err(_) => invalid_values.push(&str),
                 };
             }
 
