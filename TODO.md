@@ -12,6 +12,11 @@
     - https://github.com/clap-rs/clap/issues/1127
     - https://stackoverflow.com/questions/78354022/when-i-disable-the-default-help-option-and-add-it-as-a-custom-arg-it-says-that
 - [ ] CI Build GitHub Action
+  - https://docs.github.com/en/actions/tutorials/build-and-test-code/rust
+  - https://github.com/actions-rust-lang/setup-rust-toolchain
+  - https://users.rust-lang.org/t/github-actions-for-rust/116704
+  - https://jondot.medium.com/building-rust-on-multiple-platforms-using-github-6f3e6f8b8458
+  - https://blog.urth.org/2023/03/05/cross-compiling-rust-projects-in-github-actions/
 - [ ] Project / Solution Structure for Executables, libraries, tests, externals, etc
   - i.e. Support multiple cargo targets 
 - [ ] Tests
