@@ -17,6 +17,8 @@
   - https://users.rust-lang.org/t/github-actions-for-rust/116704
   - https://jondot.medium.com/building-rust-on-multiple-platforms-using-github-6f3e6f8b8458
   - https://blog.urth.org/2023/03/05/cross-compiling-rust-projects-in-github-actions/
+  - https://eertmans.be/posts/rust-binaries-to-github-action/
+  - https://www.reddit.com/r/rust/comments/ga80lj/example_github_actions_with_rust_build_test/
 - [ ] Project / Solution Structure for Executables, libraries, tests, externals, etc
   - i.e. Support multiple cargo targets 
 - [ ] Tests
