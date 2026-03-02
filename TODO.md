@@ -11,8 +11,9 @@
   - See :
     - https://github.com/clap-rs/clap/issues/1127
     - https://stackoverflow.com/questions/78354022/when-i-disable-the-default-help-option-and-add-it-as-a-custom-arg-it-says-that
-
+- [ ] CI Build GitHub Action
 - [ ] Project / Solution Structure for Executables, libraries, tests, externals, etc
+  - i.e. Support multiple cargo targets 
 - [ ] Tests
   - https://doc.rust-lang.org/rust-by-example/testing/unit_testing.html
   - https://doc.rust-lang.org/book/ch11-01-writing-tests.html
@@ -26,6 +27,19 @@
 - [ ] Invoke via CI
 - [ ] Add Windows File Properties
   - See : https://stackoverflow.com/questions/74509880/add-exe-file-details-to-binary-of-compiled-rust-code
+
+### UUIDGen
+
+- [ ] Move UUIDType (uuid/nanoid) to become a command (so won't require -t prefix) 
+
+### HashCalc
+- 
+- [ ] Implement all required hashers
+  - Will require each hasher in its own file / module
+    - https://doc.rust-lang.org/rust-by-example/mod/split.html
+    - https://www.reddit.com/r/rust/comments/16e571d/breaking_down_rust_code_into_seperate_rs_files_is/
+    - https://doc.rust-lang.org/book/ch07-05-separating-modules-into-different-files.html
+    - https://stackoverflow.com/questions/70317526/how-to-use-multiple-files-in-rust
 
 ## Enhancements
 
