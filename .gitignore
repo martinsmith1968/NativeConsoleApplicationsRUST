@@ -37,3 +37,5 @@ target
 /target
 
 .idea/workspace.xml
+
+output/
