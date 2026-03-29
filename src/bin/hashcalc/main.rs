@@ -15,6 +15,7 @@ use hashers::hash_content;
 )]
 struct Args {
     /// The text to generate a hash for (mutually exclusive with --file)
+    #[arg(short, long)]
     text: Option<String>,
 
     /// Path to file to hash
@@ -60,7 +61,20 @@ fn main() {
     };
 
     match hash_content(&content_bytes, &args.algorithm) {
-        Ok(hash_output) => println!("{}", hash_output),
+        Ok(hash_output) => {
+            let identifier = match (&args.text, &args.file) {
+                (Some(text), None) => text.clone(),
+                (None, Some(file_path)) => {
+                    std::path::Path::new(file_path)
+                        .file_name()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or(file_path)
+                        .to_string()
+                },
+                _ => String::new(),
+            };
+            println!("{} [{}] : {}", identifier, args.algorithm.to_lowercase(), hash_output);
+        }
         Err(e) => {
             eprintln!("Error: {}", e);
             std::process::exit(1);
@@ -75,6 +89,10 @@ mod tests {
     use std::io::Write;
     use std::path::PathBuf;
     use std::process::Command;
+
+    fn extract_hash(output: &str) -> String {
+        output.trim().rsplitn(2, " : ").next().unwrap().to_string()
+    }
 
     // Helper function to create temporary test files
     fn create_temp_file(filename: &str, content: &[u8]) -> PathBuf {
@@ -253,7 +271,7 @@ mod tests {
     #[test]
     fn test_cli_text_mode_hello() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "hello"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "hello"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -265,7 +283,7 @@ mod tests {
     #[test]
     fn test_cli_text_mode_empty_string() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", ""])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", ""])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -277,7 +295,7 @@ mod tests {
     #[test]
     fn test_cli_text_mode_hello_world() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "hello world"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "hello world"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -289,20 +307,20 @@ mod tests {
     #[test]
     fn test_cli_text_mode_special_chars() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "!@#$%^&*()"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "!@#$%^&*()"])
             .output()
             .expect("Failed to run hashcalc");
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let hex_line = stdout.trim();
-        assert_eq!(hex_line.len(), 64);
+        let hex = extract_hash(&stdout);
+        assert_eq!(hex.len(), 64);
     }
 
     #[test]
     fn test_cli_algorithm_sha1() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "hello", "-a", "sha1"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "hello", "-a", "sha1"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -314,7 +332,7 @@ mod tests {
     #[test]
     fn test_cli_algorithm_md5() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "hello", "-a", "md5"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "hello", "-a", "md5"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -326,20 +344,20 @@ mod tests {
     #[test]
     fn test_cli_algorithm_sha512() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "hello", "-a", "sha512"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "hello", "-a", "sha512"])
             .output()
             .expect("Failed to run hashcalc");
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let hex_line = stdout.trim();
-        assert_eq!(hex_line.len(), 128);
+        let hex = extract_hash(&stdout);
+        assert_eq!(hex.len(), 128);
     }
 
     #[test]
     fn test_cli_algorithm_base64() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "hello", "-a", "base64"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "hello", "-a", "base64"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -351,7 +369,7 @@ mod tests {
     #[test]
     fn test_cli_algorithm_invalid() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "hello", "-a", "invalid"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "hello", "-a", "invalid"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -393,7 +411,7 @@ mod tests {
         let path = create_temp_file("conflict.txt", b"test");
         
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "text", "--file", path.to_str().unwrap()])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "text", "--file", path.to_str().unwrap()])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -430,7 +448,7 @@ mod tests {
     #[test]
     fn test_cli_exit_code_success() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "test"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "test"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -450,7 +468,7 @@ mod tests {
     #[test]
     fn test_cli_exit_code_mutual_exclusivity_error() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "text", "--file", "/tmp/file.txt"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "text", "--file", "/tmp/file.txt"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -470,18 +488,18 @@ mod tests {
     #[test]
     fn test_cli_consistency_same_input() {
         let output1 = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "consistency"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "consistency"])
             .output()
             .expect("Failed to run hashcalc");
 
         let output2 = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "consistency"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "consistency"])
             .output()
             .expect("Failed to run hashcalc");
 
         assert!(output1.status.success());
         assert!(output2.status.success());
-        assert_eq!(String::from_utf8_lossy(&output1.stdout), String::from_utf8_lossy(&output2.stdout));
+        assert_eq!(extract_hash(&String::from_utf8_lossy(&output1.stdout)), extract_hash(&String::from_utf8_lossy(&output2.stdout)));
     }
 
     #[test]
@@ -490,7 +508,7 @@ mod tests {
         let abs_path = std::fs::canonicalize(&path).unwrap();
         
         let text_output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "equivalence"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "equivalence"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -501,29 +519,31 @@ mod tests {
 
         assert!(text_output.status.success());
         assert!(file_output.status.success());
-        assert_eq!(String::from_utf8_lossy(&text_output.stdout), String::from_utf8_lossy(&file_output.stdout));
+        let text_stdout = String::from_utf8_lossy(&text_output.stdout);
+        let file_stdout = String::from_utf8_lossy(&file_output.stdout);
+        assert_eq!(extract_hash(&text_stdout), extract_hash(&file_stdout));
         cleanup_temp_file(&path);
     }
 
     #[test]
     fn test_cli_output_format_single_line() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "format_test"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "format_test"])
             .output()
             .expect("Failed to run hashcalc");
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let hex_line = stdout.trim();
+        let hex = extract_hash(&stdout);
         
-        assert_eq!(hex_line.len(), 64);
-        assert!(hex_line.chars().all(|c| c.is_ascii_hexdigit()));
+        assert_eq!(hex.len(), 64);
+        assert!(hex.chars().all(|c| c.is_ascii_hexdigit()));
     }
 
     #[test]
     fn test_cli_output_hex_lowercase() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "lowercase_test"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "lowercase_test"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -562,20 +582,20 @@ mod tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let hex_line = stdout.trim();
-        assert_eq!(hex_line.len(), 64);
+        let hex = extract_hash(&stdout);
+        assert_eq!(hex.len(), 64);
         cleanup_temp_file(&path);
     }
 
     #[test]
     fn test_cli_text_different_inputs_different_hashes() {
         let output1 = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "input1"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "input1"])
             .output()
             .expect("Failed to run hashcalc");
 
         let output2 = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "input2"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "input2"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -717,8 +737,8 @@ mod tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let hex_line = stdout.trim();
-        assert_eq!(hex_line.len(), 40);
+        let hex = extract_hash(&stdout);
+        assert_eq!(hex.len(), 40);
         cleanup_temp_file(&path);
     }
 
@@ -733,8 +753,8 @@ mod tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let hex_line = stdout.trim();
-        assert_eq!(hex_line.len(), 32);
+        let hex = extract_hash(&stdout);
+        assert_eq!(hex.len(), 32);
         cleanup_temp_file(&path);
     }
 
@@ -749,8 +769,8 @@ mod tests {
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let hex_line = stdout.trim();
-        assert_eq!(hex_line.len(), 128);
+        let hex = extract_hash(&stdout);
+        assert_eq!(hex.len(), 128);
         cleanup_temp_file(&path);
     }
 
@@ -772,57 +792,59 @@ mod tests {
     #[test]
     fn test_cli_long_option_algorithm() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "test", "--algorithm", "sha1"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "test", "--algorithm", "sha1"])
             .output()
             .expect("Failed to run hashcalc");
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let hex_line = stdout.trim();
-        assert_eq!(hex_line.len(), 40);
+        let hex = extract_hash(&stdout);
+        assert_eq!(hex.len(), 40);
     }
 
     #[test]
     fn test_cli_text_with_spaces() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "   multiple   spaces   "])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "   multiple   spaces   "])
             .output()
             .expect("Failed to run hashcalc");
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert_eq!(stdout.trim().len(), 64);
+        let hash = extract_hash(&stdout);
+        assert_eq!(hash.trim().len(), 64);
     }
 
     #[test]
     fn test_cli_text_numeric_string() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "1234567890"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "1234567890"])
             .output()
             .expect("Failed to run hashcalc");
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let hex_line = stdout.trim();
-        assert_eq!(hex_line.len(), 64);
+        let hex = extract_hash(&stdout);
+        assert_eq!(hex.len(), 64);
     }
 
     #[test]
     fn test_cli_text_single_character() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "x"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "x"])
             .output()
             .expect("Failed to run hashcalc");
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert_eq!(stdout.trim().len(), 64);
+        let hash = extract_hash(&stdout);
+        assert_eq!(hash.trim().len(), 64);
     }
 
     #[test]
     fn test_cli_algorithm_case_sensitive() {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "test", "-a", "SHA256"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "test", "-a", "SHA256"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -852,12 +874,13 @@ mod tests {
         
         for algo in &["sha256", "sha1", "md5", "sha512"] {
             let output = Command::new("cargo")
-                .args(&["run", "--bin", "hashcalc", "--", text, "-a", algo])
+                .args(&["run", "--bin", "hashcalc", "--", "-t", text, "-a", algo])
                 .output()
                 .expect("Failed to run hashcalc");
             
             assert!(output.status.success());
-            hashes.push(String::from_utf8_lossy(&output.stdout).to_string());
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            hashes.push(extract_hash(&stdout));
         }
         
         // All hashes should be different
@@ -871,12 +894,12 @@ mod tests {
     #[test]
     fn test_cli_default_algorithm_is_sha256() {
         let output_default = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "test"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "test"])
             .output()
             .expect("Failed to run hashcalc");
 
         let output_explicit = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "test", "-a", "sha256"])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "test", "-a", "sha256"])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -920,10 +943,9 @@ mod tests {
         assert!(output2.status.success());
         
         // Results should be different because algorithms are different
-        assert_ne!(
-            String::from_utf8_lossy(&output1.stdout).trim(),
-            String::from_utf8_lossy(&output2.stdout).trim()
-        );
+        let out1 = String::from_utf8_lossy(&output1.stdout);
+        let out2 = String::from_utf8_lossy(&output2.stdout);
+        assert_ne!(extract_hash(&out1), extract_hash(&out2));
         cleanup_temp_file(&path);
     }
 
@@ -946,7 +968,7 @@ mod tests {
         let path = create_temp_file("priority.txt", b"file_content");
         
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "text_content", "--file", path.to_str().unwrap()])
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "text_content", "--file", path.to_str().unwrap()])
             .output()
             .expect("Failed to run hashcalc");
 

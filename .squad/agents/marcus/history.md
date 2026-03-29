@@ -1,5 +1,61 @@
 # Marcus Backend Dev - History & Learnings
 
+## Session 5: hashcalc CLI Refactor - Text Parameter to Option Flag
+
+### Refactoring Complete
+
+Converted the hashcalc CLI from accepting text as a positional argument to accepting it via a `-t` / `--text` option flag.
+
+#### Changes Made
+
+1. **Args Struct Modification** - Added `#[arg(short, long)]` attribute to the `text` field in the Args struct, changing it from a positional argument to an optional flag parameter.
+
+2. **Test Suite Update** - Updated all 67 tests to use the new `-t TEXT` syntax instead of positional text arguments:
+   - Text mode tests: `cargo run -- "text"` → `cargo run -- -t "text"`
+   - Algorithm combination tests: `cargo run -- "text" -a algo` → `cargo run -- -t "text" -a algo`
+   - Mutual exclusivity tests: adjusted to use `-t` flag
+
+3. **CLI Behavior Preserved**:
+   - `-t "hello world"` hashes the text (default SHA256)
+   - `-f file.txt` reads and hashes the file
+   - `-a sha1` / `--algorithm sha256` specify hash algorithm
+   - Mutual exclusivity enforced: error if both `-t` and `-f` provided
+   - Error if neither `-t` nor `-f` provided
+   - Help text automatically updated by clap: shows `-t, --text <TEXT>`
+
+#### Testing & Verification
+
+✅ All 67 integration tests pass without modification (after updating command syntax)  
+✅ Build: Clean compilation, zero warnings  
+✅ Manual verification:
+  - `hashcalc -t "hello world"` → Correct SHA256 hash
+  - `hashcalc -t hello -a sha1` → Correct SHA1 hash
+  - `hashcalc` (no args) → Error with clear message
+  - `hashcalc -t text --file file.txt` → Error for mutual exclusivity
+
+#### Key Learnings
+
+- **clap flag syntax**: `#[arg(short, long)]` on Option field converts positional to flag-based option
+- **Test maintenance**: When CLI arguments change, all test command invocations must be updated systematically
+- **Mutual exclusivity**: The logic for handling `-t` and `-f` remains the same; clap handles argument parsing details
+- **Backward incompatibility**: This is a breaking change to the CLI interface — users must update scripts to use `-t` flag
+
+### Key Files Modified
+- `src/bin/hashcalc/main.rs` - Args struct, all 67 test commands
+
+### Build Status
+✅ Compiles without warnings or errors  
+✅ All 67 tests pass  
+✅ Manual spot checks verified  
+✅ Help text correctly shows `-t, --text <TEXT>`
+
+### Session Outcome
+**Refactoring:** COMPLETED ✅  
+**Testing:** All 67 tests passing ✅  
+**Ready for commit:** YES ✅
+
+---
+
 ## Session 4: hashcalc Module Refactoring
 
 ### Refactoring Complete
