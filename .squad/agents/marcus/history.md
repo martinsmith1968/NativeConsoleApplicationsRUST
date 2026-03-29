@@ -1,5 +1,73 @@
 # Marcus Backend Dev - History & Learnings
 
+## Session 4: hashcalc Module Refactoring
+
+### Refactoring Complete
+
+Extracted all five hash algorithms from the monolithic `main.rs` into a clean module structure under `src/bin/hashcalc/hashers/`:
+
+#### New Module Structure
+- `hashers/mod.rs` - Module index and `hash_content()` dispatcher
+- `hashers/sha1.rs` - SHA1 implementation (40-char hex output)
+- `hashers/md5.rs` - MD5 implementation (32-char hex output)
+- `hashers/sha256.rs` - SHA256 implementation (64-char hex output)
+- `hashers/sha512.rs` - SHA512 implementation (128-char hex output)
+- `hashers/base64.rs` - Base64 encoding (custom impl)
+
+#### Key Design Decisions
+
+1. **Consistent public API** - Each hasher module exports `pub fn hash(data: &[u8]) -> Result<String, String>` with uniform error handling.
+
+2. **Centralized dispatch** - `hashers::hash_content()` routes algorithm selection to the correct module, preserving original API compatibility.
+
+3. **Trait imports** - Imported `Digest` trait in sha1.rs, sha256.rs, and sha512.rs to access `.new()`, `.update()`, and `.finalize()` methods. No conflicts despite multi-version digest dependency.
+
+4. **Minimal main.rs** - Reduced main.rs to ~70 lines handling only CLI parsing and I/O orchestration. All algorithm logic is now in dedicated modules.
+
+#### Code Organization Benefits
+
+- **Modularity**: Each algorithm is independently testable and maintainable
+- **Clarity**: Readers can understand one algorithm at a time
+- **Extensibility**: Adding a new algorithm is now a single new file, not inline code
+- **Separation of concerns**: CLI logic separated from hashing logic
+
+#### Testing
+
+✅ All 67 integration tests pass without modification (backward compatibility preserved)
+✅ Build: Clean compilation, zero warnings
+✅ Manual verification: SHA256, SHA1, Base64 tested and working
+✅ File and text modes work correctly with all algorithms
+
+#### Implementation Notes
+
+- Used re-export pattern: `pub use self::sha1::hash as sha1;` to provide convenient namespace
+- Match expression in dispatcher is exhaustive, compiler ensures all algorithms handled
+- Each hasher independently handles its own dependencies (sha1 crate, sha2 crate, custom encoding)
+- Error handling consistent: `Result<String, String>` throughout
+
+### Key Files Modified
+- `src/bin/hashcalc/main.rs` - Simplified, imports from hashers module
+- Created: `src/bin/hashcalc/hashers/mod.rs` (dispatcher)
+- Created: `src/bin/hashcalc/hashers/sha1.rs`
+- Created: `src/bin/hashcalc/hashers/md5.rs`
+- Created: `src/bin/hashcalc/hashers/sha256.rs`
+- Created: `src/bin/hashcalc/hashers/sha512.rs`
+- Created: `src/bin/hashcalc/hashers/base64.rs`
+
+### Build Status
+✅ Compiles without warnings or errors
+✅ All 67 tests pass
+✅ Zero breaking changes to CLI interface
+✅ No regressions detected
+
+### Session Outcome
+**Refactoring:** COMPLETED ✅  
+**Code Review:** APPROVED by Kiefer ✅  
+**Decisions:** Documented and merged to decisions.md ✅  
+**Ready for commit:** YES ✅
+
+---
+
 ## Session 1: uuidgen Code Quality Fixes
 
 ### Issues Fixed

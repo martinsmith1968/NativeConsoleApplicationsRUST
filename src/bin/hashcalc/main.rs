@@ -1,14 +1,9 @@
 use clap::Parser;
-use sha2::{Sha256, Sha512};
-use sha2::Digest as Sha2Digest;
-use sha1::Sha1;
-use md5;
 use std::fs;
 use std::io;
 
-// Notes:
-// - https://mojoauth.com/hashing/sha-256-in-rust#validating-and-testing-sha-256-in-rust
-// - https://ssojet.com/hashing/sha-256-in-rust
+mod hashers;
+use hashers::hash_content;
 
 /// Generate a hash of text or file contents
 #[derive(Parser, Debug)]
@@ -40,74 +35,6 @@ fn read_file_contents(path: &str) -> Result<Vec<u8>, String> {
             _ => format!("Failed to read file '{}': {}", path, e),
         }
     })
-}
-
-fn encode_base64(data: &[u8]) -> String {
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut result = String::new();
-    let mut i = 0;
-
-    while i < data.len() {
-        let b1 = data[i];
-        let b2 = if i + 1 < data.len() { data[i + 1] } else { 0 };
-        let b3 = if i + 2 < data.len() { data[i + 2] } else { 0 };
-
-        let n = ((b1 as u32) << 16) | ((b2 as u32) << 8) | (b3 as u32);
-
-        result.push(CHARSET[((n >> 18) & 63) as usize] as char);
-        result.push(CHARSET[((n >> 12) & 63) as usize] as char);
-
-        if i + 1 < data.len() {
-            result.push(CHARSET[((n >> 6) & 63) as usize] as char);
-        } else {
-            result.push('=');
-        }
-
-        if i + 2 < data.len() {
-            result.push(CHARSET[(n & 63) as usize] as char);
-        } else {
-            result.push('=');
-        }
-
-        i += 3;
-    }
-
-    result
-}
-
-fn hash_content(content_bytes: &[u8], algorithm: &str) -> Result<String, String> {
-    match algorithm {
-        "sha1" => {
-            let mut hasher = Sha1::new();
-            hasher.update(content_bytes);
-            let result = hasher.finalize();
-            Ok(hex::encode(result))
-        }
-        "md5" => {
-            let digest = md5::compute(content_bytes);
-            Ok(format!("{:x}", digest))
-        }
-        "sha256" => {
-            let mut hasher = Sha256::new();
-            hasher.update(content_bytes);
-            let result = hasher.finalize();
-            Ok(hex::encode(result))
-        }
-        "sha512" => {
-            let mut hasher = Sha512::new();
-            hasher.update(content_bytes);
-            let result = hasher.finalize();
-            Ok(hex::encode(result))
-        }
-        "base64" => {
-            let encoded = encode_base64(content_bytes);
-            Ok(encoded)
-        }
-        _ => Err(format!(
-            "Unknown algorithm: '{}'. Supported: sha1, md5, sha256, sha512, base64",
-            algorithm
-        )),
-    }
 }
 
 fn main() {
