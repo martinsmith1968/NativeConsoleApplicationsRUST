@@ -1,7 +1,7 @@
 [package]
 name       = "NativeConsoleApplicationsRUST"
 authors    = [ "Martin Smith" ]
-version    = "0.1.0"
+version    = "0.1.0-dev"
 edition    = "2024"
 readme     = "README.md"
 license    = "MIT OR Apache-2.0"
@@ -9,12 +9,19 @@ keywords   = [ "uuid", "nanoid" ]
 categories = [ "command-line-utilities" ]
 repository = "http://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
 
+[package.metadata.winresource]
+ProductName    = "Command Line Utilities written in RUST"
+LegalCopyright = "Copyright © 2022"
+
 [dependencies]
 nanoid = "0.4.0"
-clap = { version = "4.5.58", features = ["derive", "wrap_help"] }
+clap   = { version = "4.5.58", features = ["derive", "wrap_help"] }
 strfmt = "0.2.5"
-sha2 = "0.11.0-rc.5"
-hex = "0.4"
+sha2   = "0.11.0-rc.5"
+hex    = "0.4"
+
+[build-dependencies]
+winresource = "0.1.14"
 
 [dependencies.uuid]
 version = "1.21.0"
@@ -27,11 +34,11 @@ features = [
 ]
 
 [[bin]]
-name = "uuidgen"
-test = false
+name  = "uuidgen"
+test  = false
 bench = false
 
 [[bin]]
-name = "hashcalc"
-test = false
+name  = "hashcalc"
+test  = false
 bench = false
