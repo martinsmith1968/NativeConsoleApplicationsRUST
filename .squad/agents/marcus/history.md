@@ -72,3 +72,57 @@ Modified `src/bin/hashcalc/main.rs` to add optional file hashing capability:
 - **Idiomatic error mapping**: `fs::read().map_err()` with `io::ErrorKind` match for user-friendly messages.
 - **Content normalization**: Work with `Vec<u8>` for both text and file content to maintain uniform hashing logic.
 - **Exit codes**: Use `std::process::exit(1)` for user input errors (distinct from panics).
+
+## Session 3: hashcalc Multi-Algorithm Support
+
+### Feature Implemented
+
+Extended hashcalc CLI to support multiple hash algorithms via `-a/--algorithm` option. Feature was already partially implemented but had a critical trait import conflict that prevented compilation.
+
+### Fix Applied
+
+**Import Conflict Resolution**: SHA1 crate (0.10.6) and SHA2 crate (0.11.0-rc.5) depend on different versions of the `digest` crate, causing trait resolution failures when importing `Digest` from both.
+
+**Solution**: Import each crate's `Digest` trait with different aliases:
+```rust
+use sha2::{Sha256, Sha512};
+use sha2::Digest as Sha2Digest;
+use sha1::Sha1;
+```
+
+This allows both trait methods to be available through explicit qualification when needed (though pattern matching on hashers doesn't require explicit trait use).
+
+### Algorithms Supported
+
+- `sha1` - 40-char hex output
+- `md5` - 32-char hex output  
+- `sha256` - 64-char hex output (default)
+- `sha512` - 128-char hex output
+- `base64` - base64 encoding of raw bytes
+
+### CLI Features
+
+- Short flag: `-a`, long flag: `--algorithm`
+- Default value: `sha256` (maintains backward compatibility)
+- Works with both text mode and file mode (`-f`)
+- Clear error messages for unsupported algorithms
+- All existing functionality preserved
+
+### Testing
+
+✅ Build: Clean compilation without warnings  
+✅ Spot checks:
+- `cargo run --bin hashcalc -- "hello" -a sha256` → Correct SHA256
+- `cargo run --bin hashcalc -- "hello" -a sha1` → Correct SHA1  
+- `cargo run --bin hashcalc -- "hello" -a md5` → Correct MD5
+- `cargo run --bin hashcalc -- "hello" -a sha512` → 128-char output
+- `cargo run --bin hashcalc -- "hello" -a base64` → aGVsbG8=
+- `cargo run --bin hashcalc -- "hello"` → Default SHA256 matches explicit
+- `cargo run --bin hashcalc -- "hello" -a invalid` → Helpful error message
+- File mode: `cargo run --bin hashcalc -- -f file.txt -a sha1` → Works correctly
+
+✅ Comprehensive test suite included (40+ tests covering all algorithms, file/text modes, edge cases, error handling)
+
+### Key Files Modified
+
+- `src/bin/hashcalc/main.rs` - Import conflict resolution only (feature already implemented)

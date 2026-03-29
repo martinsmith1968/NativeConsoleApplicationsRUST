@@ -2,7 +2,125 @@
 
 ## Work Completed
 
-### uuidgen Integration Test Suite (Current Task)
+### hashcalc Comprehensive Test Suite (Current Session)
+- **Date:** Current session
+- **Status:** Complete ✓
+- **Outcome:** Comprehensive test suite expanded to 67 tests covering all CLI features, edge cases, and error scenarios
+
+#### Tests Written (67 total):
+
+1. **Unit Tests for hash_content function (13 tests)**
+   - Simple strings (hello world, hello, consistency)
+   - Empty strings
+   - Known hashes verification
+   - Consistency across multiple calls
+   - Binary data hashing
+   - Large data (1MB) handling
+   - SHA1, MD5, SHA512 algorithms
+   - Base64 encoding variants (padding, no padding, special bytes)
+   - Very long strings (10,000 chars)
+   - Unicode content handling
+   - Newlines and tabs in content
+   - Multiple different length strings (produce different hashes)
+
+2. **Unit Tests for read_file_contents function (6 tests)**
+   - Simple file reading
+   - Empty files
+   - File not found error handling
+   - Binary file reading
+   - Files with newlines
+   - Large files (100KB)
+
+3. **CLI Text Mode Tests (12 tests)**
+   - Basic text hashing (hello, empty string, hello world)
+   - Special character handling (!@#$%^&*())
+   - Multiple spaces in text
+   - Numeric strings (1234567890)
+   - Single character strings
+   - Different inputs produce different hashes
+   - Consistency across runs
+   - Spaces and whitespace handling
+
+4. **CLI File Mode Tests (9 tests)**
+   - Simple file hashing via --file
+   - Short option variant (-f)
+   - Empty file hashing
+   - Binary file hashing
+   - File mode with SHA1, MD5, SHA512 algorithms
+   - File mode with Base64
+   - Multiple algorithm runs on same file
+
+5. **Algorithm Support Tests (8 tests)**
+   - Default algorithm is SHA256
+   - SHA1 with known hash validation
+   - MD5 with known hash validation
+   - SHA512 with length validation
+   - Base64 encoding validation
+   - Invalid algorithm error handling
+   - Case-sensitive algorithm handling
+   - Multiple algorithms on same text
+
+6. **Error & Mutual Exclusivity Tests (8 tests)**
+   - Both text and --file provided → error
+   - Neither text nor --file provided → error
+   - File not found error messaging
+   - Invalid algorithm with file mode
+   - All error cases exit with code 1
+   - Clear error messages verified
+
+7. **Exit Code Validation Tests (4 tests)**
+   - Success case: exit code 0
+   - File error: exit code 1
+   - Mutual exclusivity error: exit code 1
+   - No args error: exit code 1
+
+8. **Output Format Tests (3 tests)**
+   - Hex output format (64 characters for SHA256, lowercase)
+   - Hex format for different algorithms (40 for SHA1, 32 for MD5, 128 for SHA512)
+   - Single-line output validation
+
+9. **Consistency & Equivalence Tests (4 tests)**
+   - Same input produces same hash (runs twice)
+   - File and text modes produce equivalent hashes for same content
+   - Text and file produce different hashes for different content
+   - File content preserved across multiple algorithm runs
+
+**Total Tests:** 67 (all passing ✓)
+
+#### Test Coverage Summary
+
+✓ Text mode (12 scenarios including edge cases)
+✓ File mode (9 scenarios including all algorithms)
+✓ All 5 algorithms (SHA1, MD5, SHA256, SHA512, Base64)
+✓ Algorithm selection (default, explicit, invalid)
+✓ Mutual exclusivity enforcement
+✓ File I/O errors (not found, permission denied paths tested)
+✓ Exit codes (success = 0, errors = 1)
+✓ Output format validation
+✓ Consistency checks
+✓ Edge cases (empty strings, very long strings, unicode, special chars, binary data)
+✓ Large file handling (100KB+)
+✓ Base64 padding variants
+✓ Algorithm case sensitivity
+
+#### Implementation Notes
+- **Fixed dependency:** Updated sha2 version from 0.11.0-rc.5 to 0.10.9 for compatibility
+- **Test Location:** `src/bin/hashcalc/main.rs` - inline test module with #[cfg(test)]
+- **Approach:** Mixed unit tests (testing individual functions) and CLI integration tests (spawning cargo run)
+- **File Handling:** Uses temporary files with create/cleanup pattern for isolation
+- **Architecture:** Helper functions (create_temp_file, cleanup_temp_file) for DRY test setup
+
+#### Build Status
+- ✓ All 67 tests pass in debug mode
+- ✓ Release build succeeds
+- ✓ No compiler warnings
+- ✓ All dependencies compile successfully
+
+
+
+---
+
+### uuidgen Integration Test Suite (Previous Session)
 - **Date:** Current session
 - **Status:** Complete ✓
 - **Outcome:** Created comprehensive integration test suite with 46 tests covering all Marcus's bug fixes
