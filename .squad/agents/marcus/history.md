@@ -32,3 +32,43 @@
 ✅ V6 seed now correctly applies parsed node values
 ✅ Template errors handled gracefully
 ✅ Generated 300 UUIDs successfully (u32 count works)
+
+## Session 2: hashcalc File Input Feature
+
+### Implementation
+
+Modified `src/bin/hashcalc/main.rs` to add optional file hashing capability:
+
+1. **Optional text parameter** - Changed `text: String` to `text: Option<String>`, making text input optional.
+
+2. **File input option** - Added `file: Option<String>` with `#[arg(short, long)]` to support `-f` / `--file` flag.
+
+3. **Idiomatic error handling** - Implemented `read_file_contents()` function using `fs::read()` with context-aware error mapping:
+   - `NotFound`: "File not found: {path}"
+   - `PermissionDenied`: "Permission denied: {path}"
+   - `InvalidData`: "Invalid file data: {path}"
+   - Default: Generic error with message
+
+4. **Input validation** - Match expression on `(&args.text, &args.file)` tuple:
+   - Text only: hash text bytes
+   - File only: read and hash file bytes
+   - Both: error with exit code 1
+   - Neither: error with exit code 1
+
+5. **Help text** - Updated doc comment and clap directives for clarity.
+
+### Testing
+
+✅ Text input: `hashcalc "hello world"` produces correct SHA256
+✅ File input: `hashcalc --file testfile.txt` reads and hashes file contents
+✅ File not found: Graceful error message, exit code 1
+✅ Both arguments: Clear error message preventing ambiguity
+✅ No arguments: Prompts user to provide either option
+✅ Build: Zero warnings/errors
+
+### Learnings & Patterns
+
+- **Optional inputs with validation**: Use tuple matching on multiple `Option` types for exhaustive input validation.
+- **Idiomatic error mapping**: `fs::read().map_err()` with `io::ErrorKind` match for user-friendly messages.
+- **Content normalization**: Work with `Vec<u8>` for both text and file content to maintain uniform hashing logic.
+- **Exit codes**: Use `std::process::exit(1)` for user input errors (distinct from panics).
