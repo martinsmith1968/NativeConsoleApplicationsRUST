@@ -250,3 +250,15 @@ This allows both trait methods to be available through explicit qualification wh
 ### Key Files Modified
 
 - `src/bin/hashcalc/main.rs` - Import conflict resolution only (feature already implemented)
+
+## Learnings
+
+- Architecture: keep CLI parsing minimal in main.rs and delegate hashing to `src/bin/hashcalc/hashers/*`. This separation made the output-format change low risk.
+- Patterns: prefer small focused functions (e.g., read_file_contents) and central dispatcher `hash_content()` for algorithms.
+- User preferences: human-friendly single-line output format `{input} [{algorithm}] : {hash}`; algorithm shown lowercase; file outputs use filename only.
+- Key paths:
+  - src/bin/hashcalc/main.rs (CLI + orchestration)
+  - src/bin/hashcalc/hashers/ (algorithm implementations)
+  - .squad/agents/marcus/history.md (this file)
+
+
