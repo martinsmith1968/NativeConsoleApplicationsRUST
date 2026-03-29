@@ -22,6 +22,10 @@ struct Args {
     #[arg(short, long)]
     file: Option<String>,
 
+    /// Write output to file instead of stdout (requires --file)
+    #[arg(short = 'w', long)]
+    write: bool,
+
     /// Hash algorithm to use: sha1, md5, sha256, sha512, base64
     #[arg(short, long, default_value = "sha256")]
     algorithm: String,
@@ -62,6 +66,16 @@ fn main() {
 
     match hash_content(&content_bytes, &args.algorithm) {
         Ok(hash_output) => {
+            // Validate write flag usage
+            if args.write && args.file.is_none() {
+                eprintln!("Error: --write requires --file");
+                std::process::exit(1);
+            }
+            if args.write && args.text.is_some() {
+                eprintln!("Error: --write cannot be used with --text");
+                std::process::exit(1);
+            }
+
             let identifier = match (&args.text, &args.file) {
                 (Some(text), None) => text.clone(),
                 (None, Some(file_path)) => {
@@ -73,7 +87,27 @@ fn main() {
                 },
                 _ => String::new(),
             };
-            println!("{} [{}] : {}", identifier, args.algorithm.to_lowercase(), hash_output);
+
+            let output_line = format!("{} [{}] : {}", identifier, args.algorithm.to_lowercase(), hash_output);
+
+            if args.write {
+                // Construct output path in same directory with {filename}.{algorithm}
+                let input_path = std::path::Path::new(args.file.as_ref().unwrap());
+                let dir = input_path.parent().unwrap_or_else(|| std::path::Path::new("."));
+                let file_name = input_path.file_name().and_then(|s| s.to_str()).unwrap_or("output");
+                let alg = args.algorithm.to_lowercase();
+                let out_file_name = format!("{}.{}", file_name, alg);
+                let out_path = dir.join(out_file_name);
+
+                if let Err(e) = fs::write(&out_path, output_line.as_bytes()) {
+                    eprintln!("Error writing to file '{}': {}", out_path.display(), e);
+                    std::process::exit(1);
+                }
+                // Success: exit quietly
+                return;
+            }
+
+            println!("{}", output_line);
         }
         Err(e) => {
             eprintln!("Error: {}", e);
@@ -390,6 +424,62 @@ mod tests {
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(stdout.contains("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"));
+        cleanup_temp_file(&path);
+    }
+
+    #[test]
+    fn test_cli_write_flag_writes_file() {
+        let path = create_temp_file("write_test.txt", b"hello");
+        let abs_path = std::fs::canonicalize(&path).unwrap();
+        let dir = std::fs::canonicalize(".").unwrap();
+
+        let output = Command::new("cargo")
+            .args(&["run", "--bin", "hashcalc", "--", "--file", abs_path.to_str().unwrap(), "-a", "sha1", "-w"]) 
+            .output()
+            .expect("Failed to run hashcalc");
+
+        // Should exit success and not print to stdout
+        assert!(output.status.success());
+        assert!(output.stdout.is_empty());
+
+        // Determine expected output file name based on input file_name
+        let input_file_name = path.file_name().and_then(|s| s.to_str()).unwrap();
+        let expected_out = format!("{}.{}", input_file_name, "sha1");
+        let out_path = dir.join(&expected_out);
+
+        assert!(out_path.exists());
+        let contents = fs::read_to_string(&out_path).unwrap();
+        assert!(contents.contains(&format!("{} [sha1] :", input_file_name)));
+
+        // cleanup
+        let _ = fs::remove_file(out_path);
+        cleanup_temp_file(&path);
+    }
+
+    #[test]
+    fn test_cli_write_without_file_errors() {
+        let output = Command::new("cargo")
+            .args(&["run", "--bin", "hashcalc", "--", "-w", "-t", "hello"]) 
+            .output()
+            .expect("Failed to run hashcalc");
+
+        assert!(!output.status.success());
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(stderr.contains("--write requires --file") || stderr.contains("--write cannot be used with --text"));
+    }
+
+    #[test]
+    fn test_cli_write_with_text_errors() {
+        let path = create_temp_file("write_conflict.txt", b"hello");
+        
+        let output = Command::new("cargo")
+            .args(&["run", "--bin", "hashcalc", "--", "-t", "hello", "-w"]) 
+            .output()
+            .expect("Failed to run hashcalc");
+
+        assert!(!output.status.success());
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(stderr.contains("--write cannot be used with --text") || stderr.contains("--write requires --file"));
         cleanup_temp_file(&path);
     }
 

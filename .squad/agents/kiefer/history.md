@@ -35,3 +35,21 @@ Marcus refactored hashcalc into a modular architecture with dedicated hasher mod
 ### Previous Session: Hasher Module Refactoring Review (Current Session)
 
 
+### Review: --write flag for hashcalc
+
+**Date:** 2026-03-29T00:00:00Z  
+**Verdict:** Approved ✓  
+**Reviewer:** Kiefer (Lead)
+
+Marcus implemented the -w / --write flag to write hash output to a file alongside robust validations and tests. Findings:
+
+- CLI: clap-based args are clear; -w is exposed as -w/--write and validated (requires --file, disallows --text).
+- File I/O: output path constructed in the input file's directory; errors from fs::write are reported via eprintln with exit code 1.
+- Output format: matches existing pattern "{filename} [{algorithm}] : {hash}" and tests verify formatting.
+- Tests: three integration tests added covering success and both error conditions; all tests (70) pass locally.
+- Rust quality: idiomatic error handling, no unsafe unwraps in production paths; helper unwraps in tests are acceptable.
+
+Minor suggestion: consider Path::with_extension or preserving original extension if desired, but current behavior matches spec.
+
+**Conclusion:** ✅ APPROVED — Implementation is correct, well-tested, and ready to commit.
+

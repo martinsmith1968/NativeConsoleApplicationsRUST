@@ -261,4 +261,6 @@ This allows both trait methods to be available through explicit qualification wh
   - src/bin/hashcalc/hashers/ (algorithm implementations)
   - .squad/agents/marcus/history.md (this file)
 
+- Added --write (-w) option to hashcalc to write output to a sidecar file named `{input_filename}.{algorithm}` in the same directory as the input. Implemented in src\bin\hashcalc\main.rs and covered by integration tests.
+- Output format for written files mirrors stdout: `{filename} [{algorithm}] : {hash}`. Errors surface with clear messages and non-zero exit codes on misuse or write failures.
 
