@@ -34,7 +34,7 @@ enum UUIDType {
 struct Args {
     /// Number of times to generate
     #[arg(short = 'c', long, default_value_t = 1)]
-    count: u8,
+    count: u32,
 
     /// The type of UUID to generate
     #[arg(short = 't', long, default_value = "guid")]
@@ -87,35 +87,28 @@ fn main() {
 }
 
 fn generate_uuid(args: &Args) -> String {
-    if args.uuid_type == UUIDType::Guid {
-        let format_options = FormatOptions {
-            hyphenated: !args.non_hyphenated,
-            uppercase: args.uppercase,
-        };
+    match args.uuid_type {
+        UUIDType::Guid => {
+            let format_options = FormatOptions {
+                hyphenated: !args.non_hyphenated,
+                uppercase: args.uppercase,
+            };
 
-        let generate_options = GuidGenerateOptions {
-            guid_version: args.guid_version,
-            v6_seed: args.guid_v6_seed.clone(),
-        };
+            let generate_options = GuidGenerateOptions {
+                guid_version: args.guid_version,
+                v6_seed: args.guid_v6_seed.clone(),
+            };
 
-        let uuid = generate_guid(generate_options);
-        let uuid_formatted = format_guid(&uuid, &format_options);
-
-        return uuid_formatted.clone();
+            let uuid = generate_guid(generate_options);
+            format_guid(&uuid, &format_options)
+        }
+        UUIDType::NanoId => generate_nanoid(args.nanoid_length),
     }
-
-    if args.uuid_type == UUIDType::NanoId {
-        let uuid = generate_nanoid(args.nanoid_length);
-
-        return uuid.clone();
-    }
-
-    String::new()
 }
 
 fn generate_guid(options: GuidGenerateOptions) -> Uuid {
     if options.guid_version == GuidVersionType::V6 {
-        let node = &[1, 2, 3, 4, 5, 6];
+        let mut node = [1u8; 6];
 
         if !options.v6_seed.is_empty() {
             let mut seed_values: Vec<u8> = Vec::new();
@@ -129,7 +122,9 @@ fn generate_guid(options: GuidGenerateOptions) -> Uuid {
             }
 
             if seed_values.len() == 6 {
-                let _node: &[u8] = &seed_values;
+                for (i, &val) in seed_values.iter().enumerate() {
+                    node[i] = val;
+                }
             }
 
             if invalid_values.len() > 0 {
@@ -140,7 +135,7 @@ fn generate_guid(options: GuidGenerateOptions) -> Uuid {
             }
         }
 
-        return Uuid::now_v6(node);
+        return Uuid::now_v6(&node);
     }
 
     if options.guid_version == GuidVersionType::V7 {
@@ -151,9 +146,7 @@ fn generate_guid(options: GuidGenerateOptions) -> Uuid {
 }
 
 fn generate_nanoid(nanoid_length: usize) -> String {
-    let uuid = nanoid!(nanoid_length);
-
-    uuid
+    nanoid!(nanoid_length)
 }
 
 fn format_guid(uuid: &Uuid, format_options: &FormatOptions) -> String {
@@ -172,16 +165,20 @@ fn format_guid(uuid: &Uuid, format_options: &FormatOptions) -> String {
     value
 }
 
-fn format_output(output_format: &String, formatted_uuid: &String, sequence: u8) -> String {
+fn format_output(output_format: &str, formatted_uuid: &str, sequence: u32) -> String {
     if output_format.is_empty() {
-        return formatted_uuid.clone();
+        return formatted_uuid.to_string();
     }
 
     let mut vars = HashMap::new();
     vars.insert("sequence".to_string(), sequence.to_string());
     vars.insert("uuid".to_string(), formatted_uuid.to_string());
 
-    let result = strfmt(&output_format, &vars).unwrap();
-
-    result
+    match strfmt(output_format, &vars) {
+        Ok(result) => result,
+        Err(e) => {
+            eprintln!("Error: Invalid output template - {}", e);
+            formatted_uuid.to_string()
+        }
+    }
 }
