@@ -30,7 +30,6 @@ struct Args {
     //hash_type: HashType,
 
     /// The text to generate a hash for
-    #[arg(short = 't', long)]
     text: String
 }
 
