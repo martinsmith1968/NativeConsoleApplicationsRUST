@@ -70,18 +70,10 @@ struct FormatOptions {
     uppercase: bool,
 }
 
+#[derive(Clone)]
 struct GuidGenerateOptions {
     guid_version: GuidVersionType,
     v6_seed: String,
-}
-
-impl Clone for GuidGenerateOptions {
-    fn clone(&self) -> Self {
-        GuidGenerateOptions {
-            guid_version: self.guid_version,
-            v6_seed: self.v6_seed.clone(),
-        }
-    }
 }
 
 fn main() {
@@ -123,10 +115,10 @@ fn generate_guid(options: GuidGenerateOptions) -> Uuid {
             let mut seed_values: Vec<u8> = Vec::new();
             let mut invalid_values: Vec<&str> = Vec::new();
 
-            for str in options.v6_seed.split(",") {
-                match str.trim().parse::<u8>() {
+            for s in options.v6_seed.split(",") {
+                match s.trim().parse::<u8>() {
                     Ok(value) => seed_values.push(value),
-                    Err(_) => invalid_values.push(&str),
+                    Err(_) => invalid_values.push(s),
                 };
             }
 
@@ -137,7 +129,7 @@ fn generate_guid(options: GuidGenerateOptions) -> Uuid {
             }
 
             if invalid_values.len() > 0 {
-                println!(
+                eprintln!(
                     "Warning: unable to use seed values - {}",
                     invalid_values.join(", ")
                 );
