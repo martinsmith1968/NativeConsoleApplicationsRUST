@@ -34,6 +34,10 @@
 - [ ] Invoke via CI
 - [ ] Add Windows File Properties
   - See : https://stackoverflow.com/questions/74509880/add-exe-file-details-to-binary-of-compiled-rust-code
+  -     : https://github.com/BenjaminRi/winresource
+  -     : https://crates.io/crates/windows_exe_info
+  -     : https://doc.rust-lang.org/cargo/reference/build-scripts.html
+  -     : https://www.40tude.fr/docs/06_programmation/rust/014_build_system/from_src_to_exe.html
 
 ### UUIDGen
 
