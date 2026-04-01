@@ -11,7 +11,8 @@ fn main() {
         for binary in binaries {
             let mut res = winresource::WindowsResource::new();
 
-            let build_dir = env::var("CARGO_MANIFEST_DIR  ").unwrap_or_else(|_e| env::current_dir().unwrap().display().to_string());
+            let build_dir = env::var("CARGO_MANIFEST_DIR")
+                .unwrap_or_else(|_e| env::current_dir().unwrap().display().to_string());
 
             let icon_file = Path::new(&build_dir)
                 .join("src")
