@@ -4,10 +4,9 @@ use std::env;
 use std::path::Path;
 
 fn main() {
-    let binaries = [ "uuidgen", "hashcalc" ];
+    let binaries = ["uuidgen", "hashcalc"];
 
     if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "windows" {
-
         for binary in binaries {
             let mut res = winresource::WindowsResource::new();
 
