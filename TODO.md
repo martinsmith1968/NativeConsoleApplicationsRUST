@@ -19,6 +19,7 @@
   - https://blog.urth.org/2023/03/05/cross-compiling-rust-projects-in-github-actions/
   - https://eertmans.be/posts/rust-binaries-to-github-action/
   - https://www.reddit.com/r/rust/comments/ga80lj/example_github_actions_with_rust_build_test/
+  - https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
 - [ ] Project / Solution Structure for Executables, libraries, tests, externals, etc
   - i.e. Support multiple cargo targets 
 - [ ] Tests
@@ -34,6 +35,10 @@
 - [ ] Invoke via CI
 - [ ] Add Windows File Properties
   - See : https://stackoverflow.com/questions/74509880/add-exe-file-details-to-binary-of-compiled-rust-code
+  -     : https://github.com/BenjaminRi/winresource
+  -     : https://crates.io/crates/windows_exe_info
+  -     : https://doc.rust-lang.org/cargo/reference/build-scripts.html
+  -     : https://www.40tude.fr/docs/06_programmation/rust/014_build_system/from_src_to_exe.html
 
 ### UUIDGen
 

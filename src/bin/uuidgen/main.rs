@@ -198,10 +198,13 @@ mod tests {
         };
 
         let uuid = generate_guid(options);
-        let formatted = format_guid(&uuid, &FormatOptions {
-            hyphenated: true,
-            uppercase: false,
-        });
+        let formatted = format_guid(
+            &uuid,
+            &FormatOptions {
+                hyphenated: true,
+                uppercase: false,
+            },
+        );
 
         // V4 UUIDs should be 36 characters with hyphens
         assert_eq!(formatted.len(), 36);
@@ -217,10 +220,13 @@ mod tests {
         };
 
         let uuid = generate_guid(options);
-        let formatted = format_guid(&uuid, &FormatOptions {
-            hyphenated: true,
-            uppercase: false,
-        });
+        let formatted = format_guid(
+            &uuid,
+            &FormatOptions {
+                hyphenated: true,
+                uppercase: false,
+            },
+        );
 
         // Verify hyphens at correct positions
         assert_eq!(formatted.chars().nth(8).unwrap(), '-');
@@ -237,10 +243,13 @@ mod tests {
         };
 
         let uuid = generate_guid(options);
-        let formatted = format_guid(&uuid, &FormatOptions {
-            hyphenated: false,
-            uppercase: false,
-        });
+        let formatted = format_guid(
+            &uuid,
+            &FormatOptions {
+                hyphenated: false,
+                uppercase: false,
+            },
+        );
 
         // Non-hyphenated should be 32 characters
         assert_eq!(formatted.len(), 32);
@@ -258,13 +267,19 @@ mod tests {
         };
 
         let uuid = generate_guid(options);
-        let formatted = format_guid(&uuid, &FormatOptions {
-            hyphenated: true,
-            uppercase: true,
-        });
+        let formatted = format_guid(
+            &uuid,
+            &FormatOptions {
+                hyphenated: true,
+                uppercase: true,
+            },
+        );
 
         // Check that all hex digits are uppercase
-        let hex_chars: String = formatted.chars().filter(|c| c.is_ascii_hexdigit()).collect();
+        let hex_chars: String = formatted
+            .chars()
+            .filter(|c| c.is_ascii_hexdigit())
+            .collect();
         assert_eq!(hex_chars, hex_chars.to_uppercase());
     }
 
@@ -276,13 +291,19 @@ mod tests {
         };
 
         let uuid = generate_guid(options);
-        let formatted = format_guid(&uuid, &FormatOptions {
-            hyphenated: true,
-            uppercase: false,
-        });
+        let formatted = format_guid(
+            &uuid,
+            &FormatOptions {
+                hyphenated: true,
+                uppercase: false,
+            },
+        );
 
         // Check that all hex digits are lowercase
-        let hex_chars: String = formatted.chars().filter(|c| c.is_ascii_hexdigit()).collect();
+        let hex_chars: String = formatted
+            .chars()
+            .filter(|c| c.is_ascii_hexdigit())
+            .collect();
         assert_eq!(hex_chars, hex_chars.to_lowercase());
     }
 
@@ -312,15 +333,21 @@ mod tests {
         };
 
         let uuid = generate_guid(options);
-        let formatted = format_guid(&uuid, &FormatOptions {
-            hyphenated: false,
-            uppercase: true,
-        });
+        let formatted = format_guid(
+            &uuid,
+            &FormatOptions {
+                hyphenated: false,
+                uppercase: true,
+            },
+        );
 
         // Should be 32 chars, no hyphens, uppercase
         assert_eq!(formatted.len(), 32);
         assert!(!formatted.contains('-'));
-        let hex_chars: String = formatted.chars().filter(|c| c.is_ascii_hexdigit()).collect();
+        let hex_chars: String = formatted
+            .chars()
+            .filter(|c| c.is_ascii_hexdigit())
+            .collect();
         assert_eq!(hex_chars, hex_chars.to_uppercase());
     }
 
@@ -334,15 +361,21 @@ mod tests {
         };
 
         let uuid = generate_guid(options);
-        let formatted = format_guid(&uuid, &FormatOptions {
-            hyphenated: true,
-            uppercase: false,
-        });
+        let formatted = format_guid(
+            &uuid,
+            &FormatOptions {
+                hyphenated: true,
+                uppercase: false,
+            },
+        );
 
         // V6 UUIDs should be 36 characters with hyphens
         assert_eq!(formatted.len(), 36);
         // Should be valid hex
-        let hex_chars: String = formatted.chars().filter(|c| c.is_ascii_hexdigit()).collect();
+        let hex_chars: String = formatted
+            .chars()
+            .filter(|c| c.is_ascii_hexdigit())
+            .collect();
         assert!(hex_chars.len() > 0);
     }
 
@@ -494,15 +527,21 @@ mod tests {
         };
 
         let uuid = generate_guid(options);
-        let formatted = format_guid(&uuid, &FormatOptions {
-            hyphenated: true,
-            uppercase: false,
-        });
+        let formatted = format_guid(
+            &uuid,
+            &FormatOptions {
+                hyphenated: true,
+                uppercase: false,
+            },
+        );
 
         // V7 UUIDs should be 36 characters with hyphens
         assert_eq!(formatted.len(), 36);
         // Should be valid hex
-        let hex_chars: String = formatted.chars().filter(|c| c.is_ascii_hexdigit()).collect();
+        let hex_chars: String = formatted
+            .chars()
+            .filter(|c| c.is_ascii_hexdigit())
+            .collect();
         assert!(hex_chars.len() > 0);
     }
 
@@ -529,9 +568,11 @@ mod tests {
         // Default NanoID should be 21 characters
         assert_eq!(nanoid.len(), 21);
         // Should only contain valid NanoID characters (0-9, A-Z, a-z, -, _)
-        assert!(nanoid.chars().all(|c| {
-            c.is_ascii_alphanumeric() || c == '-' || c == '_'
-        }));
+        assert!(
+            nanoid
+                .chars()
+                .all(|c| { c.is_ascii_alphanumeric() || c == '-' || c == '_' })
+        );
     }
 
     #[test]
@@ -548,9 +589,11 @@ mod tests {
 
         // Should handle large lengths
         assert_eq!(nanoid.len(), 100);
-        assert!(nanoid.chars().all(|c| {
-            c.is_ascii_alphanumeric() || c == '-' || c == '_'
-        }));
+        assert!(
+            nanoid
+                .chars()
+                .all(|c| { c.is_ascii_alphanumeric() || c == '-' || c == '_' })
+        );
     }
 
     #[test]
@@ -559,9 +602,11 @@ mod tests {
 
         // Should handle very long lengths
         assert_eq!(nanoid.len(), 255);
-        assert!(nanoid.chars().all(|c| {
-            c.is_ascii_alphanumeric() || c == '-' || c == '_'
-        }));
+        assert!(
+            nanoid
+                .chars()
+                .all(|c| { c.is_ascii_alphanumeric() || c == '-' || c == '_' })
+        );
     }
 
     #[test]
@@ -599,7 +644,10 @@ mod tests {
         let uuid = "550e8400-e29b-41d4-a716-446655440000";
         let result = format_output(template, uuid, 5);
 
-        assert_eq!(result, "Sequence 5: UUID 550e8400-e29b-41d4-a716-446655440000");
+        assert_eq!(
+            result,
+            "Sequence 5: UUID 550e8400-e29b-41d4-a716-446655440000"
+        );
     }
 
     #[test]
@@ -649,7 +697,10 @@ mod tests {
         let uuid = "550e8400-e29b-41d4-a716-446655440000";
         let result = format_output(template, uuid, 1);
 
-        assert_eq!(result, "550e8400-e29b-41d4-a716-446655440000-550e8400-e29b-41d4-a716-446655440000");
+        assert_eq!(
+            result,
+            "550e8400-e29b-41d4-a716-446655440000-550e8400-e29b-41d4-a716-446655440000"
+        );
     }
 
     #[test]
@@ -676,7 +727,10 @@ mod tests {
             });
         }
 
-        let uuids: Vec<_> = options_list.iter().map(|opt| generate_guid(opt.clone())).collect();
+        let uuids: Vec<_> = options_list
+            .iter()
+            .map(|opt| generate_guid(opt.clone()))
+            .collect();
 
         // Should generate 5 UUIDs
         assert_eq!(uuids.len(), 5);
@@ -699,7 +753,10 @@ mod tests {
             });
         }
 
-        let uuids: Vec<_> = options_list.iter().map(|opt| generate_guid(opt.clone())).collect();
+        let uuids: Vec<_> = options_list
+            .iter()
+            .map(|opt| generate_guid(opt.clone()))
+            .collect();
 
         // Should generate 100 UUIDs
         assert_eq!(uuids.len(), 100);
@@ -716,7 +773,10 @@ mod tests {
             });
         }
 
-        let uuids: Vec<_> = options_list.iter().map(|opt| generate_guid(opt.clone())).collect();
+        let uuids: Vec<_> = options_list
+            .iter()
+            .map(|opt| generate_guid(opt.clone()))
+            .collect();
 
         // Should generate 1000 UUIDs (validates u32 count support)
         assert_eq!(uuids.len(), 1000);
@@ -732,15 +792,21 @@ mod tests {
         };
 
         let uuid = generate_guid(options);
-        let formatted = format_guid(&uuid, &FormatOptions {
-            hyphenated: true,
-            uppercase: true,
-        });
+        let formatted = format_guid(
+            &uuid,
+            &FormatOptions {
+                hyphenated: true,
+                uppercase: true,
+            },
+        );
 
         // Should have hyphens
         assert!(formatted.contains('-'));
         // Should be uppercase
-        let hex_chars: String = formatted.chars().filter(|c| c.is_ascii_hexdigit()).collect();
+        let hex_chars: String = formatted
+            .chars()
+            .filter(|c| c.is_ascii_hexdigit())
+            .collect();
         assert_eq!(hex_chars, hex_chars.to_uppercase());
     }
 
@@ -752,15 +818,21 @@ mod tests {
         };
 
         let uuid = generate_guid(options);
-        let formatted = format_guid(&uuid, &FormatOptions {
-            hyphenated: false,
-            uppercase: false,
-        });
+        let formatted = format_guid(
+            &uuid,
+            &FormatOptions {
+                hyphenated: false,
+                uppercase: false,
+            },
+        );
 
         // Should not have hyphens
         assert!(!formatted.contains('-'));
         // Should be lowercase
-        let hex_chars: String = formatted.chars().filter(|c| c.is_ascii_hexdigit()).collect();
+        let hex_chars: String = formatted
+            .chars()
+            .filter(|c| c.is_ascii_hexdigit())
+            .collect();
         assert_eq!(hex_chars, hex_chars.to_lowercase());
     }
 
@@ -772,15 +844,21 @@ mod tests {
         };
 
         let uuid = generate_guid(options);
-        let formatted = format_guid(&uuid, &FormatOptions {
-            hyphenated: false,
-            uppercase: true,
-        });
+        let formatted = format_guid(
+            &uuid,
+            &FormatOptions {
+                hyphenated: false,
+                uppercase: true,
+            },
+        );
 
         // Should not have hyphens
         assert!(!formatted.contains('-'));
         // Should be uppercase
-        let hex_chars: String = formatted.chars().filter(|c| c.is_ascii_hexdigit()).collect();
+        let hex_chars: String = formatted
+            .chars()
+            .filter(|c| c.is_ascii_hexdigit())
+            .collect();
         assert_eq!(hex_chars, hex_chars.to_uppercase());
     }
 
@@ -792,15 +870,21 @@ mod tests {
         };
 
         let uuid = generate_guid(options);
-        let formatted = format_guid(&uuid, &FormatOptions {
-            hyphenated: true,
-            uppercase: false,
-        });
+        let formatted = format_guid(
+            &uuid,
+            &FormatOptions {
+                hyphenated: true,
+                uppercase: false,
+            },
+        );
 
         // Should have hyphens
         assert!(formatted.contains('-'));
         // Should be lowercase
-        let hex_chars: String = formatted.chars().filter(|c| c.is_ascii_hexdigit()).collect();
+        let hex_chars: String = formatted
+            .chars()
+            .filter(|c| c.is_ascii_hexdigit())
+            .collect();
         assert_eq!(hex_chars, hex_chars.to_lowercase());
     }
 
@@ -909,7 +993,11 @@ mod tests {
         // Should be valid V4 UUID format
         assert_eq!(uuid_formatted.len(), 36);
         assert!(uuid_formatted.contains('-'));
-        assert!(uuid_formatted.chars().all(|c| c.is_ascii_hexdigit() || c == '-'));
+        assert!(
+            uuid_formatted
+                .chars()
+                .all(|c| c.is_ascii_hexdigit() || c == '-')
+        );
     }
 
     #[test]
@@ -949,7 +1037,11 @@ mod tests {
 
         // Should be valid NanoID
         assert_eq!(nanoid.len(), 21);
-        assert!(nanoid.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_'));
+        assert!(
+            nanoid
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        );
     }
 
     #[test]

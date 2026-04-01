@@ -1,14 +1,14 @@
-pub mod sha1;
+pub mod base64;
 pub mod md5;
+pub mod sha1;
 pub mod sha256;
 pub mod sha512;
-pub mod base64;
 
-pub use self::sha1::hash as sha1;
+pub use self::base64::hash as base64;
 pub use self::md5::hash as md5;
+pub use self::sha1::hash as sha1;
 pub use self::sha256::hash as sha256;
 pub use self::sha512::hash as sha512;
-pub use self::base64::hash as base64;
 
 pub fn hash_content(content_bytes: &[u8], algorithm: &str) -> Result<String, String> {
     match algorithm {

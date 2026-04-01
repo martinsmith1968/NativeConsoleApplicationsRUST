@@ -1,4 +1,4 @@
-use sha2::{Sha512, Digest};
+use sha2::{Digest, Sha512};
 
 pub fn hash(data: &[u8]) -> Result<String, String> {
     let mut hasher = Sha512::new();
