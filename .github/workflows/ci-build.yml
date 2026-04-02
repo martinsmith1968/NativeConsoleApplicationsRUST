@@ -139,8 +139,9 @@ jobs:
     strategy:
       matrix:
         os: [ 'windows-latest', 'ubuntu-latest' ]
+        arch: [ 'x64' ]
 
-    name: Build - ${{ matrix.application }} ${{ matrix.dotnet-version }} ${{ matrix.os }}
+    name: Build - ${{ matrix.os }}
 
     needs: setup
 
@@ -154,6 +155,12 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: rustfmt
+
+      - name: Show Rust Version
+        run: rustc --version
+
+      - name: Show Rust Available Targets
+        run: rustc --print target-list
 
       - name: Rustfmt Check
         uses: actions-rust-lang/rustfmt@v1
@@ -241,6 +248,9 @@ jobs:
 
       - name: Build
         run: cargo build --bins --release --verbose --target-dir ${{ env.TARGET_BUILD_OUTPUT_FOLDER }}
+
+      - name: Check Build Output
+        run: sigcheck uuidgen.exe (Requires SysInternals)
 
       - name: Run tests
         run: cargo test --verbose --release

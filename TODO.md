@@ -20,6 +20,11 @@
   - https://eertmans.be/posts/rust-binaries-to-github-action/
   - https://www.reddit.com/r/rust/comments/ga80lj/example_github_actions_with_rust_build_test/
   - https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
+  - https://codefresh.io/learn/github-actions/github-actions-matrix/
+  - https://runs-on.com/github-actions/the-matrix-strategy/
+  - https://medium.com/credera-engineering/matrix-strategies-in-github-actions-56dd6defeb04
+  - https://oneuptime.com/blog/post/2025-12-20-github-actions-matrix-include-exclude/view
+  - https://users.rust-lang.org/t/how-to-build-both-32-and-64-bit-app-on-windows/26365/2
 - [ ] Project / Solution Structure for Executables, libraries, tests, externals, etc
   - i.e. Support multiple cargo targets 
 - [ ] Tests
