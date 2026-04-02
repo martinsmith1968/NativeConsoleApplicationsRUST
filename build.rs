@@ -6,12 +6,13 @@ use std::path::Path;
 fn main() {
     let binaries = ["uuidgen", "hashcalc"];
 
-    if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "windows" {
+    if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "windows-disabled" {
         for binary in binaries {
             let mut res = winresource::WindowsResource::new();
 
             let build_dir = env::var("CARGO_MANIFEST_DIR")
                 .unwrap_or_else(|_e| env::current_dir().unwrap().display().to_string());
+            println!("cargo:warning=Using Build Dir: {}", build_dir);
 
             let icon_file = Path::new(&build_dir)
                 .join("src")
@@ -19,8 +20,7 @@ fn main() {
                 .join(binary)
                 .join("app.ico");
 
-            println!("cargo:warning=Checking: {}/{}", binary, icon_file.display());
-            println!("Checking: {}", icon_file.display());
+            println!("cargo:warning=Checking: {}: {} - {}", binary, icon_file.display(), icon_file.exists());
             if icon_file.exists() {
                 println!("Setting APP Icon: {}", icon_file.display());
                 println!("cargo:rerun-if-changed={}", icon_file.display());
