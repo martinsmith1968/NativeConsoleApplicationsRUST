@@ -20,7 +20,12 @@ fn main() {
                 .join(binary)
                 .join("app.ico");
 
-            println!("cargo:warning=Checking: {}: {} - {}", binary, icon_file.display(), icon_file.exists());
+            println!(
+                "cargo:warning=Checking: {}: {} - {}",
+                binary,
+                icon_file.display(),
+                icon_file.exists()
+            );
             if icon_file.exists() {
                 println!("Setting APP Icon: {}", icon_file.display());
                 println!("cargo:rerun-if-changed={}", icon_file.display());
