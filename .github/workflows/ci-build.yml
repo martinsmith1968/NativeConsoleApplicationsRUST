@@ -292,6 +292,8 @@ jobs:
 
     - name: Build Changelog
       uses: mikepenz/release-changelog-builder-action@v5
+      with:
+        failOnError: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
