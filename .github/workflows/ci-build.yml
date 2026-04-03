@@ -2,7 +2,7 @@ name: CI Build
 run-name: CIBuild_${{ github.event_name }}_${{ github.ref_name }}_${{ github.run_number }}.${{ github.run_attempt }}
 
 env:
-  PRIMARY_BRANCH_NAME: master
+  PRIMARY_BRANCH_NAME: main
   APP_MAJOR_VERSION: 1
   APP_MINOR_VERSION: 0
   PROJECT_NAME: NativeWindowsConsoleApplicationsRUST
@@ -15,6 +15,7 @@ env:
 on:
   push:
     branches:
+      - main
       - master
       - rc/**
       - feature/**
@@ -24,6 +25,7 @@ on:
   pull_request:
     branches:
       - master
+      - main
 
   workflow_dispatch:
 
