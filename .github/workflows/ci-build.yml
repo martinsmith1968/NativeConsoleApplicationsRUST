@@ -297,7 +297,7 @@ jobs:
         path: build
 
     - name: Build Changelog
-      uses: mikepenz/release-changelog-builder-action@v5
+      uses: mikepenz/release-changelog-builder-action@v6
       with:
         failOnError: false
       env:
