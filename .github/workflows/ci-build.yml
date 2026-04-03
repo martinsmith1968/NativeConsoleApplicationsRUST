@@ -144,7 +144,7 @@ jobs:
         include:
           - os: windows-latest
             arch: x64
-            target: stable-x86_64-pc-windows-msvc
+            target: x86_64-pc-windows-msvc
         #  - os: windows-latest
         #    arch: x86
         #    target: i686-pc-windows-msvc
