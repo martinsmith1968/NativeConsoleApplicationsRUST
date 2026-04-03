@@ -168,7 +168,9 @@ jobs:
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          components: rustfmt
+          components:
+            rustfmt
+            clippy
 
       - name: Show Rust Version
         run: rustc --version
