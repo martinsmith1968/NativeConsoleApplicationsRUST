@@ -9,8 +9,8 @@ env:
   BUILD_CONFIG: Release
   BRANCH_PREFIX_RELEASE_CANDIDATE: rc/
   CARGO_TERM_COLOR: always
-  TARGET_BUILD_OUTPUT_FOLDER: Output
-  TARGET_BUILD_ARTIFACT_FOLDER: Artifacts
+  BASE_BUILD_OUTPUT_FOLDER: Output
+  BASE_BUILD_ARTIFACT_FOLDER: Artifacts
 
 on:
   push:
@@ -200,8 +200,8 @@ jobs:
       - name: Set Build Parameters
         shell: pwsh
         run: |
-          $build_output_folder = Join-Path "${{ env.TARGET_BUILD_OUTPUT_FOLDER }}" "${{ matrix.os }}" "${{ matrix.arch }}"
-          $build_artifacts_folder = Join-Path "${{ env.TARGET_BUILD_ARTIFACTS_FOLDER }}" "${{ matrix.os }}" "${{ matrix.arch }}"
+          $build_output_folder = Join-Path "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" "${{ matrix.os }}" "${{ matrix.arch }}"
+          $build_artifacts_folder = Join-Path "${{ env.BASE_BUILD_ARTIFACT_FOLDER }}" "${{ matrix.os }}" "${{ matrix.arch }}"
           
           echo "BUILD_OUTPUT_FOLDER=$build_output_folder" >> $env:GITHUB_ENV
           echo "BUILD_ARTIFACTS_FOLDER=$build_artifacts_folder" >> $env:GITHUB_ENV
