@@ -166,9 +166,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          fetch-tags: true
 
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -289,6 +286,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        fetch-tags: true
 
     - uses: actions/download-artifact@v4
       with:
@@ -296,7 +296,7 @@ jobs:
         path: build
 
     - name: Build Changelog
-      uses: mikepenz/release-changelog-builder-action@v5
+      uses: mikepenz/release-changelog-builder-action@v6
       with:
         failOnError: false
       env:
@@ -312,3 +312,5 @@ jobs:
         prerelease: ${{ needs.setup.outputs.release_is_prerelease }}
         removeArtifacts: true
         artifacts: '**/${{ env.PROJECT_NAME }}*.zip'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
