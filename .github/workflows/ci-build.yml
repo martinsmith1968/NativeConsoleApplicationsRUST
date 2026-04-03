@@ -252,6 +252,7 @@ jobs:
   ## Tag in git
   tag:
     name: Tag in GitHub
+    permissions: write-all
     if: needs.setup.outputs.should_tag == 'true'
 
     needs:
@@ -275,6 +276,7 @@ jobs:
   ## Generate a GitHub Release
   release:
     name: Create GitHub Release
+    permissions: write-all
     if: needs.setup.outputs.should_release == 'true'
 
     needs:
