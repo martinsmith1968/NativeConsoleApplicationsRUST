@@ -128,7 +128,7 @@ fn generate_guid(options: GuidGenerateOptions) -> Uuid {
                 }
             }
 
-            if invalid_values.len() > 0 {
+            if !invalid_values.is_empty() {
                 eprintln!(
                     "Warning: unable to use seed values - {}",
                     invalid_values.join(", ")
@@ -157,13 +157,11 @@ fn format_guid(uuid: &Uuid, format_options: &FormatOptions) -> String {
         uuid.simple().to_string()
     };
 
-    let value = if format_options.uppercase {
+    if format_options.uppercase {
         value.to_uppercase()
     } else {
         value.to_lowercase()
-    };
-
-    value
+    }
 }
 
 fn format_output(output_format: &str, formatted_uuid: &str, sequence: u32) -> String {
