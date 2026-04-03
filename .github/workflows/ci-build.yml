@@ -223,10 +223,12 @@ jobs:
       - name: Run tests
         run: cargo test --verbose --release
 
-      - name: Add files to output folder
+      - name: Copy relevant files to output folder
         shell: pwsh
         run: |
           Copy-Item "README.md" "${{ env.BUILD_OUTPUT_FOLDER}}"
+          Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER}}" "${{ env.BUILD_CONFIG }}" "*.exe") "${{ env.BUILD_OUTPUT_FOLDER}}"
+          Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER}}" "${{ env.BUILD_CONFIG }}" "*.") "${{ env.BUILD_OUTPUT_FOLDER}}"
 
       - name: Debug Files
         shell: pwsh
@@ -240,10 +242,7 @@ jobs:
           version: v${{ needs.setup.outputs.executable_version }}
           output_folder: ${{ env.BUILD_ARTIFACTS_FOLDER }}
           base_path: ${{ env.BUILD_OUTPUT_FOLDER }}/${{ env.BUILD_CONFIG }}
-          files: |
-            *.
-            *.exe
-            *.md
+          files: *
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
