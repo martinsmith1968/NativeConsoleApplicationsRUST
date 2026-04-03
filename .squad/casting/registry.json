@@ -1,0 +1,28 @@
+{
+  "agents": [
+    {
+      "persistent_name": "Kiefer",
+      "role": "Lead",
+      "universe": "The Usual Suspects",
+      "created_at": "2026-03-29T19:24:43Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    {
+      "persistent_name": "Marcus",
+      "role": "Backend Dev",
+      "universe": "The Usual Suspects",
+      "created_at": "2026-03-29T19:24:43Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    {
+      "persistent_name": "Blake",
+      "role": "Tester",
+      "universe": "The Usual Suspects",
+      "created_at": "2026-03-29T19:24:43Z",
+      "legacy_named": false,
+      "status": "active"
+    }
+  ]
+}
