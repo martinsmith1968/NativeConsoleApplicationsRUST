@@ -283,6 +283,7 @@ jobs:
     needs:
       - setup
       - build
+      - tag
 
     runs-on: ubuntu-latest
 
