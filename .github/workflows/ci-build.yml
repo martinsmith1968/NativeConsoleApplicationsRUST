@@ -312,3 +312,5 @@ jobs:
         prerelease: ${{ needs.setup.outputs.release_is_prerelease }}
         removeArtifacts: true
         artifacts: '**/${{ env.PROJECT_NAME }}*.zip'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
