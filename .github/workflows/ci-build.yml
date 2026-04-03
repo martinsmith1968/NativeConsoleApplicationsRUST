@@ -178,6 +178,9 @@ jobs:
       - name: Show Rust Available Targets
         run: rustc --print target-list
 
+      - name: Show Rust Config
+        run: rustc --print cfg
+
       - name: Show Rust Available Toolchains
         run: rustup toolchain list
 

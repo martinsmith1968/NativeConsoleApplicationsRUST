@@ -6,7 +6,7 @@ use std::path::Path;
 fn main() {
     let binaries = ["uuidgen", "hashcalc"];
 
-    if std::env::var("CARGO_CFG_TARGET_OS").unwrap() == "windows-disabled" {
+    if std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap() == "windows-disabled" {
         for binary in binaries {
             let mut res = winresource::WindowsResource::new();
 
