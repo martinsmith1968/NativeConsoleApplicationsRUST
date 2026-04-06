@@ -337,6 +337,177 @@
 3. **NanoID Character Set:** Includes alphanumeric, hyphen, and underscore
 4. **Format Options:** Applied sequentially (hyphenation first, then case conversion)
 
+---
+
+### hashcalc Comprehensive Test Expansion (Current Session)
+- **Date:** Current session
+- **Status:** Complete ✓
+- **Outcome:** Expanded test suite from 70 to 147 total tests (108 unit + 39 integration) covering all CLI features, hasher algorithms with known vectors, and edge cases
+
+#### Tests Added (77 new tests):
+
+**Per-Hasher Unit Tests (38 new tests):**
+
+1. **SHA1 Hasher Unit Tests (6 tests in hashers/sha1.rs)**
+   - Known vector: "hello" → aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d
+   - Known vector: empty string → da39a3ee5e6b4b0d3255bfef95601890afd80709
+   - Known vector: "abc" → a9993e364706816aba3e25717850c26c9cd0d89d
+   - Binary data hashing (validates 40 hex char output)
+   - Large data (1MB) handling
+   - Unicode content handling
+
+2. **SHA256 Hasher Unit Tests (7 tests in hashers/sha256.rs)**
+   - Known vector: "hello" → 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+   - Known vector: empty string → e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+   - Known vector: "abc" → ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+   - Known vector: "hello world" → b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9
+   - Binary data hashing (validates 64 hex char output)
+   - Large data (1MB) handling
+   - Unicode content handling
+
+3. **SHA512 Hasher Unit Tests (6 tests in hashers/sha512.rs)**
+   - Known vector: "hello" → 9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca7...
+   - Known vector: empty string → cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce...
+   - Known vector: "abc" → ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a...
+   - Binary data hashing (validates 128 hex char output)
+   - Large data (1MB) handling
+   - Unicode content handling
+
+4. **MD5 Hasher Unit Tests (7 tests in hashers/md5.rs)**
+   - Known vector: "hello" → 5d41402abc4b2a76b9719d911017c592
+   - Known vector: empty string → d41d8cd98f00b204e9800998ecf8427e
+   - Known vector: "abc" → 900150983cd24fb0d6963f7d28e17f72
+   - Known vector: "hello world" → 5eb63bbbe01eeed093cb22bb8f5acdc3
+   - Binary data hashing (validates 32 hex char output)
+   - Large data (1MB) handling
+   - Unicode content handling
+
+5. **Base64 Hasher Unit Tests (12 tests in hashers/base64.rs)**
+   - Known vector: "hello" → aGVsbG8=
+   - Known vector: empty string → ""
+   - Known vector: "f" → Zg==
+   - Known vector: "fo" → Zm8=
+   - Known vector: "foo" → Zm9v
+   - Known vector: "foob" → Zm9vYg==
+   - Known vector: "fooba" → Zm9vYmE=
+   - Known vector: "foobar" → Zm9vYmFy
+   - Binary data encoding ([0x00, 0x01, 0x02] → AAEC)
+   - All zeros ([0x00, 0x00, 0x00] → AAAA)
+   - All ones ([0xFF, 0xFF, 0xFF] → ////)
+   - Unicode character set validation
+
+**Integration Tests (39 new black-box CLI tests in tests/integration_tests.rs):**
+
+1. **CLI Help & Version (2 tests)**
+   - --help flag output validation
+   - --version flag output validation
+
+2. **Text Mode with All Algorithms (10 tests)**
+   - SHA256 default (known hash verification)
+   - SHA1 with known hash
+   - MD5 with known hash
+   - SHA512 with known hash
+   - Base64 encoding
+   - Empty string handling
+   - Unicode text
+   - Text with spaces
+   - Special characters (!@#$%^&*())
+   - Short option (-t)
+
+3. **File Mode Tests (6 tests)**
+   - Simple file hashing
+   - File mode with algorithm selection
+   - Empty file handling
+   - Binary file handling
+   - File not found error
+   - Short option (-f)
+
+4. **Write Mode Tests (4 tests)**
+   - Creates .sha256 file with hash
+   - Creates .md5 file with hash
+   - Fails without --file flag
+   - Fails when combined with --text
+
+5. **Error Handling (4 tests)**
+   - No arguments error
+   - Both --text and --file error
+   - Invalid algorithm error
+   - Algorithm case sensitivity
+
+6. **Output Format Tests (3 tests)**
+   - Output contains text/filename
+   - Output contains algorithm name [sha256]
+   - Hex output is lowercase
+
+7. **Exit Code Tests (4 tests)**
+   - Success: exit code 0
+   - --help: exit code 0
+   - --version: exit code 0
+   - Error: exit code 1
+
+8. **Large File & Edge Cases (4 tests)**
+   - Large file (1MB) handling
+   - Newline in text
+   - Tab in text
+   - Quotes in text
+
+9. **Consistency Tests (2 tests)**
+   - Text and file with same content produce same hash
+   - Multiple runs produce same output
+
+#### Test Coverage Summary
+
+**Total Tests:** 147 (108 unit + 39 integration)
+- ✅ 70 existing unit tests in main.rs (all still passing)
+- ✅ 38 new per-hasher unit tests with known test vectors
+- ✅ 39 new integration tests (CLI black-box)
+
+**Per-Hasher Unit Test Coverage (38 tests across 5 files):**
+- SHA1 (6 tests): Known vectors + edge cases
+- SHA256 (7 tests): Known vectors + edge cases
+- SHA512 (6 tests): Known vectors + edge cases
+- MD5 (7 tests): Known vectors + edge cases
+- Base64 (12 tests): Comprehensive padding/encoding validation
+
+**Integration Test Coverage (39 tests in tests/integration_tests.rs):**
+- CLI help and version output
+- All 5 algorithms (SHA1, MD5, SHA256, SHA512, Base64) via command line
+- Text mode and file mode
+- Write flag behavior (creates .{algorithm} files)
+- Error handling (invalid args, missing file, mutual exclusivity)
+- Exit codes (success and failure cases)
+- Output format validation
+- Edge cases (unicode, special chars, large files, empty input)
+- Consistency validation
+
+#### New Dependencies
+- `assert_cmd = "2.0"` (dev-dependency for CLI testing)
+- `predicates = "3.0"` (dev-dependency for output assertions)
+
+#### Key Findings
+
+1. **Known Test Vectors:** All hashers validated against industry-standard test vectors ensuring correctness
+2. **Base64 Padding:** Manual base64 implementation correctly handles 0, 1, and 2-byte padding scenarios
+3. **Large Data Handling:** All hashers successfully process 1MB files without performance issues
+4. **Write Flag Logic:** Correctly validates --write requires --file and rejects --write with --text
+5. **Error Messages:** Clear, actionable error messages for all failure scenarios
+6. **Output Format:** Consistent format: `{identifier} [{algorithm}] : {hash}`
+
+#### Files Modified
+- `hashcalc/Cargo.toml` - Added assert_cmd and predicates dev-dependencies
+- `hashcalc/src/hashers/sha1.rs` - Added 6 unit tests with known vectors
+- `hashcalc/src/hashers/sha256.rs` - Added 7 unit tests with known vectors
+- `hashcalc/src/hashers/sha512.rs` - Added 6 unit tests with known vectors
+- `hashcalc/src/hashers/md5.rs` - Added 7 unit tests with known vectors
+- `hashcalc/src/hashers/base64.rs` - Added 12 unit tests for encoding validation
+- `hashcalc/tests/integration_tests.rs` - Created with 39 CLI black-box tests (NEW FILE)
+
+#### Build & Test Status
+- ✅ All 147 tests pass (108 unit + 39 integration)
+- ✅ Clean build with no warnings
+- ✅ All known hash vectors validated
+- ✅ All edge cases covered
+
 ## Learnings
 
 ### Testing Rust CLI Applications (Updated)

@@ -452,6 +452,67 @@ Add `-w` / `--write` option to hashcalc that writes the computed hash to a sidec
 
 ---
 
+### Decision: Comprehensive hashcalc Test Suite Expansion
+
+**Date:** 2026-04-06  
+**Decided by:** Blake (Tester)  
+**Status:** ✅ Complete
+
+#### Context
+
+The `hashcalc` workspace had 70 existing unit tests in `main.rs` covering basic CLI functionality and the `hash_content` dispatcher. However, there were no:
+- Black-box CLI integration tests
+- Per-hasher unit tests with known cryptographic test vectors
+- Tests for the individual hasher implementations (sha1.rs, sha256.rs, etc.)
+
+Following the pattern established with `uuidgen`, comprehensive test coverage was needed.
+
+#### Decision
+
+Expanded the test suite from 70 to 147 total tests by adding:
+
+1. **39 Integration Tests** in new file `hashcalc/tests/integration_tests.rs`
+   - Black-box CLI testing using `assert_cmd` and `predicates` crates
+   - Tests all CLI flags, algorithms, error cases, exit codes
+   - Validates file I/O, write flag, output format
+
+2. **38 Per-Hasher Unit Tests** across 5 hasher files
+   - Added test modules to: sha1.rs (6), sha256.rs (7), sha512.rs (6), md5.rs (7), base64.rs (12)
+   - Known cryptographic test vectors validate correctness
+   - Edge cases: empty input, binary data, large data (1MB), unicode
+
+3. **Added Dev Dependencies** to `Cargo.toml`
+   - `assert_cmd = "2.0"` for spawning CLI binary in tests
+   - `predicates = "3.0"` for flexible output assertions
+
+#### Rationale
+
+- **Industry Best Practice:** Known test vectors (NIST, RFC standards) ensure hash implementations are correct
+- **Black-Box Testing:** Integration tests validate the complete CLI user experience
+- **Consistency with uuidgen:** Same testing pattern (unit + integration) for maintainability
+- **Regression Prevention:** Comprehensive coverage prevents future breakage
+- **Quality Assurance:** Every hasher algorithm validated independently
+
+#### Verification
+
+✅ 147 tests passing (108 unit + 39 integration)  
+✅ All hashers validated with known cryptographic vectors  
+✅ Complete CLI black-box coverage  
+✅ Edge cases covered (unicode, binary, large files, error paths)  
+✅ Clean build with no warnings
+
+#### Files Modified
+
+- `hashcalc/Cargo.toml` - Added dev-dependencies
+- `hashcalc/src/hashers/sha1.rs` - Added 6 tests
+- `hashcalc/src/hashers/sha256.rs` - Added 7 tests
+- `hashcalc/src/hashers/sha512.rs` - Added 6 tests
+- `hashcalc/src/hashers/md5.rs` - Added 7 tests
+- `hashcalc/src/hashers/base64.rs` - Added 12 tests
+- `hashcalc/tests/integration_tests.rs` - NEW FILE with 39 tests
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus
