@@ -3,6 +3,7 @@ name       = "hashcalc"
 authors    = [ "Martin Smith" ]
 version    = "0.1.0-dev"
 edition    = "2024"
+description = "Generate a hash of text or file contents"
 readme     = "../README.md"
 license    = "MIT OR Apache-2.0"
 keywords   = [ "hash", "sha", "md5" ]

@@ -3,6 +3,7 @@ name       = "uuidgen"
 authors    = [ "Martin Smith" ]
 version    = "0.1.0-dev"
 edition    = "2024"
+description = "Generate Unique IDs (UUIDs) with controlled output and formatting"
 readme     = "../README.md"
 license    = "MIT OR Apache-2.0"
 keywords   = [ "uuid", "nanoid" ]

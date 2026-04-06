@@ -24,7 +24,7 @@ fn main() {
             res.set_icon(icon_file.to_str().unwrap());
         }
 
-        res.set("FileDescription", "Generate Unique IDs (UUIDs)");
+        res.set("FileDescription", &env::var("CARGO_PKG_DESCRIPTION").unwrap_or_default());
         res.compile().unwrap();
     }
 }
