@@ -227,13 +227,13 @@ jobs:
       - name: Copy relevant files to output folder
         shell: pwsh
         run: |
-          Copy-Item "README.md" "${{ env.BUILD_OUTPUT_FOLDER}}"
-          Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER}}" "${{ env.BUILD_CONFIG }}" "*.exe") "${{ env.BUILD_OUTPUT_FOLDER}}"
-          Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER}}" "${{ env.BUILD_CONFIG }}" "*.") "${{ env.BUILD_OUTPUT_FOLDER}}"
+          Copy-Item "README.md" "${{ env.BASE_BUILD_OUTPUT_FOLDER}}"
+          Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER}}" "${{ env.BUILD_CONFIG }}" "*.exe") "${{ env.BASE_BUILD_OUTPUT_FOLDER}}"
+          Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER}}" "${{ env.BUILD_CONFIG }}" "*.") "${{ env.BASE_BUILD_OUTPUT_FOLDER}}"
 
       - name: Debug Files
         shell: pwsh
-        run: Get-ChildItem "${{ env.BUILD_OUTPUT_FOLDER}}" -recurse
+        run: Get-ChildItem "${{ env.BASE_BUILD_OUTPUT_FOLDER}}" -recurse
 
       - name: Compress Artifacts
         id: compress
@@ -242,7 +242,7 @@ jobs:
           package_id: ${{ env.PROJECT_NAME }}.${{ matrix.platform }}.${{ matrix.arch }}
           version: v${{ needs.setup.outputs.executable_version }}
           output_folder: ${{ env.BUILD_ARTIFACTS_FOLDER }}
-          base_path: ${{ env.BUILD_OUTPUT_FOLDER }}
+          base_path: ${{ env.BASE_BUILD_OUTPUT_FOLDER }}
           files: |
             *.md
             *.exe
