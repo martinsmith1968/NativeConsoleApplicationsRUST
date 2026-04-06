@@ -3,22 +3,6 @@
 version = 4
 
 [[package]]
-name = "NativeConsoleApplicationsRUST"
-version = "0.1.0-dev"
-dependencies = [
- "clap",
- "hex",
- "md5",
- "nanoid",
- "sha1",
- "sha2",
- "strfmt",
- "tempfile",
- "uuid",
- "winresource",
-]
-
-[[package]]
 name = "anstream"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -264,6 +248,19 @@ name = "hashbrown"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
+
+[[package]]
+name = "hashcalc"
+version = "0.1.0-dev"
+dependencies = [
+ "clap",
+ "hex",
+ "md5",
+ "sha1",
+ "sha2",
+ "tempfile",
+ "winresource",
+]
 
 [[package]]
 name = "heck"
@@ -680,6 +677,17 @@ dependencies = [
  "js-sys",
  "sha1_smol",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "uuidgen"
+version = "0.1.0-dev"
+dependencies = [
+ "clap",
+ "nanoid",
+ "strfmt",
+ "uuid",
+ "winresource",
 ]
 
 [[package]]

@@ -1,49 +1,6 @@
-[package]
-name       = "NativeConsoleApplicationsRUST"
-authors    = [ "Martin Smith" ]
-version    = "0.1.0-dev"
-edition    = "2024"
-readme     = "README.md"
-license    = "MIT OR Apache-2.0"
-keywords   = [ "uuid", "nanoid" ]
-categories = [ "command-line-utilities" ]
-repository = "http://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
-
-[package.metadata.winresource]
-ProductName    = "Command Line Utilities written in RUST"
-LegalCopyright = "Copyright © 2022"
-
-[dependencies]
-nanoid = "0.4.0"
-clap   = { version = "4.6.0", features = ["derive", "wrap_help"] }
-strfmt = "0.2.5"
-sha2   = "0.11.0"
-sha1   = "0.11.0"
-md5    = "0.8.0"
-hex    = "0.4"
-
-[build-dependencies]
-winresource = "0.1.14"
-
-[dependencies.uuid]
-version = "1.23.0"
-# Lets you generate random UUIDs
-features = [
-    "v4",
-    "v5",
-    "v6",
-    "v7",
+[workspace]
+members  = [
+    "uuidgen",
+    "hashcalc",
 ]
-
-[[bin]]
-name  = "uuidgen"
-test  = false
-bench = false
-
-[[bin]]
-name  = "hashcalc"
-test  = true
-bench = false
-
-[dev-dependencies]
-tempfile = "3.27.0"
+resolver = "2"
