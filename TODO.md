@@ -51,7 +51,7 @@
 
 ### HashCalc
 - 
-- [ ] Implement all required hashers
+- [X] Implement all required hashers
   - Will require each hasher in its own file / module
     - https://doc.rust-lang.org/rust-by-example/mod/split.html
     - https://www.reddit.com/r/rust/comments/16e571d/breaking_down_rust_code_into_seperate_rs_files_is/

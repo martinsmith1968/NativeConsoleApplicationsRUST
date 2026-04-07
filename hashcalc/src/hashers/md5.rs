@@ -9,26 +9,17 @@ mod tests {
 
     #[test]
     fn test_md5_known_vector_hello() {
-        assert_eq!(
-            hash(b"hello").unwrap(),
-            "5d41402abc4b2a76b9719d911017c592"
-        );
+        assert_eq!(hash(b"hello").unwrap(), "5d41402abc4b2a76b9719d911017c592");
     }
 
     #[test]
     fn test_md5_known_vector_empty() {
-        assert_eq!(
-            hash(b"").unwrap(),
-            "d41d8cd98f00b204e9800998ecf8427e"
-        );
+        assert_eq!(hash(b"").unwrap(), "d41d8cd98f00b204e9800998ecf8427e");
     }
 
     #[test]
     fn test_md5_known_vector_abc() {
-        assert_eq!(
-            hash(b"abc").unwrap(),
-            "900150983cd24fb0d6963f7d28e17f72"
-        );
+        assert_eq!(hash(b"abc").unwrap(), "900150983cd24fb0d6963f7d28e17f72");
     }
 
     #[test]

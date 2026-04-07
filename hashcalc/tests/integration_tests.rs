@@ -11,7 +11,9 @@ fn test_cli_help_flag() {
     cmd.arg("--help")
         .assert()
         .success()
-        .stdout(predicate::str::contains("Generate a hash of text or file contents"))
+        .stdout(predicate::str::contains(
+            "Generate a hash of text or file contents",
+        ))
         .stdout(predicate::str::contains("Usage:"));
 }
 
@@ -33,7 +35,9 @@ fn test_cli_text_mode_sha256_default() {
         .arg("hello")
         .assert()
         .success()
-        .stdout(predicate::str::contains("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"));
+        .stdout(predicate::str::contains(
+            "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+        ));
 }
 
 #[test]
@@ -45,7 +49,9 @@ fn test_cli_text_mode_sha1() {
         .arg("sha1")
         .assert()
         .success()
-        .stdout(predicate::str::contains("aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d"));
+        .stdout(predicate::str::contains(
+            "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d",
+        ));
 }
 
 #[test]
@@ -93,7 +99,9 @@ fn test_cli_text_empty_string() {
         .arg("sha256")
         .assert()
         .success()
-        .stdout(predicate::str::contains("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
+        .stdout(predicate::str::contains(
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ));
 }
 
 #[test]
@@ -116,7 +124,9 @@ fn test_cli_text_with_spaces() {
         .arg("sha256")
         .assert()
         .success()
-        .stdout(predicate::str::contains("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"));
+        .stdout(predicate::str::contains(
+            "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+        ));
 }
 
 #[test]
@@ -143,7 +153,9 @@ fn test_cli_file_mode_simple() {
         .arg(&file_path)
         .assert()
         .success()
-        .stdout(predicate::str::contains("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"));
+        .stdout(predicate::str::contains(
+            "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+        ));
 }
 
 #[test]
@@ -175,7 +187,9 @@ fn test_cli_file_mode_empty_file() {
         .arg("sha256")
         .assert()
         .success()
-        .stdout(predicate::str::contains("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
+        .stdout(predicate::str::contains(
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ));
 }
 
 #[test]
@@ -215,7 +229,9 @@ fn test_cli_file_short_option() {
         .arg(&file_path)
         .assert()
         .success()
-        .stdout(predicate::str::contains("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"));
+        .stdout(predicate::str::contains(
+            "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+        ));
 }
 
 // ===== Write Mode Tests =====
@@ -309,7 +325,9 @@ fn test_cli_both_text_and_file_error() {
         .assert()
         .failure()
         .code(1)
-        .stderr(predicate::str::contains("specify either text or --file, not both"));
+        .stderr(predicate::str::contains(
+            "specify either text or --file, not both",
+        ));
 }
 
 #[test]
@@ -365,7 +383,9 @@ fn test_cli_output_format_contains_text() {
         .success()
         .stdout(predicate::str::contains("hello"))
         .stdout(predicate::str::contains("[sha256]"))
-        .stdout(predicate::str::contains("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"));
+        .stdout(predicate::str::contains(
+            "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+        ));
 }
 
 #[test]
@@ -403,26 +423,19 @@ fn test_cli_output_hex_lowercase() {
 #[test]
 fn test_cli_success_exit_code() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
-    cmd.arg("--text")
-        .arg("hello")
-        .assert()
-        .code(0);
+    cmd.arg("--text").arg("hello").assert().code(0);
 }
 
 #[test]
 fn test_cli_help_exit_code() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
-    cmd.arg("--help")
-        .assert()
-        .code(0);
+    cmd.arg("--help").assert().code(0);
 }
 
 #[test]
 fn test_cli_version_exit_code() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
-    cmd.arg("--version")
-        .assert()
-        .code(0);
+    cmd.arg("--version").assert().code(0);
 }
 
 #[test]
@@ -499,17 +512,17 @@ fn test_cli_text_and_file_same_content_same_hash() {
 
     let mut cmd1 = Command::cargo_bin("hashcalc").unwrap();
     let output1 = cmd1.arg("--text").arg("consistent").output().unwrap();
-    
+
     let mut cmd2 = Command::cargo_bin("hashcalc").unwrap();
     let output2 = cmd2.arg("--file").arg(&file_path).output().unwrap();
-    
+
     let hash1 = String::from_utf8(output1.stdout).unwrap();
     let hash2 = String::from_utf8(output2.stdout).unwrap();
-    
+
     // Extract hash values (last part after " : ")
     let hash1_val = hash1.split(" : ").last().unwrap().trim();
     let hash2_val = hash2.split(" : ").last().unwrap().trim();
-    
+
     assert_eq!(hash1_val, hash2_val);
 }
 
@@ -517,9 +530,9 @@ fn test_cli_text_and_file_same_content_same_hash() {
 fn test_cli_multiple_runs_same_hash() {
     let mut cmd1 = Command::cargo_bin("hashcalc").unwrap();
     let output1 = cmd1.arg("--text").arg("stable").output().unwrap();
-    
+
     let mut cmd2 = Command::cargo_bin("hashcalc").unwrap();
     let output2 = cmd2.arg("--text").arg("stable").output().unwrap();
-    
+
     assert_eq!(output1.stdout, output2.stdout);
 }

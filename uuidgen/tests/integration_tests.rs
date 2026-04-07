@@ -27,18 +27,23 @@ fn test_cli_version_flag() {
 #[test]
 fn test_cli_v4_default_generation() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.assert()
-        .success()
-        .stdout(predicate::str::is_match(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\n$").unwrap());
+    cmd.assert().success().stdout(
+        predicate::str::is_match(
+            r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\n$",
+        )
+        .unwrap(),
+    );
 }
 
 #[test]
 fn test_cli_v4_uppercase() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.arg("--uppercase")
-        .assert()
-        .success()
-        .stdout(predicate::str::is_match(r"^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}\n$").unwrap());
+    cmd.arg("--uppercase").assert().success().stdout(
+        predicate::str::is_match(
+            r"^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}\n$",
+        )
+        .unwrap(),
+    );
 }
 
 #[test]
@@ -69,7 +74,12 @@ fn test_cli_v6_with_default_seed() {
         .arg("v6")
         .assert()
         .success()
-        .stdout(predicate::str::is_match(r"^[0-9a-f]{8}-[0-9a-f]{4}-6[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\n$").unwrap());
+        .stdout(
+            predicate::str::is_match(
+                r"^[0-9a-f]{8}-[0-9a-f]{4}-6[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\n$",
+            )
+            .unwrap(),
+        );
 }
 
 #[test]
@@ -81,7 +91,12 @@ fn test_cli_v6_with_custom_seed() {
         .arg("100,101,102,103,104,105")
         .assert()
         .success()
-        .stdout(predicate::str::is_match(r"^[0-9a-f]{8}-[0-9a-f]{4}-6[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\n$").unwrap());
+        .stdout(
+            predicate::str::is_match(
+                r"^[0-9a-f]{8}-[0-9a-f]{4}-6[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\n$",
+            )
+            .unwrap(),
+        );
 }
 
 #[test]
@@ -93,7 +108,9 @@ fn test_cli_v6_with_invalid_seed_shows_warning() {
         .arg("abc,def,ghi,jkl,mno,pqr")
         .assert()
         .success()
-        .stderr(predicate::str::contains("Warning: unable to use seed values"));
+        .stderr(predicate::str::contains(
+            "Warning: unable to use seed values",
+        ));
 }
 
 // ===== UUID V7 CLI Tests =====
@@ -105,7 +122,12 @@ fn test_cli_v7_generation() {
         .arg("v7")
         .assert()
         .success()
-        .stdout(predicate::str::is_match(r"^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\n$").unwrap());
+        .stdout(
+            predicate::str::is_match(
+                r"^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\n$",
+            )
+            .unwrap(),
+        );
 }
 
 // ===== NanoID CLI Tests =====
@@ -149,30 +171,24 @@ fn test_cli_nanoid_length_100() {
 #[test]
 fn test_cli_count_multiple() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.arg("--count")
-        .arg("5")
-        .assert()
-        .success();
-    
+    cmd.arg("--count").arg("5").assert().success();
+
     let output = cmd.output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     let lines: Vec<&str> = stdout.lines().collect();
-    
+
     assert_eq!(lines.len(), 5);
 }
 
 #[test]
 fn test_cli_count_single() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.arg("--count")
-        .arg("1")
-        .assert()
-        .success();
-    
+    cmd.arg("--count").arg("1").assert().success();
+
     let output = cmd.output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     let lines: Vec<&str> = stdout.lines().collect();
-    
+
     assert_eq!(lines.len(), 1);
 }
 
@@ -248,30 +264,21 @@ fn test_cli_short_options() {
 #[test]
 fn test_cli_invalid_uuid_type() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.arg("--uuid-type")
-        .arg("invalid")
-        .assert()
-        .failure();
+    cmd.arg("--uuid-type").arg("invalid").assert().failure();
 }
 
 #[test]
 fn test_cli_invalid_guid_version() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.arg("--guid-version")
-        .arg("v99")
-        .assert()
-        .failure();
+    cmd.arg("--guid-version").arg("v99").assert().failure();
 }
 
 #[test]
 fn test_cli_invalid_count_zero() {
     // Count of 0 should be rejected by clap or result in no output
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.arg("--count")
-        .arg("0")
-        .assert()
-        .success(); // The loop 1..=0 produces no iterations, so success with no output
-    
+    cmd.arg("--count").arg("0").assert().success(); // The loop 1..=0 produces no iterations, so success with no output
+
     let output = cmd.output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert_eq!(stdout, "");
@@ -280,10 +287,7 @@ fn test_cli_invalid_count_zero() {
 #[test]
 fn test_cli_invalid_count_negative() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.arg("--count")
-        .arg("-5")
-        .assert()
-        .failure();
+    cmd.arg("--count").arg("-5").assert().failure();
 }
 
 // ===== Combined Options Tests =====
@@ -326,30 +330,23 @@ fn test_cli_nanoid_with_template_and_count() {
 #[test]
 fn test_cli_success_exit_code() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.assert()
-        .success();
+    cmd.assert().success();
 }
 
 #[test]
 fn test_cli_help_exit_code() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.arg("--help")
-        .assert()
-        .code(0);
+    cmd.arg("--help").assert().code(0);
 }
 
 #[test]
 fn test_cli_version_exit_code() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.arg("--version")
-        .assert()
-        .code(0);
+    cmd.arg("--version").assert().code(0);
 }
 
 #[test]
 fn test_cli_invalid_arg_exit_code() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.arg("--invalid-option")
-        .assert()
-        .failure();
+    cmd.arg("--invalid-option").assert().failure();
 }
