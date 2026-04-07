@@ -199,7 +199,7 @@ jobs:
         with:
           file: Cargo.toml
           path: $.package.version
-          value: "${{ needs.setup.output.executable_version }}"
+          value: "${{ needs.setup.outputs.executable_version }}"
 
       - name: Show Cargo TOML
         shell: pwsh
