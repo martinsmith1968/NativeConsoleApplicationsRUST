@@ -194,14 +194,14 @@ jobs:
       - name: Setup Rust Target
         run: rustup target add ${{ matrix.target }}
 
-      - name: Set Cargo TOML Version Values
+      - name: Set Cargo TOML Version Values (HACK - hashcalc)
         uses: cssnr/toml-action@v1
         with:
-          file: hashcalc/Cargo.toml (HACK)
+          file: hashcalc/Cargo.toml
           path: $.package.version
           value: "${{ needs.setup.outputs.executable_version }}"
 
-      - name: Set Cargo TOML Version Values (HACK)
+      - name: Set Cargo TOML Version Values (HACK - uuidgen)
         uses: cssnr/toml-action@v1
         with:
           file: uuidgen/Cargo.toml
