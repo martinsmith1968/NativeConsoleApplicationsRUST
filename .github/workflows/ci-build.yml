@@ -120,6 +120,9 @@ jobs:
     - name: Set Executable Version
       run: echo "executable_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}.${{ env.build_date }}.${{ github.run_number }}${{ github.run_attempt }}${{ env.release_modifier }}" >> $GITHUB_ENV
 
+    - name: Set Executable Build Version (for RUST)
+      run: echo "executable_build_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}.${{ env.build_date }}" >> $GITHUB_ENV
+
     - name: Show Configuration
       run: env | sort
 
@@ -127,6 +130,7 @@ jobs:
       build_date: ${{ env.build_date }}
       build_year: ${{ env.build_year }}
       executable_version: ${{ env.executable_version }}
+      executable_build_version: ${{ env.executable_build_version }}
       product_version: ${{ env.product_version }}
       should_tag: ${{ env.should_tag }}
       should_release: ${{ env.should_release }}
@@ -199,24 +203,31 @@ jobs:
         with:
           file: hashcalc/Cargo.toml
           path: $.package.version
-          value: "${{ needs.setup.outputs.executable_version }}"
+          value: "${{ needs.setup.outputs.executable_build_version }}"
 
       - name: Set Cargo TOML Version Values (HACK - uuidgen)
         uses: cssnr/toml-action@v1
         with:
           file: uuidgen/Cargo.toml
           path: $.package.version
-          value: "${{ needs.setup.outputs.executable_version }}"
+          value: "${{ needs.setup.outputs.executable_build_version }}"
 
       - name: Show Cargo TOML
         shell: pwsh
         run: |
+          Write-Host '> Cargo.toml'
           Get-Content 'Cargo.toml'
+
+          Write-Host '> hashcalc/Cargo.toml'
+          Get-Content 'hashcalc/Cargo.toml'
+
+          Write-Host '> uuidgen/Cargo.toml'
+          Get-Content 'uuidgen/Cargo.toml'
 
       - name: Set Build Parameters
         shell: pwsh
         run: |
-          $build_output_folder = Join-Path "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}"
+          $build_output_folder    = Join-Path "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}"
           $build_artifacts_folder = Join-Path "${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}"
           
           echo "BUILD_OUTPUT_FOLDER=$build_output_folder" >> $env:GITHUB_ENV
@@ -234,13 +245,13 @@ jobs:
       - name: Copy relevant files to output folder
         shell: pwsh
         run: |
-          Copy-Item "README.md" "${{ env.BASE_BUILD_OUTPUT_FOLDER}}"
-          Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER}}" "${{ env.BUILD_CONFIG }}" "*.exe") "${{ env.BASE_BUILD_OUTPUT_FOLDER}}"
-          Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER}}" "${{ env.BUILD_CONFIG }}" "*.") "${{ env.BASE_BUILD_OUTPUT_FOLDER}}"
+          Copy-Item "README.md" "${{ env.BASE_BUILD_OUTPUT_FOLDER }}"
+          Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "*.exe") "${{ env.BASE_BUILD_OUTPUT_FOLDER }}"
+          Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "*.") "${{ env.BASE_BUILD_OUTPUT_FOLDER }}"
 
       - name: Debug Files
         shell: pwsh
-        run: Get-ChildItem "${{ env.BASE_BUILD_OUTPUT_FOLDER}}" -recurse
+        run: Get-ChildItem "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" -recurse
 
       - name: Compress Artifacts
         uses: OctopusDeploy/create-zip-package-action@v3
