@@ -197,7 +197,14 @@ jobs:
       - name: Set Cargo TOML Version Values
         uses: cssnr/toml-action@v1
         with:
-          file: Cargo.toml
+          file: hashcalc/Cargo.toml (HACK)
+          path: $.package.version
+          value: "${{ needs.setup.outputs.executable_version }}"
+
+      - name: Set Cargo TOML Version Values (HACK)
+        uses: cssnr/toml-action@v1
+        with:
+          file: uuidgen/Cargo.toml
           path: $.package.version
           value: "${{ needs.setup.outputs.executable_version }}"
 
@@ -236,7 +243,6 @@ jobs:
         run: Get-ChildItem "${{ env.BASE_BUILD_OUTPUT_FOLDER}}" -recurse
 
       - name: Compress Artifacts
-        id: compress
         uses: OctopusDeploy/create-zip-package-action@v3
         with:
           package_id: ${{ env.PROJECT_NAME }}.${{ matrix.platform }}.${{ matrix.arch }}
@@ -306,6 +312,7 @@ jobs:
         path: build
 
     - name: Build Changelog
+      id: build_changelog
       uses: mikepenz/release-changelog-builder-action@v6
       with:
         failOnError: false
