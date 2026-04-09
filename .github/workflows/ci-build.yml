@@ -233,6 +233,26 @@ jobs:
           echo "BUILD_OUTPUT_FOLDER=$build_output_folder" >> $env:GITHUB_ENV
           echo "BUILD_ARTIFACTS_FOLDER=$build_artifacts_folder" >> $env:GITHUB_ENV
 
+      - name: Discover Buildable Projects
+        shell: pwsh
+        run: |
+          Install-Module -Name PSToml -Force
+
+          $toml_filename = "Cargo.toml"
+          $contents = Get-Content $toml_filename -Raw
+
+          $toml_object = $contents | ConvertFrom-Toml
+
+          $projects = $toml_object.workspace.members
+          Write-Host "Found $($projects.Count) Project Names"
+          foreach ($project in $projects) {
+            Write-Host " - $project"
+          }
+
+          $project_names = [string]::join(',', $projects)
+
+          echo "PROJECT_NAMES=$project_names" >> $env:GITHUB_ENV
+
       - name: Build
         run: cargo build --all-targets --future-incompat-report --profile ${{ env.BUILD_CONFIG }} --verbose --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
 
@@ -245,9 +265,17 @@ jobs:
       - name: Copy relevant files to output folder
         shell: pwsh
         run: |
+          $executable_extension = ".exe"
+          if ("${{ matrix.platform }}" -ne "windows") {
+            $executable_extension = ""
+          }
+
           Copy-Item "README.md" "${{ env.BASE_BUILD_OUTPUT_FOLDER }}"
-          Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "*.exe") "${{ env.BASE_BUILD_OUTPUT_FOLDER }}"
-          Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "*.") "${{ env.BASE_BUILD_OUTPUT_FOLDER }}"
+
+          foreach ($project in "${{ env.PROJECT_NAMES }}".Split(',')) {
+            $project = $project.Trim()
+            Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "$project$executable_extension") "${{ env.BASE_BUILD_OUTPUT_FOLDER }}"
+          }
 
       - name: Debug Files - BASE_BUILD_OUTPUT_FOLDER
         shell: pwsh
@@ -264,6 +292,8 @@ jobs:
             *.md
             *.exe
             *.
+
+      # gci |  where { $_.UnixMode -like '*x*' }
 
       - name: Debug Files - BUILD_ARTIFACTS_FOLDER
         shell: pwsh
