@@ -289,9 +289,7 @@ jobs:
           output_folder: ${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}
           base_path: ${{ env.BASE_BUILD_OUTPUT_FOLDER }}
           files: |
-            *.md
-            *.exe
-            *.
+            *
 
       # gci |  where { $_.UnixMode -like '*x*' }
 
