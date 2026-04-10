@@ -156,14 +156,14 @@ jobs:
             arch: x86
             target: i686-pc-windows-msvc
             platform: windows
-        #  - os: ubuntu-latest
-        #    arch: x64
-        #    target: x86_64-unknown-linux-gnu
-        #    platform: linux
-        #  - os: ubuntu-latest
-        #    arch: x86
-        #    target: i686-unknown-linux-gnu
-        #    platform: linux
+          - os: ubuntu-latest
+            arch: x64
+            target: x86_64-unknown-linux-gnu
+            platform: linux
+          - os: ubuntu-latest
+            arch: x86
+            target: i686-unknown-linux-gnu
+            platform: linux
 
     name: Build - ${{ matrix.os }} - ${{ matrix.arch }}
 
