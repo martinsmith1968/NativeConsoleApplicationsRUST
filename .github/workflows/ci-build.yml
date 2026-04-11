@@ -124,6 +124,11 @@ jobs:
     - name: Set Executable Build Version (for RUST)
       run: echo "executable_build_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}.${{ env.build_date }}" >> $GITHUB_ENV
 
+    - name: Checkout
+      uses: actions/checkout@v6.0.2
+      with:
+        fetch-depth: 0
+
     - name: Discover Buildable Projects
       shell: pwsh
       run: |
