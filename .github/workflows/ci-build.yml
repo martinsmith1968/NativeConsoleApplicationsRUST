@@ -163,6 +163,7 @@ jobs:
       release_is_draft: ${{ env.release_is_draft }}
       release_is_prerelease: ${{ env.release_is_prerelease }}
       release_modifier: ${{ env.release_modifier }}
+      project_names: ${{ env.PROJECT_NAMES }}
 
 
   ##########################################################
@@ -229,7 +230,7 @@ jobs:
       - name: Set Cargo TOML Version Values
         shell: pwsh
         run: |
-          foreach ($project in "${{ env.PROJECT_NAMES }}".Split(',')) {
+          foreach ($project in "${{ needs.setup.outputs.project_names }}".Split(',')) {
             $project = $project.Trim()
             
             Write-Host "--------------------------------------------------------------------------------"
