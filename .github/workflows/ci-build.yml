@@ -354,7 +354,6 @@ jobs:
     - uses: actions/download-artifact@v8
       with:
         path: release
-        skip-decompress: true
 
     - name: Debug Files - release
       shell: pwsh
