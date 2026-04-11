@@ -1,0 +1,31 @@
+[package]
+name       = "uuidgen"
+authors    = [ "Martin Smith" ]
+version    = "0.1.0-dev"
+edition    = "2024"
+description = "Generate Unique IDs (UUIDs) with controlled output and formatting"
+readme     = "../README.md"
+license    = "MIT OR Apache-2.0"
+keywords   = [ "uuid", "nanoid" ]
+categories = [ "command-line-utilities" ]
+repository = "http://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
+
+[package.metadata.winresource]
+ProductName    = "Unique ID Generator (UUID / NanoID)"
+LegalCopyright = "Copyright © 2022"
+
+[dependencies]
+nanoid = "0.4.0"
+clap   = { version = "4.6.0", features = ["derive", "wrap_help"] }
+strfmt = "0.2.5"
+
+[build-dependencies]
+winresource = "0.1.31"
+
+[dependencies.uuid]
+version  = "1.23.0"
+features = [ "v4", "v5", "v6", "v7" ]
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.0"

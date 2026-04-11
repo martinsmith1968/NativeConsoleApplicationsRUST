@@ -1062,4 +1062,167 @@ mod tests {
         assert!(output.contains("ID-5-"));
         assert!(output.contains("-") && output.len() > 10);
     }
+
+    // ===== Additional Edge Cases =====
+
+    #[test]
+    fn test_v6_uuid_seed_with_overflow_values() {
+        // Values > 255 should wrap or be truncated by u8 parsing
+        let options = GuidGenerateOptions {
+            guid_version: GuidVersionType::V6,
+            v6_seed: "256,300,1000,500,400,350".to_string(),
+        };
+
+        let uuid = generate_guid(options);
+        let node_bytes = uuid.as_bytes();
+
+        // All values will fail to parse as u8, so default node [1; 6] is used
+        assert_eq!(node_bytes[10], 1);
+        assert_eq!(node_bytes[11], 1);
+        assert_eq!(node_bytes[12], 1);
+        assert_eq!(node_bytes[13], 1);
+        assert_eq!(node_bytes[14], 1);
+        assert_eq!(node_bytes[15], 1);
+    }
+
+    #[test]
+    fn test_v6_uuid_seed_with_extra_commas_prefix() {
+        let options = GuidGenerateOptions {
+            guid_version: GuidVersionType::V6,
+            v6_seed: ",,,10,20,30,40,50,60".to_string(),
+        };
+
+        let uuid = generate_guid(options);
+        let node_bytes = uuid.as_bytes();
+
+        // Leading commas create empty strings that fail parse
+        // We get 3 empty (fail) + 6 valid = 9 total, but seed_values has 6 valid
+        // So the seed IS applied!
+        assert_eq!(node_bytes[10], 10);
+        assert_eq!(node_bytes[11], 20);
+        assert_eq!(node_bytes[12], 30);
+        assert_eq!(node_bytes[13], 40);
+        assert_eq!(node_bytes[14], 50);
+        assert_eq!(node_bytes[15], 60);
+    }
+
+    #[test]
+    fn test_v6_uuid_seed_with_extra_commas_suffix() {
+        let options = GuidGenerateOptions {
+            guid_version: GuidVersionType::V6,
+            v6_seed: "10,20,30,40,50,60,,,".to_string(),
+        };
+
+        let uuid = generate_guid(options);
+        let node_bytes = uuid.as_bytes();
+
+        // Trailing empty strings will be added to seed_values as parse failures
+        // But we have 6 valid values first, so they should be used
+        assert_eq!(node_bytes[10], 10);
+        assert_eq!(node_bytes[11], 20);
+        assert_eq!(node_bytes[12], 30);
+        assert_eq!(node_bytes[13], 40);
+        assert_eq!(node_bytes[14], 50);
+        assert_eq!(node_bytes[15], 60);
+    }
+
+    #[test]
+    fn test_v6_uuid_seed_with_embedded_commas() {
+        let options = GuidGenerateOptions {
+            guid_version: GuidVersionType::V6,
+            v6_seed: "10,,20,,30,,40,,50,,60".to_string(),
+        };
+
+        let uuid = generate_guid(options);
+        let node_bytes = uuid.as_bytes();
+
+        // Embedded empty strings fail parse, so we get 6 valid + 5 invalid = 11 total
+        // Since we have exactly 6 valid values, they should be used
+        assert_eq!(node_bytes[10], 10);
+        assert_eq!(node_bytes[11], 20);
+        assert_eq!(node_bytes[12], 30);
+        assert_eq!(node_bytes[13], 40);
+        assert_eq!(node_bytes[14], 50);
+        assert_eq!(node_bytes[15], 60);
+    }
+
+    #[test]
+    fn test_v6_uuid_seed_with_more_than_six_values() {
+        let options = GuidGenerateOptions {
+            guid_version: GuidVersionType::V6,
+            v6_seed: "10,20,30,40,50,60,70,80,90".to_string(),
+        };
+
+        let uuid = generate_guid(options);
+        let node_bytes = uuid.as_bytes();
+
+        // Should use default node because seed_values.len() != 6 (it's 9)
+        assert_eq!(node_bytes[10], 1);
+        assert_eq!(node_bytes[11], 1);
+        assert_eq!(node_bytes[12], 1);
+        assert_eq!(node_bytes[13], 1);
+        assert_eq!(node_bytes[14], 1);
+        assert_eq!(node_bytes[15], 1);
+    }
+
+    #[test]
+    fn test_format_output_whitespace_only_template() {
+        let template = "   ";
+        let uuid = "550e8400-e29b-41d4-a716-446655440000";
+        let result = format_output(template, uuid, 1);
+
+        // Whitespace-only template should be preserved
+        assert_eq!(result, "   ");
+    }
+
+    #[test]
+    fn test_end_to_end_full_pipeline_uppercase_non_hyphenated_template() {
+        let args = Args {
+            count: 1,
+            uuid_type: UUIDType::Guid,
+            guid_version: GuidVersionType::V4,
+            nanoid_length: 21,
+            non_hyphenated: true,
+            uppercase: true,
+            output_template: "PREFIX-{uuid}-SUFFIX".to_string(),
+            guid_v6_seed: String::new(),
+        };
+
+        let uuid_formatted = generate_uuid(&args);
+        let output = format_output(&args.output_template, &uuid_formatted, 1);
+
+        // UUID should be uppercase and non-hyphenated
+        assert_eq!(uuid_formatted.len(), 32); // No hyphens
+        assert!(!uuid_formatted.contains('-'));
+        let hex_chars: String = uuid_formatted
+            .chars()
+            .filter(|c| c.is_ascii_hexdigit())
+            .collect();
+        assert_eq!(hex_chars, hex_chars.to_uppercase());
+
+        // Output should contain the template with the UUID
+        assert!(output.starts_with("PREFIX-"));
+        assert!(output.ends_with("-SUFFIX"));
+        assert!(output.contains(&uuid_formatted));
+    }
+
+    #[test]
+    fn test_v6_uuid_seed_negative_values() {
+        // Negative values should fail parsing as u8
+        let options = GuidGenerateOptions {
+            guid_version: GuidVersionType::V6,
+            v6_seed: "-1,-2,-3,-4,-5,-6".to_string(),
+        };
+
+        let uuid = generate_guid(options);
+        let node_bytes = uuid.as_bytes();
+
+        // All negative values fail to parse, default node used
+        assert_eq!(node_bytes[10], 1);
+        assert_eq!(node_bytes[11], 1);
+        assert_eq!(node_bytes[12], 1);
+        assert_eq!(node_bytes[13], 1);
+        assert_eq!(node_bytes[14], 1);
+        assert_eq!(node_bytes[15], 1);
+    }
 }
