@@ -248,7 +248,7 @@ jobs:
               }
 
               if ($section -eq "package" -and $line -match '^\s*version\s*=\s*".*"\s*$') {
-                Write-Host "Found version line: $i: '$line'"
+                Write-Host "Found version line: $($i): '$line'"
                 $new_line = "version = `"${{ needs.setup.outputs.executable_build_version }}`""
                 $lines[$i] = $new_line
                 break
