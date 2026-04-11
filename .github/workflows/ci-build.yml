@@ -302,7 +302,7 @@ jobs:
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build_output
+          name: ${{ matrix.platform }}.${{ matrix.arch }}
           path: ${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}/*.zip
           if-no-files-found: error
 
@@ -367,7 +367,6 @@ jobs:
         body: ${{ steps.build_changelog.outputs.changelog }}
         draft: ${{ needs.setup.outputs.release_is_draft }}
         prerelease: ${{ needs.setup.outputs.release_is_prerelease }}
-        removeArtifacts: true
         artifacts: '**/${{ env.PROJECT_NAME }}*.zip'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
