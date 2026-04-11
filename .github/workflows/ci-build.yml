@@ -124,6 +124,26 @@ jobs:
     - name: Set Executable Build Version (for RUST)
       run: echo "executable_build_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}.${{ env.build_date }}" >> $GITHUB_ENV
 
+    - name: Discover Buildable Projects
+      shell: pwsh
+      run: |
+        Install-Module -Name PSToml -Force
+
+        $toml_filename = "Cargo.toml"
+        $contents = Get-Content $toml_filename -Raw
+
+        $toml_object = $contents | ConvertFrom-Toml
+
+        $projects = $toml_object.workspace.members
+        Write-Host "Found $($projects.Count) Project Names"
+        foreach ($project in $projects) {
+          Write-Host " - $project"
+        }
+
+        $project_names = [string]::join(',', $projects)
+
+        echo "PROJECT_NAMES=$project_names" >> $env:GITHUB_ENV
+
     - name: Show Configuration
       run: env | sort
 
@@ -201,31 +221,41 @@ jobs:
       - name: Setup Rust Target
         run: rustup target add ${{ matrix.target }}
 
-      - name: Set Cargo TOML Version Values (HACK - hashcalc)
-        uses: cssnr/toml-action@v1.0.1
-        with:
-          file: hashcalc/Cargo.toml
-          path: $.package.version
-          value: "${{ needs.setup.outputs.executable_build_version }}"
-
-      - name: Set Cargo TOML Version Values (HACK - uuidgen)
-        uses: cssnr/toml-action@v1.0.1
-        with:
-          file: uuidgen/Cargo.toml
-          path: $.package.version
-          value: "${{ needs.setup.outputs.executable_build_version }}"
-
-      - name: Show Cargo TOML
+      - name: Set Cargo TOML Version Values
         shell: pwsh
         run: |
-          Write-Host '> Cargo.toml'
-          Get-Content 'Cargo.toml'
+          foreach ($project in "${{ env.PROJECT_NAMES }}".Split(',')) {
+            $project = $project.Trim()
+            
+            Write-Host "--------------------------------------------------------------------------------"
+            Write-Host "Setting version for project '$project' to '${{ needs.setup.outputs.executable_build_version }}'"
+            Write-Host
 
-          Write-Host '> hashcalc/Cargo.toml'
-          Get-Content 'hashcalc/Cargo.toml'
+            $file_path = Join-Path $project "Cargo.toml"
+            $lines = Get-Content $file_path
 
-          Write-Host '> uuidgen/Cargo.toml'
-          Get-Content 'uuidgen/Cargo.toml'
+            $section = ""
+            for ($i = 0; $i -lt $lines.Length; $i++) {
+              $line = $lines[$i].Trim()
+
+              if ($line -match '^\s*\[.*\]\s*$') {
+                $section = $line.Trim('[', ']')
+              }
+
+              if ($section -eq "package" -and $line -match '^\s*version\s*=\s*".*"\s*$') {
+                Write-Host "Found version line: $i: '$line'"
+                $new_line = "version = `"${{ needs.setup.outputs.executable_build_version }}`""
+                $lines[$i] = $new_line
+                break
+              }
+            }
+            
+            Set-Content -Path $file_path -Value $lines -NoNewline
+
+            Write-Host
+            Write-Host "$file_path :"
+            Get-Content $file_path
+          }
 
       - name: Set Build Parameters
         shell: pwsh
@@ -235,26 +265,6 @@ jobs:
           
           echo "BUILD_OUTPUT_FOLDER=$build_output_folder" >> $env:GITHUB_ENV
           echo "BUILD_ARTIFACTS_FOLDER=$build_artifacts_folder" >> $env:GITHUB_ENV
-
-      - name: Discover Buildable Projects
-        shell: pwsh
-        run: |
-          Install-Module -Name PSToml -Force
-
-          $toml_filename = "Cargo.toml"
-          $contents = Get-Content $toml_filename -Raw
-
-          $toml_object = $contents | ConvertFrom-Toml
-
-          $projects = $toml_object.workspace.members
-          Write-Host "Found $($projects.Count) Project Names"
-          foreach ($project in $projects) {
-            Write-Host " - $project"
-          }
-
-          $project_names = [string]::join(',', $projects)
-
-          echo "PROJECT_NAMES=$project_names" >> $env:GITHUB_ENV
 
       - name: Build
         run: cargo build --all-targets --future-incompat-report --profile ${{ env.BUILD_CONFIG }} --verbose --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
