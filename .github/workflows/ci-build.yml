@@ -10,6 +10,7 @@ env:
   BRANCH_PREFIX_RELEASE_CANDIDATE: rc/
   CARGO_TERM_COLOR: always
   BASE_BUILD_OUTPUT_FOLDER: Output
+  BASE_BUILD_COLLECT_FOLDER: Collect
   BASE_BUILD_ARTIFACTS_FOLDER: Artifacts
 
 on:
@@ -272,16 +273,24 @@ jobs:
             $executable_extension = ""
           }
 
-          Copy-Item "README.md" "${{ env.BASE_BUILD_OUTPUT_FOLDER }}"
+          if (-not(Test-Path "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -PathType Container)) {
+            New-Item -path "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -ItemType Directory
+          }
+
+          Copy-Item "README.md" "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
 
           foreach ($project in "${{ env.PROJECT_NAMES }}".Split(',')) {
             $project = $project.Trim()
-            Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "$project$executable_extension") "${{ env.BASE_BUILD_OUTPUT_FOLDER }}"
+            Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "$project$executable_extension") "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
           }
 
       - name: Debug Files - BASE_BUILD_OUTPUT_FOLDER
         shell: pwsh
         run: Get-ChildItem "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" -recurse
+
+      - name: Debug Files - BASE_BUILD_COLLECT_FOLDER
+        shell: pwsh
+        run: Get-ChildItem "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -recurse
 
       - name: Compress Artifacts
         uses: OctopusDeploy/create-zip-package-action@v4.1.0
@@ -289,7 +298,7 @@ jobs:
           package_id: ${{ env.PROJECT_NAME }}.${{ matrix.platform }}.${{ matrix.arch }}
           version: v${{ needs.setup.outputs.executable_version }}
           output_folder: ${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}
-          base_path: ${{ env.BASE_BUILD_OUTPUT_FOLDER }}
+          base_path: ${{ env.BASE_BUILD_COLLECT_FOLDER }}
           files: |
             *
 
