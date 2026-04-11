@@ -233,9 +233,9 @@ jobs:
           foreach ($project in "${{ needs.setup.outputs.project_names }}".Split(',')) {
             $project = $project.Trim()
             
+            Write-Host
             Write-Host "--------------------------------------------------------------------------------"
             Write-Host "Setting version for project '$project' to '${{ needs.setup.outputs.executable_build_version }}'"
-            Write-Host
 
             $file_path = Join-Path $project "Cargo.toml"
             $lines = Get-Content $file_path
@@ -252,11 +252,12 @@ jobs:
                 Write-Host "Found version line: $($i): '$line'"
                 $new_line = "version = `"${{ needs.setup.outputs.executable_build_version }}`""
                 $lines[$i] = $new_line
+                Write-Host "  Set version line: $($i): '$new_line'"
                 break
               }
             }
             
-            Set-Content -Path $file_path -Value $lines -NoNewline
+            Set-Content -Path $file_path -Value $lines
 
             Write-Host
             Write-Host "$file_path :"
