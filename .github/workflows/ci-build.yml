@@ -165,7 +165,7 @@ jobs:
             target: i686-unknown-linux-gnu
             platform: linux
 
-    name: Build - ${{ matrix.os }} - ${{ matrix.arch }}
+    name: Build - ${{ matrix.platform }} - ${{ matrix.arch }}
 
     needs: setup
 
@@ -367,6 +367,7 @@ jobs:
         body: ${{ steps.build_changelog.outputs.changelog }}
         draft: ${{ needs.setup.outputs.release_is_draft }}
         prerelease: ${{ needs.setup.outputs.release_is_prerelease }}
-        artifacts: '**/${{ env.PROJECT_NAME }}*.zip'
+        removeArtifacts: true
+        artifacts: '**/*.zip'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
