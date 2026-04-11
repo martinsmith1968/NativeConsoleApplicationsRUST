@@ -173,10 +173,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
 
       - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1.15.4
         with:
           components:
             rustfmt
@@ -195,20 +195,20 @@ jobs:
         run: rustup toolchain list
 
       - name: Rustfmt Check
-        uses: actions-rust-lang/rustfmt@v1
+        uses: actions-rust-lang/rustfmt@v1.1.2
 
       - name: Setup Rust Target
         run: rustup target add ${{ matrix.target }}
 
       - name: Set Cargo TOML Version Values (HACK - hashcalc)
-        uses: cssnr/toml-action@v1
+        uses: cssnr/toml-action@v1.0.1
         with:
           file: hashcalc/Cargo.toml
           path: $.package.version
           value: "${{ needs.setup.outputs.executable_build_version }}"
 
       - name: Set Cargo TOML Version Values (HACK - uuidgen)
-        uses: cssnr/toml-action@v1
+        uses: cssnr/toml-action@v1.0.1
         with:
           file: uuidgen/Cargo.toml
           path: $.package.version
@@ -284,7 +284,7 @@ jobs:
         run: Get-ChildItem "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" -recurse
 
       - name: Compress Artifacts
-        uses: OctopusDeploy/create-zip-package-action@v3
+        uses: OctopusDeploy/create-zip-package-action@v4.1.0
         with:
           package_id: ${{ env.PROJECT_NAME }}.${{ matrix.platform }}.${{ matrix.arch }}
           version: v${{ needs.setup.outputs.executable_version }}
@@ -300,7 +300,7 @@ jobs:
         run: Get-ChildItem "${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}" -recurse
 
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: ${{ matrix.platform }}.${{ matrix.arch }}
           path: ${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}/*.zip
@@ -322,7 +322,7 @@ jobs:
 
     steps:
     - name: Tag git
-      uses: pkgdeps/git-tag-action@v3
+      uses: pkgdeps/git-tag-action@v3.0.1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         github_repo: ${{ github.repository }}
@@ -346,12 +346,12 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6.0.2
       with:
         fetch-depth: 0
         fetch-tags: true
 
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@v8.0.1
       with:
         path: release
 
@@ -361,14 +361,14 @@ jobs:
 
     - name: Build Changelog
       id: build_changelog
-      uses: mikepenz/release-changelog-builder-action@v6
+      uses: mikepenz/release-changelog-builder-action@v6.2.1
       with:
         failOnError: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Create Release
-      uses: ncipollo/release-action@v1
+      uses: ncipollo/release-action@v1.21.0
       with:
         tag: v${{ needs.setup.outputs.executable_version }}
         name: Release ${{ needs.setup.outputs.executable_version }}
