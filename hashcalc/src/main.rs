@@ -8,17 +8,14 @@ use hashers::hash_content;
 /// Generate a hash of text or file contents
 #[derive(Parser, Debug)]
 #[command(
-    version, 
-    about, 
-    author, 
-    help_expected = true, 
-    disable_help_flag = true
+    version,
+    about,
+    author,
+    help_expected = true,
+    disable_help_flag = true,
+    disable_version_flag = true
 )]
 struct Args {
-    /// Print help
-    #[arg(short = 'h', long, visible_short_alias = '?', action = clap::ArgAction::Help)]
-    help: bool,
-
     /// The text to generate a hash for (mutually exclusive with --file)
     #[arg(short, long)]
     text: Option<String>,
@@ -34,6 +31,14 @@ struct Args {
     /// Hash algorithm to use: sha1, md5, sha256, sha512, base64
     #[arg(short, long, default_value = "sha256")]
     algorithm: String,
+
+    /// Print help
+    #[arg(short = 'h', long, visible_short_alias = '?', action = clap::ArgAction::Help)]
+    help: bool,
+
+    /// Print version
+    #[arg(short = 'V', long, action = clap::ArgAction::Version)]
+    version: bool,
 }
 
 fn read_file_contents(path: &str) -> Result<Vec<u8>, String> {

@@ -30,13 +30,10 @@ enum UUIDType {
     author,
     help_expected = true,
     disable_help_flag = true,
+    disable_version_flag = true,
     after_help = "NOTE:\noutput-template supports: {uuid}, {sequence} dynamic values\n(See also : https://github.com/vitiral/strfmt)"
 )]
 struct Args {
-    /// Print help
-    #[arg(short = 'h', long, visible_short_alias = '?', action = clap::ArgAction::Help)]
-    help: bool,
-
     /// Number of times to generate
     #[arg(short = 'c', long, default_value_t = 1)]
     count: u32,
@@ -68,6 +65,14 @@ struct Args {
     /// The seed to use when generating a v6 Guid (6 values)
     #[arg(short = '6', long, default_value = "1,2,3,4,5,6")]
     guid_v6_seed: String,
+
+    /// Print help
+    #[arg(short = 'h', long, visible_short_alias = '?', action = clap::ArgAction::Help)]
+    help: bool,
+
+    /// Print version
+    #[arg(short = 'V', long, action = clap::ArgAction::Version)]
+    version: bool,
 }
 
 struct FormatOptions {
