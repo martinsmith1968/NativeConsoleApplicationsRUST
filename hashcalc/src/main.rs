@@ -9,7 +9,7 @@ use hashers::hash_content;
 #[derive(Parser, Debug)]
 #[command(
     version,
-    about,
+    about = concat!("Generate a hash of text or file contents\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
     author,
     help_expected = true,
     disable_help_flag = true,

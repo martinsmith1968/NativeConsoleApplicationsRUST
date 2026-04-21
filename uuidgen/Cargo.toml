@@ -12,7 +12,7 @@ repository = "http://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
 
 [package.metadata.winresource]
 ProductName    = "Unique ID Generator (UUID / NanoID)"
-LegalCopyright = "Copyright © 2022"
+LegalCopyright = "Copyright © 2026 Martin Smith"
 
 [dependencies]
 nanoid = "0.4.0"
