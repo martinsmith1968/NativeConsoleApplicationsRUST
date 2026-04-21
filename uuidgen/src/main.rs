@@ -68,11 +68,11 @@ struct Args {
 
     /// Print help
     #[arg(short = 'h', long, visible_short_alias = '?', action = clap::ArgAction::Help)]
-    help: bool,
+    help: Option<bool>,
 
     /// Print version
     #[arg(short = 'V', long, action = clap::ArgAction::Version)]
-    version: bool,
+    version: Option<bool>,
 }
 
 struct FormatOptions {
@@ -994,6 +994,8 @@ mod tests {
             uppercase: false,
             output_template: "{uuid}".to_string(),
             guid_v6_seed: "1,2,3,4,5,6".to_string(),
+            help: None,
+            version: None,
         };
 
         let uuid_formatted = generate_uuid(&args);
@@ -1019,6 +1021,8 @@ mod tests {
             uppercase: false,
             output_template: "{uuid}".to_string(),
             guid_v6_seed: "100,101,102,103,104,105".to_string(),
+            help: None,
+            version: None,
         };
 
         let uuid_formatted = generate_uuid(&args);
@@ -1039,6 +1043,8 @@ mod tests {
             uppercase: false,
             output_template: "{uuid}".to_string(),
             guid_v6_seed: String::new(),
+            help: None,
+            version: None,
         };
 
         let nanoid = generate_uuid(&args);
@@ -1063,6 +1069,8 @@ mod tests {
             uppercase: false,
             output_template: "ID-{sequence}-{uuid}".to_string(),
             guid_v6_seed: String::new(),
+            help: None,
+            version: None,
         };
 
         let uuid_formatted = generate_uuid(&args);
@@ -1196,6 +1204,8 @@ mod tests {
             uppercase: true,
             output_template: "PREFIX-{uuid}-SUFFIX".to_string(),
             guid_v6_seed: String::new(),
+            help: None,
+            version: None,
         };
 
         let uuid_formatted = generate_uuid(&args);

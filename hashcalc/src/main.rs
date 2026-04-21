@@ -35,11 +35,11 @@ struct Args {
 
     /// Print help
     #[arg(short = 'h', long, visible_short_alias = '?', action = clap::ArgAction::Help)]
-    help: bool,
+    help: Option<bool>,
 
     /// Print version
     #[arg(short = 'V', long, action = clap::ArgAction::Version)]
-    version: bool,
+    version: Option<bool>,
 }
 
 fn read_file_contents(path: &str) -> Result<Vec<u8>, String> {
