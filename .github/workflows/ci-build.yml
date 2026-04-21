@@ -282,6 +282,10 @@ jobs:
       - name: Run tests
         run: cargo test --verbose --release
 
+      - name: Debug Files - BUILD_OUTPUT_FOLDER
+        shell: pwsh
+        run: Get-ChildItem "${{ env.BUILD_OUTPUT_FOLDER }}" -recurse
+
       - name: Copy relevant files to output folder
         shell: pwsh
         run: |
@@ -297,6 +301,10 @@ jobs:
           Copy-Item "README.md" "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
 
           foreach ($project in "${{ env.PROJECT_NAMES }}".Split(',')) {
+            if ([string]::IsNullOrWhiteSpace($project)) {
+              continue
+            }
+            
             Write-Host "Copying project to '${{ env.BASE_BUILD_COLLECT_FOLDER }}': $project"
             $project = $project.Trim()
             Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "$($project)$($executable_extension)") "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
