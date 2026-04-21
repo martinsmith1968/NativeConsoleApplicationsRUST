@@ -372,7 +372,10 @@ jobs:
         run: cargo llvm-cov --all-targets --lcov --output-path lcov.info
 
       - name: Write coverage summary to GitHub Step Summary
-        run: cargo llvm-cov report --summary-only >> $GITHUB_STEP_SUMMARY
+        run: |
+          echo "```" >> $GITHUB_STEP_SUMMARY
+          cargo llvm-cov report --summary-only >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload coverage report artifact
         uses: actions/upload-artifact@v7.0.1
