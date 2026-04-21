@@ -31,7 +31,7 @@ enum UUIDType {
     help_expected = true,
     disable_help_flag = true,
     disable_version_flag = true,
-    after_help = "NOTE:\noutput-template supports: {uuid}, {sequence} dynamic values\n(See also : https://github.com/vitiral/strfmt)"
+    after_help = "NOTE:\noutput-template supports: {uuid}, {sequence} dynamic values\n(See also : https://github.com/vitiral/strfmt)\n\nExamples:\n  uuidgen\n  uuidgen --count 5\n  uuidgen --count 3 --uppercase\n  uuidgen --uuid-type nanoid\n  uuidgen --count 5 --output-template \"{sequence}: {uuid}\""
 )]
 struct Args {
     /// Number of times to generate

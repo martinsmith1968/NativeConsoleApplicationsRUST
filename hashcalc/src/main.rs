@@ -13,7 +13,8 @@ use hashers::hash_content;
     author,
     help_expected = true,
     disable_help_flag = true,
-    disable_version_flag = true
+    disable_version_flag = true,
+    after_help = "Examples:\n  hashcalc --text \"Hello World\"\n  hashcalc --text \"Hello World\" --algorithm md5\n  hashcalc --file myfile.txt\n  hashcalc --file myfile.txt --algorithm sha512\n  hashcalc --file myfile.txt --write"
 )]
 struct Args {
     /// The text to generate a hash for (mutually exclusive with --file)
