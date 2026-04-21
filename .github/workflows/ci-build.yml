@@ -203,7 +203,7 @@ jobs:
         uses: actions/checkout@v6.0.2
 
       - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1.15.4
+        uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
         with:
           components:
             rustfmt
@@ -319,7 +319,7 @@ jobs:
         run: Get-ChildItem "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -recurse
 
       - name: Compress Artifacts
-        uses: OctopusDeploy/create-zip-package-action@v4.1.0
+        uses: OctopusDeploy/create-zip-package-action@v4.1.1
         with:
           package_id: ${{ env.PROJECT_NAME }}.${{ matrix.platform }}.${{ matrix.arch }}
           version: v${{ needs.setup.outputs.executable_version }}
