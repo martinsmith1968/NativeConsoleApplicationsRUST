@@ -297,8 +297,9 @@ jobs:
           Copy-Item "README.md" "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
 
           foreach ($project in "${{ env.PROJECT_NAMES }}".Split(',')) {
+            Write-Host "Copying project to '${{ env.BASE_BUILD_COLLECT_FOLDER }}': $project"
             $project = $project.Trim()
-            Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "$project$executable_extension") "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
+            Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "$($project)$($executable_extension)") "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
           }
 
       - name: Debug Files - BASE_BUILD_OUTPUT_FOLDER
