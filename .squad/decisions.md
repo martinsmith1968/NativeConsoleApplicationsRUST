@@ -513,6 +513,55 @@ Expanded the test suite from 70 to 147 total tests by adding:
 
 ---
 
+### Directive: Tests in Separate Files (2026-04-21)
+
+**By:** Martin Smith (via Copilot)
+
+Tests must be placed in separate files named `{source_file}_tests.rs`, not inline in source files.
+
+For source files at root of `src/` (e.g., `main.rs`):
+```rust
+#[cfg(test)] mod main_tests;  // resolves to src/main_tests.rs
+```
+
+For non-root source files (e.g., `hashers/base64.rs`):
+```rust
+#[cfg(test)] #[path = "base64_tests.rs"] mod tests;  // sibling in same dir
+```
+
+**Rationale:** Maintains clean separation between implementation and tests across all source structures.
+
+---
+
+### Decision: Standard about/long_about Format for CLI Binaries
+
+**Date:** Session 6  
+**Author:** Marcus (Backend Dev)  
+**Status:** Implemented ✓  
+**Affected Components:** `hashcalc/src/main.rs`, `uuidgen/src/main.rs`
+
+Standardised the `#[command(...)]` `about` and `long_about` fields across all CLI binaries.
+
+**Standard Format:**
+```rust
+about = concat!("{app_name} v", env!("CARGO_PKG_VERSION"), " - {description}"),
+long_about = concat!("{app_name} v", env!("CARGO_PKG_VERSION"), " - {description}\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
+```
+
+- **`about`** — shown in brief usage / error output: `{app_name} v{version} - {description}`
+- **`long_about`** — shown with `--help`: same as `about` plus the copyright line
+
+**Rationale:**
+- Users see which tool and version they're using immediately
+- Copyright belongs in `--help` output, not error messages
+- `env!("CARGO_PKG_VERSION")` is zero-cost compile-time constant
+
+**Verification:**
+✅ Clean build, zero warnings  
+✅ 231 tests pass across both binaries
+
+---
+
 ## Governance
 
 - All meaningful changes require team consensus

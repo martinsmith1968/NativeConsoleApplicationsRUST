@@ -26,7 +26,8 @@ enum UUIDType {
 #[derive(Parser, Debug)]
 #[command(
     version,
-    about = concat!("Generate Unique IDs (UUIDs) with controlled output and formatting\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
+    about = concat!("uuidgen v", env!("CARGO_PKG_VERSION"), " - Generate Unique IDs (UUIDs) with controlled output and formatting\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
+    long_about = concat!("uuidgen v", env!("CARGO_PKG_VERSION"), " - Generate Unique IDs (UUIDs) with controlled output and formatting\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
     author,
     help_expected = true,
     disable_help_flag = true,
