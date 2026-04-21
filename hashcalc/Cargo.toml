@@ -12,7 +12,7 @@ repository = "http://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
 
 [package.metadata.winresource]
 ProductName    = "Calculate hashes of text / files in a variety of alogirthms"
-LegalCopyright = "Copyright © 2022"
+LegalCopyright = "Copyright © 2026 Martin Smith"
 
 [dependencies]
 clap = { version = "4.6.0", features = ["derive", "wrap_help"] }

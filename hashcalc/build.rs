@@ -2,8 +2,16 @@ extern crate winresource;
 
 use std::env;
 use std::path::Path;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 fn main() {
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    let build_year = 1970 + (secs / 31_557_600);
+    println!("cargo:rustc-env=BUILD_YEAR={}", build_year);
+
     if std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap() == "windows" {
         let mut res = winresource::WindowsResource::new();
 
