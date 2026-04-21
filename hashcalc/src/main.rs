@@ -7,8 +7,18 @@ use hashers::hash_content;
 
 /// Generate a hash of text or file contents
 #[derive(Parser, Debug)]
-#[command(version, about, author, help_expected = true)]
+#[command(
+    version, 
+    about, 
+    author, 
+    help_expected = true, 
+    disable_help_flag = true
+)]
 struct Args {
+    /// Print help
+    #[arg(short = 'h', long, visible_short_alias = '?', action = clap::ArgAction::Help)]
+    help: bool,
+
     /// The text to generate a hash for (mutually exclusive with --file)
     #[arg(short, long)]
     text: Option<String>,
