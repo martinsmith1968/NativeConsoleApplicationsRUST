@@ -538,10 +538,21 @@
 - **Regex Patterns:** UUID format validation via regex (e.g., `[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}...`)
 - **Stderr Validation:** Test warning messages appear on stderr when appropriate (invalid seeds, malformed templates)
 
+### CI Coverage Job (Current Session)
+- **cargo-llvm-cov** is the modern standard for Rust coverage — uses LLVM instrumentation, cross-platform, first-class GitHub Action support via `taiki-e/install-action@cargo-llvm-cov`
+- Coverage jobs should run on `ubuntu-latest` for speed and tooling simplicity, even if the main build targets Windows
+- Run coverage in parallel with `build` (both need `setup` only) — don't chain them; coverage is independent of artifact production
+- `--all-targets` ensures test binaries, integration tests, and examples are all instrumented
+- `cargo llvm-cov report --summary-only` gives the compact human-readable output suitable for step summaries
+- No threshold gates on initial coverage adoption — let the team see the baseline before enforcing minimums
+- Upload `lcov.info` as an artifact for future Codecov/Coveralls integration
+- `tag` and `release` jobs must NOT depend on `coverage` — they gate only on `build`
+
 ## Files Modified (Current Session)
 - `uuidgen/src/main.rs` - Added 8 edge case unit tests
 - `uuidgen/tests/integration_tests.rs` - Created with 30 CLI black-box tests (NEW FILE)
 - `uuidgen/Cargo.toml` - Added assert_cmd and predicates dev-dependencies
+- `.github/workflows/ci-build.yml` - Added `coverage` job (cargo-llvm-cov, LCOV artifact, step summary)
 - `.squad/agents/blake/history.md` - Updated with comprehensive session notes
 
 ## Next Steps / Recommendations

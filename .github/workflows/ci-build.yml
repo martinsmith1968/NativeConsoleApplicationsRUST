@@ -343,6 +343,46 @@ jobs:
 
 
   ##########################################################
+  ## Test Coverage
+  coverage:
+    name: Test Coverage
+
+    # Run on Linux — coverage tooling is faster and simpler there
+    runs-on: ubuntu-latest
+
+    # Only needs setup; runs in parallel with the build job
+    needs: setup
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
+        with:
+          components: |
+            rustfmt
+            clippy
+            llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Generate coverage (LCOV)
+        run: cargo llvm-cov --all-targets --lcov --output-path lcov.info
+
+      - name: Write coverage summary to GitHub Step Summary
+        run: cargo llvm-cov report --summary-only >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage report artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: coverage-report
+          path: lcov.info
+          if-no-files-found: error
+
+
+  ##########################################################
   ## Tag in git
   tag:
     name: Tag in GitHub
