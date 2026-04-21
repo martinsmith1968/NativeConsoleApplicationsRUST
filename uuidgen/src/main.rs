@@ -192,6 +192,5 @@ fn format_output(output_format: &str, formatted_uuid: &str, sequence: u32) -> St
     }
 }
 
-
 #[cfg(test)]
 mod main_tests;
