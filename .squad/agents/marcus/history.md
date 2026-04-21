@@ -263,4 +263,17 @@ This allows both trait methods to be available through explicit qualification wh
 
 - Added --write (-w) option to hashcalc to write output to a sidecar file named `{input_filename}.{algorithm}` in the same directory as the input. Implemented in src\bin\hashcalc\main.rs and covered by integration tests.
 - Output format for written files mirrors stdout: `{filename} [{algorithm}] : {hash}`. Errors surface with clear messages and non-zero exit codes on misuse or write failures.
+- Standard `about`/`long_about` pattern: `about` = `"{app_name} v{version} - {description}"` for brief usage; `long_about` appends the copyright line so it only shows with `--help`. Use `env!("CARGO_PKG_VERSION")` alongside `env!("BUILD_YEAR")`.
+
+## Session 6: about/long_about Format Standardisation
+
+Updated `#[command(...)]` attributes in both binaries to use the new standard `about`/`long_about` split.
+
+### Files Modified
+- `hashcalc/src/main.rs`
+- `uuidgen/src/main.rs`
+
+### Build & Test Status
+✅ Clean build, zero warnings
+✅ 231 tests pass (108 + 39 hashcalc, 54 + 30 uuidgen)
 
