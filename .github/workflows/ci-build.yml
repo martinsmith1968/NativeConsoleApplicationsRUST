@@ -10,6 +10,7 @@ env:
   BRANCH_PREFIX_RELEASE_CANDIDATE: rc/
   CARGO_TERM_COLOR: always
   BASE_BUILD_OUTPUT_FOLDER: Output
+  BASE_BUILD_COLLECT_FOLDER: Collect
   BASE_BUILD_ARTIFACTS_FOLDER: Artifacts
 
 on:
@@ -123,6 +124,31 @@ jobs:
     - name: Set Executable Build Version (for RUST)
       run: echo "executable_build_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}.${{ env.build_date }}" >> $GITHUB_ENV
 
+    - name: Checkout
+      uses: actions/checkout@v6.0.2
+      with:
+        fetch-depth: 0
+
+    - name: Discover Buildable Projects
+      shell: pwsh
+      run: |
+        Install-Module -Name PSToml -Force
+
+        $toml_filename = "Cargo.toml"
+        $contents = Get-Content $toml_filename -Raw
+
+        $toml_object = $contents | ConvertFrom-Toml
+
+        $projects = $toml_object.workspace.members
+        Write-Host "Found $($projects.Count) Project Names"
+        foreach ($project in $projects) {
+          Write-Host " - $project"
+        }
+
+        $binary_names = [string]::join(',', $projects)
+
+        echo "BINARY_NAMES=$binary_names" >> $env:GITHUB_ENV
+
     - name: Show Configuration
       run: env | sort
 
@@ -137,6 +163,7 @@ jobs:
       release_is_draft: ${{ env.release_is_draft }}
       release_is_prerelease: ${{ env.release_is_prerelease }}
       release_modifier: ${{ env.release_modifier }}
+      binary_names: ${{ env.BINARY_NAMES }}
 
 
   ##########################################################
@@ -200,31 +227,42 @@ jobs:
       - name: Setup Rust Target
         run: rustup target add ${{ matrix.target }}
 
-      - name: Set Cargo TOML Version Values (HACK - hashcalc)
-        uses: cssnr/toml-action@v1.0.1
-        with:
-          file: hashcalc/Cargo.toml
-          path: $.package.version
-          value: "${{ needs.setup.outputs.executable_build_version }}"
-
-      - name: Set Cargo TOML Version Values (HACK - uuidgen)
-        uses: cssnr/toml-action@v1.0.1
-        with:
-          file: uuidgen/Cargo.toml
-          path: $.package.version
-          value: "${{ needs.setup.outputs.executable_build_version }}"
-
-      - name: Show Cargo TOML
+      - name: Set Cargo TOML Version Values
         shell: pwsh
         run: |
-          Write-Host '> Cargo.toml'
-          Get-Content 'Cargo.toml'
+          foreach ($project in "${{ needs.setup.outputs.binary_names }}".Split(',')) {
+            $project = $project.Trim()
+            
+            Write-Host
+            Write-Host "--------------------------------------------------------------------------------"
+            Write-Host "Setting version for project '$project' to '${{ needs.setup.outputs.executable_build_version }}'"
 
-          Write-Host '> hashcalc/Cargo.toml'
-          Get-Content 'hashcalc/Cargo.toml'
+            $file_path = Join-Path $project "Cargo.toml"
+            $lines = Get-Content $file_path
 
-          Write-Host '> uuidgen/Cargo.toml'
-          Get-Content 'uuidgen/Cargo.toml'
+            $section = ""
+            for ($i = 0; $i -lt $lines.Length; $i++) {
+              $line = $lines[$i].Trim()
+
+              if ($line -match '^\s*\[.*\]\s*$') {
+                $section = $line.Trim('[', ']')
+              }
+
+              if ($section -eq "package" -and $line -match '^\s*version\s*=\s*".*"\s*$') {
+                Write-Host "Found version line: $($i): '$line'"
+                $new_line = "version = `"${{ needs.setup.outputs.executable_build_version }}`""
+                $lines[$i] = $new_line
+                Write-Host "  Set version line: $($i): '$new_line'"
+                break
+              }
+            }
+            
+            Set-Content -Path $file_path -Value $lines
+
+            Write-Host
+            Write-Host "$file_path :"
+            Get-Content $file_path
+          }
 
       - name: Set Build Parameters
         shell: pwsh
@@ -235,26 +273,6 @@ jobs:
           echo "BUILD_OUTPUT_FOLDER=$build_output_folder" >> $env:GITHUB_ENV
           echo "BUILD_ARTIFACTS_FOLDER=$build_artifacts_folder" >> $env:GITHUB_ENV
 
-      - name: Discover Buildable Projects
-        shell: pwsh
-        run: |
-          Install-Module -Name PSToml -Force
-
-          $toml_filename = "Cargo.toml"
-          $contents = Get-Content $toml_filename -Raw
-
-          $toml_object = $contents | ConvertFrom-Toml
-
-          $projects = $toml_object.workspace.members
-          Write-Host "Found $($projects.Count) Project Names"
-          foreach ($project in $projects) {
-            Write-Host " - $project"
-          }
-
-          $project_names = [string]::join(',', $projects)
-
-          echo "PROJECT_NAMES=$project_names" >> $env:GITHUB_ENV
-
       - name: Build
         run: cargo build --all-targets --future-incompat-report --profile ${{ env.BUILD_CONFIG }} --verbose --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
 
@@ -264,6 +282,10 @@ jobs:
       - name: Run tests
         run: cargo test --verbose --release
 
+      - name: Debug Files - BUILD_OUTPUT_FOLDER
+        shell: pwsh
+        run: Get-ChildItem "${{ env.BUILD_OUTPUT_FOLDER }}" -recurse
+
       - name: Copy relevant files to output folder
         shell: pwsh
         run: |
@@ -272,16 +294,29 @@ jobs:
             $executable_extension = ""
           }
 
-          Copy-Item "README.md" "${{ env.BASE_BUILD_OUTPUT_FOLDER }}"
+          if (-not(Test-Path "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -PathType Container)) {
+            New-Item -path "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -ItemType Directory
+          }
 
-          foreach ($project in "${{ env.PROJECT_NAMES }}".Split(',')) {
+          Copy-Item "README.md" "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
+
+          foreach ($project in "${{ needs.setup.outputs.binary_names }}".Split(',')) {
+            if ([string]::IsNullOrWhiteSpace($project)) {
+              continue
+            }
+            
+            Write-Host "Copying project to '${{ env.BASE_BUILD_COLLECT_FOLDER }}': $project"
             $project = $project.Trim()
-            Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "$project$executable_extension") "${{ env.BASE_BUILD_OUTPUT_FOLDER }}"
+            Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "$($project)$($executable_extension)") "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
           }
 
       - name: Debug Files - BASE_BUILD_OUTPUT_FOLDER
         shell: pwsh
         run: Get-ChildItem "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" -recurse
+
+      - name: Debug Files - BASE_BUILD_COLLECT_FOLDER
+        shell: pwsh
+        run: Get-ChildItem "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -recurse
 
       - name: Compress Artifacts
         uses: OctopusDeploy/create-zip-package-action@v4.1.1
@@ -289,7 +324,7 @@ jobs:
           package_id: ${{ env.PROJECT_NAME }}.${{ matrix.platform }}.${{ matrix.arch }}
           version: v${{ needs.setup.outputs.executable_version }}
           output_folder: ${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}
-          base_path: ${{ env.BASE_BUILD_OUTPUT_FOLDER }}
+          base_path: ${{ env.BASE_BUILD_COLLECT_FOLDER }}
           files: |
             *
 
