@@ -41,6 +41,7 @@ jobs:
     steps:
     - name: Get Current Build Date
       run: |
+        echo "bob=${{ secrets.BOB }}" # Just to test secrets are available in this step - they should be, but we will only use them in later steps
         echo "build_date=$(date +'%y%j')" >> $GITHUB_ENV
         echo "build_year=$(date +'%Y')" >> $GITHUB_ENV
 
