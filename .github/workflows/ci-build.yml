@@ -373,7 +373,9 @@ jobs:
 
       - name: Write coverage summary to GitHub Step Summary
         run: |
-          echo '```text' ; cargo llvm-cov report --summary-only ; echo '```' >> $GITHUB_STEP_SUMMARY
+          echo '```text' ; cargo llvm-cov report --summary-only ; echo '```' > /tmp/coverage_summary.txt
+          cat /tmp/coverage_summary.txt
+          cat /tmp/coverage_summary.txt >> $GITHUB_STEP_SUMMARY
         shell: bash
 
       - name: Upload coverage report artifact
