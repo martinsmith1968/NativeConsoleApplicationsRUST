@@ -52,10 +52,10 @@ E3C791C0E66D4D418164F6825CE8DE84
 
 [//]: # (APP_LATESTVERSION)
 
-> PauseN -!
+> uuidgen -!
 
 ```text
-v2.2.0.0-dev
+uuidgen 0.1.0-dev
 ```
 
 ## Full Help Text
@@ -64,26 +64,34 @@ The full help text looks something like this :
 
 [//]: # (APP_HELPOUTPUT)
 
-> PauseN -?
+> uuidgen -?
 
 ```text
-PauseN v2.2.0.0-dev - Pause console output for a keypress, or a timeout
-Copyright ® 2018-2026 Martin Smith
+uuidgen v0.1.0-dev - Generate Unique IDs (UUIDs) with controlled output and formatting
+Copyright ┬® 2025-2026 Martin Smith
 
-Usage:
-PauseN [message-text] [OPTIONS]
+Usage: uuidgen.exe [OPTIONS]
 
 Options:
-[message-text] Text                   The Text to display (Default:Press any key to continue (or wait {timeout} seconds) . . . )
--t, --timeout Integer                 The timeout to wait for in seconds (Default:30)
--s, --sleep Integer                   The period to sleep for between checks for in milliseconds (Default:200)
--e, --escape-cancels-timeout +/-      Allow ESC to cancel timeout (Default:true)
--c, --timeout-cancelled-text Text     The text to show when a timeout is cancelled (Default:(Timeout Cancelled))
--!, --version +/-                     Show App Version details (Default:false)
--?, --help +/-                        Show Help screen (Default:false)
--@, --use-default-arguments-file +/-  Use Default Arguments File (PauseN.options) (Default:true)
--$, --use-local-arguments-file +/-    Use Local Arguments File (PauseN.options) (Default:true)
+  -c, --count <COUNT>                      Number of times to generate [default: 1]
+  -t, --uuid-type <UUID_TYPE>              The type of UUID to generate [default: guid] [possible values: guid, nanoid]
+  -v, --guid-version <GUID_VERSION>        The version of GUID to generate [default: v4] [possible values: v4, v6, v7]
+  -l, --nanoid-length <NANOID_LENGTH>      The size of NanoId to generate [default: 21]
+  -y, --non-hyphenated                     Format the GUID without Hyphens (GUID only)
+  -u, --uppercase                          Covert the GUID to Upper case values (GUID only)
+  -o, --output-template <OUTPUT_TEMPLATE>  The template to use when writing the output [default: {uuid}]
+  -6, --guid-v6-seed <GUID_V6_SEED>        The seed to use when generating a v6 Guid (6 values) [default: 1,2,3,4,5,6]
+  -h, --help                               Print help [aliases: -?]
+  -V, --version                            Print version [aliases: -!]
 
-Default App arguments can be specified in : C:\Temp\a6e4aa6c3091438b97abf6d2b52171ed\PauseN.options
-Local App arguments can be specified in : C:\Temp\PauseN.options
+NOTE:
+output-template supports: {uuid}, {sequence} dynamic values
+(See also : https://github.com/vitiral/strfmt)
+
+Examples:
+  uuidgen
+  uuidgen --count 5
+  uuidgen --count 3 --uppercase
+  uuidgen --uuid-type nanoid
+  uuidgen --count 5 --output-template "{sequence}: {uuid}"
 ```
