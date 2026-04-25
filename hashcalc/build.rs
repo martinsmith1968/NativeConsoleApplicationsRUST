@@ -1,9 +1,9 @@
 extern crate winresource;
 
+use build_print::*;
 use std::env;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
-use build_print::*;
 
 fn main() {
     let secs = SystemTime::now()
@@ -30,7 +30,10 @@ fn main() {
             warn!("No APP Icon Found: {}", icon_file.display());
         }
 
-        res.set("OriginalFilename", &env::var("CARGO_PKG_NAME").unwrap_or_default());
+        res.set(
+            "OriginalFilename",
+            &env::var("CARGO_PKG_NAME").unwrap_or_default(),
+        );
 
         res.set(
             "FileDescription",
