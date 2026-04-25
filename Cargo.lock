@@ -124,6 +124,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "build-print"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8e6738dfb11354886f890621b4a34c0b177f75538023f7100b608ab9adbd66b"
+
+[[package]]
 name = "bumpalo"
 version = "3.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -310,6 +316,7 @@ name = "hashcalc"
 version = "0.1.0-dev"
 dependencies = [
  "assert_cmd",
+ "build-print",
  "clap",
  "hex",
  "md5",
@@ -822,6 +829,7 @@ name = "uuidgen"
 version = "0.1.0-dev"
 dependencies = [
  "assert_cmd",
+ "build-print",
  "clap",
  "nanoid",
  "predicates",

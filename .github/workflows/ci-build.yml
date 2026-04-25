@@ -328,8 +328,6 @@ jobs:
           files: |
             *
 
-      # gci |  where { $_.UnixMode -like '*x*' }
-
       - name: Debug Files - BUILD_ARTIFACTS_FOLDER
         shell: pwsh
         run: Get-ChildItem "${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}" -recurse

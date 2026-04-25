@@ -1,18 +1,17 @@
 [package]
-name       = "uuidgen"
-authors    = [ "Martin Smith" ]
-version    = "0.1.0-dev"
-edition    = "2024"
+name        = "uuidgen"
+authors     = [ "Martin Smith" ]
+version     = "0.1.0-dev"
+edition     = "2024"
 description = "Generate Unique IDs (UUIDs) with controlled output and formatting"
-readme     = "../README.md"
-license    = "MIT OR Apache-2.0"
-keywords   = [ "uuid", "nanoid" ]
-categories = [ "command-line-utilities" ]
-repository = "http://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
+readme      = "../README.md"
+license     = "MIT OR Apache-2.0"
+keywords    = [ "uuid", "nanoid" ]
+categories  = [ "command-line-utilities" ]
+repository  = "http://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
 
 [package.metadata.winresource]
-ProductName    = "Unique ID Generator (UUID / NanoID)"
-LegalCopyright = "Copyright © 2026 Martin Smith"
+LegalCopyright = "Copyright © 2025-2026 Martin Smith"
 
 [dependencies]
 nanoid = "0.4.0"
@@ -21,6 +20,7 @@ strfmt = "0.2.5"
 
 [build-dependencies]
 winresource = "0.1.31"
+build-print = "1.0.1"
 
 [dependencies.uuid]
 version  = "1.23.0"

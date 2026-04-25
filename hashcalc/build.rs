@@ -3,6 +3,7 @@ extern crate winresource;
 use std::env;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
+use build_print::*;
 
 fn main() {
     let secs = SystemTime::now()
@@ -10,27 +11,26 @@ fn main() {
         .unwrap()
         .as_secs();
     let build_year = 1970 + (secs / 31_557_600);
-    println!("cargo:rustc-env=BUILD_YEAR={}", build_year);
+    std::println!("cargo:rustc-env=BUILD_YEAR={}", build_year);
 
     if std::env::var("CARGO_CFG_TARGET_FAMILY").unwrap() == "windows" {
         let mut res = winresource::WindowsResource::new();
 
         let build_dir = env::var("CARGO_MANIFEST_DIR")
             .unwrap_or_else(|_e| env::current_dir().unwrap().display().to_string());
-        println!("cargo:warning=Using Build Dir: {}", build_dir);
+        note!("Using Build Dir: {}", build_dir);
 
         let icon_file = Path::new(&build_dir).join("app.ico");
 
-        println!(
-            "cargo:warning=Checking icon: {} - {}",
-            icon_file.display(),
-            icon_file.exists()
-        );
         if icon_file.exists() {
-            println!("Setting APP Icon: {}", icon_file.display());
-            println!("cargo:rerun-if-changed={}", icon_file.display());
+            info!("Setting APP Icon: {}", icon_file.display());
+            std::println!("cargo:rerun-if-changed={}", icon_file.display());
             res.set_icon(icon_file.to_str().unwrap());
+        } else {
+            warn!("No APP Icon Found: {}", icon_file.display());
         }
+
+        res.set("OriginalFilename", &env::var("CARGO_PKG_NAME").unwrap_or_default());
 
         res.set(
             "FileDescription",
