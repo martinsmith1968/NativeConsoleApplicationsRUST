@@ -39,7 +39,7 @@ struct Args {
     help: Option<bool>,
 
     /// Print version
-    #[arg(short = 'V', long, action = clap::ArgAction::Version)]
+    #[arg(short = 'V', long, visible_short_alias = '!', action = clap::ArgAction::Version)]
     version: Option<bool>,
 }
 
