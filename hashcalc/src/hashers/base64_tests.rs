@@ -62,7 +62,9 @@ fn test_base64_all_ones() {
 fn test_base64_unicode() {
     let result = hash("hello世界".as_bytes()).unwrap();
     assert!(result.len() > 0);
-    assert!(result
-        .chars()
-        .all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '='));
+    assert!(
+        result
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=')
+    );
 }
