@@ -2,16 +2,16 @@ use assert_cmd::Command;
 use std::fs;
 use std::path::PathBuf;
 
-fn get_expected_output_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests")
-        .join("ExpectedOutput")
-}
+//fn get_expected_output_dir() -> PathBuf {
+//    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+//        .join("tests")
+//        .join("ExpectedOutput")
+//}
 
-fn load_expected_output(filename: &str) -> String {
-    let path = get_expected_output_dir().join(format!("{}.example", filename));
-    fs::read_to_string(&path).expect(&format!("Failed to read expected output file: {:?}", path))
-}
+//fn load_expected_output(filename: &str) -> String {
+//    let path = get_expected_output_dir().join(format!("{}.example", filename));
+//    fs::read_to_string(&path).expect(&format!("Failed to read expected output file: {:?}", path))
+//}
 
 fn validate_guid_format(
     output: &str,
