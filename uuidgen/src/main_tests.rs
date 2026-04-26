@@ -380,11 +380,9 @@ fn test_nanoid_generation_default_length() {
     // Default NanoID should be 21 characters
     assert_eq!(nanoid.len(), 21);
     // Should only contain valid NanoID characters (0-9, A-Z, a-z, -, _)
-    assert!(
-        nanoid
-            .chars()
-            .all(|c| { c.is_ascii_alphanumeric() || c == '-' || c == '_' })
-    );
+    assert!(nanoid
+        .chars()
+        .all(|c| { c.is_ascii_alphanumeric() || c == '-' || c == '_' }));
 }
 
 #[test]
@@ -401,11 +399,9 @@ fn test_nanoid_generation_custom_length_long() {
 
     // Should handle large lengths
     assert_eq!(nanoid.len(), 100);
-    assert!(
-        nanoid
-            .chars()
-            .all(|c| { c.is_ascii_alphanumeric() || c == '-' || c == '_' })
-    );
+    assert!(nanoid
+        .chars()
+        .all(|c| { c.is_ascii_alphanumeric() || c == '-' || c == '_' }));
 }
 
 #[test]
@@ -414,11 +410,9 @@ fn test_nanoid_generation_very_long() {
 
     // Should handle very long lengths
     assert_eq!(nanoid.len(), 255);
-    assert!(
-        nanoid
-            .chars()
-            .all(|c| { c.is_ascii_alphanumeric() || c == '-' || c == '_' })
-    );
+    assert!(nanoid
+        .chars()
+        .all(|c| { c.is_ascii_alphanumeric() || c == '-' || c == '_' }));
 }
 
 #[test]
@@ -807,11 +801,9 @@ fn test_end_to_end_v4_simple() {
     // Should be valid V4 UUID format
     assert_eq!(uuid_formatted.len(), 36);
     assert!(uuid_formatted.contains('-'));
-    assert!(
-        uuid_formatted
-            .chars()
-            .all(|c| c.is_ascii_hexdigit() || c == '-')
-    );
+    assert!(uuid_formatted
+        .chars()
+        .all(|c| c.is_ascii_hexdigit() || c == '-'));
 }
 
 #[test]
@@ -855,11 +847,9 @@ fn test_end_to_end_nanoid_generation() {
 
     // Should be valid NanoID
     assert_eq!(nanoid.len(), 21);
-    assert!(
-        nanoid
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
-    );
+    assert!(nanoid
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_'));
 }
 
 #[test]

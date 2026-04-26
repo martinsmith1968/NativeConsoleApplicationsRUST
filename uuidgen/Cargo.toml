@@ -29,3 +29,4 @@ features = [ "v4", "v5", "v6", "v7" ]
 [dev-dependencies]
 assert_cmd = "2.0"
 predicates = "3.0"
+regex = "1.10"

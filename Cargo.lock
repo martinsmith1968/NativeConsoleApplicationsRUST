@@ -833,6 +833,7 @@ dependencies = [
  "clap",
  "nanoid",
  "predicates",
+ "regex",
  "strfmt",
  "uuid",
  "winresource",
