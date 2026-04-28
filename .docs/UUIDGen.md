@@ -70,7 +70,7 @@ The full help text looks something like this :
 uuidgen v0.1.0-dev - Generate Unique IDs (UUIDs) with controlled output and formatting
 Copyright ┬® 2025-2026 Martin Smith
 
-Usage: uuidgen.exe [OPTIONS]
+Usage: uuidgen [OPTIONS]
 
 Options:
   -c, --count <COUNT>                      Number of times to generate [default: 1]

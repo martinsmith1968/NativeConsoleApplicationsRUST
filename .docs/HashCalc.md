@@ -66,7 +66,7 @@ The full help text looks something like this :
 hashcalc v0.1.0-dev - Generate a hash of text or file contents
 Copyright ┬® 2025-2026 Martin Smith
 
-Usage: hashcalc.exe [OPTIONS]
+Usage: hashcalc [OPTIONS]
 
 Options:
   -t, --text <TEXT>            The text to generate a hash for (mutually exclusive with --file)

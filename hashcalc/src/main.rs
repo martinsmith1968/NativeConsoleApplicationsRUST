@@ -9,6 +9,7 @@ use hashers::hash_content;
 #[derive(Parser, Debug)]
 #[command(
     version,
+    bin_name = env!("CARGO_PKG_NAME"),
     about = concat!("hashcalc v", env!("CARGO_PKG_VERSION"), " - Generate a hash of text or file contents\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
     long_about = concat!("hashcalc v", env!("CARGO_PKG_VERSION"), " - Generate a hash of text or file contents\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
     author,
