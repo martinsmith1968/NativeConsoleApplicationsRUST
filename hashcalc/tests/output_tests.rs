@@ -10,7 +10,8 @@ fn get_expected_output_dir() -> PathBuf {
 
 fn load_expected_output(filename: &str) -> String {
     let path = get_expected_output_dir().join(format!("{}.example", filename));
-    let content = fs::read_to_string(&path).expect(&format!("Failed to read expected output file: {:?}", path));
+    let content = fs::read_to_string(&path)
+        .expect(&format!("Failed to read expected output file: {:?}", path));
     // Normalize line endings so tests pass regardless of git autocrlf settings
     content.replace("\r\n", "\n")
 }
