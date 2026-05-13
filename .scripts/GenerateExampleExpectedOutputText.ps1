@@ -51,6 +51,9 @@ function Set-ExpectedOutput {
     if ( [string]::IsNullOrEmpty($expected_output_path) ) {
         $expected_output_path = Join-Path -Path $PSScriptRoot -ChildPath ".." $app_name "tests" "Expectedoutput"
     }
+    if ( -not (Test-Path -Path $expected_output_path) ) {
+        New-Item -Path $expected_output_path -ItemType Directory -Force | Out-Null
+    }
 
     $parameters = $arguments.Split("|")
 
@@ -59,7 +62,19 @@ function Set-ExpectedOutput {
 }
 
 
-# Generate For : BannerText
+# Generate For : bannertext
+$app_name = "bannertext.exe"
+$app = Search-AppByName -app_name $app_name
+if ( $null -ne $app ) {
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "-?"                             -output_filename "Execute_with_help_request_produces_arguments_list"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "bob"                            -output_filename "Execute_with_text_only_produces_expected_output"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "bob|-m|80"                      -output_filename "Execute_with_text_and_min_length_produces_expected_output"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "a|bb|ccc|dddd|eeeee"            -output_filename "Execute_with_multiple_text_lines_produces_expected_output"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "a|bb|ccc|dddd|eeeee|-ta|Center" -output_filename "Execute_with_multiple_text_lines_aligned_center_produces_expected_output"
+}
+
+
+# Generate For : hashcalc
 $app_name = "hashcalc.exe"
 $app = Search-AppByName -app_name $app_name
 if ( $null -ne $app ) {
@@ -73,7 +88,7 @@ if ( $null -ne $app ) {
 }
 
 
-# Generate For : Stopwatch
+# Generate For : uuidgen
 $app_name = "uuidgen.exe"
 $app = Search-AppByName -app_name $app_name
 if ( $null -ne $app ) {

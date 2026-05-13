@@ -53,7 +53,7 @@ foreach ( $app in $run_apps.GetEnumerator() ) {
     $appBaseName = [System.IO.Path]::GetFileNameWithoutExtension($appName)
 
     Write-Host "Processing App: ${appName}" -ForegroundColor Cyan
-    Set-Location -Path $temp_base_path
+    Push-Location -Path $temp_base_path
 
     $docs_folder = Join-Path $PSScriptRoot -ChildPath ".." ".docs"
     $docs_helptext_folder = Join-Path $docs_folder -ChildPath "HelpText"
@@ -102,6 +102,8 @@ foreach ( $app in $run_apps.GetEnumerator() ) {
             Set-Content -Path $cmd_help_output_file -Value $cmd_help_text -Encoding UTF8
         }
     }
+
+    Pop-Location
 }
 
 
