@@ -567,3 +567,136 @@ long_about = concat!("{app_name} v", env!("CARGO_PKG_VERSION"), " - {description
 - All meaningful changes require team consensus
 - Document architectural decisions here
 - Keep history focused on work, decisions focused on direction
+
+
+---
+
+# Decision: bannertext Test Strategy
+
+**Date:** Current session  
+**Author:** Blake (Tester)  
+**Status:** Implemented ✓
+
+## Context
+
+The `bannertext` app was already implemented with 23 unit tests in `src/main_tests.rs`. The task was to add integration (black-box CLI) and output (exact string) tests using the same patterns as uuidgen and hashcalc.
+
+## Decision: Two-File Test Split
+
+Split tests into `integration_tests.rs` (behavioural) and `output_tests.rs` (exact output) matching the repo convention.
+
+### integration_tests.rs — 35 tests
+Tests observable behaviour without hardcoding exact strings where possible:
+- Uses `predicate::str::contains` for content checks
+- Uses `lines().collect()` + `assert_eq!(lines.len(), N)` for line count checks
+- Uses per-line char checks (`all(|c| c == '*')`) for header/footer line validation
+
+### output_tests.rs — 10 tests
+Tests exact byte-for-byte output using Rust's format! to compute expected strings dynamically:
+- `format!("**  {:^72}  **", "Hello World")` for center-alignment (captures Rust's right-bias on odd remainder)
+- `format!("**  {:>12}  **", "Hi")` for right-alignment
+- Hardcoded strings only where length is trivially small ("*******************", "--  X  --", etc.)
+
+## Key Verification Step
+
+All expected outputs were verified by running the binary before writing tests. This eliminated ambiguity around:
+1. Whether version string uses "v" prefix in `--version` output (it does NOT: "bannertext 0.1.0-dev"), but help uses "bannertext v0.1.0-dev"
+2. Rust center-format left-vs-right bias for odd remainder (extra space goes RIGHT)
+3. Trailing spaces when suffix_count=0 (line ends with spaces, not stars)
+
+## Result
+
+68 total tests (23 unit + 35 integration + 10 output) — all green on first run.
+
+
+---
+
+# Decision: CI Coverage Job Strategy
+
+**Author:** Blake (Tester/QA)  
+**Date:** Current session  
+**Status:** Proposed
+
+## Decision
+
+Added a `coverage` job to `.github/workflows/ci-build.yml` using `cargo-llvm-cov`.
+
+## Key Choices Made
+
+### 1. Runs on `ubuntu-latest`, not `windows-latest`
+Coverage tooling (LLVM instrumentation) is faster and simpler on Linux. The build job owns Windows validation; the coverage job is a QA concern and Linux is the right platform for it.
+
+### 2. Runs in parallel with `build` (both depend on `setup` only)
+Coverage is independent of artifact production. Making it depend on `build` would delay feedback. Parallel execution keeps CI fast.
+
+### 3. `tag` and `release` do NOT depend on `coverage`
+Release gating is `build`-only. Coverage is informational — a low % should not block a release at this stage. This can be tightened later.
+
+### 4. No minimum coverage threshold enforced
+The project has no existing coverage baseline. Enforcing a threshold before the team knows what coverage looks like would be premature. Thresholds should be added once a baseline is established.
+
+### 5. Used `taiki-e/install-action@cargo-llvm-cov` (official action)
+This is the canonical installation path for `cargo-llvm-cov`, maintained by the tool author. Avoids `cargo install` compile time in CI.
+
+### 6. LCOV output + step summary
+- `lcov.info` uploaded as artifact for future Codecov/Coveralls integration
+- `--summary-only` text written to `$GITHUB_STEP_SUMMARY` for inline visibility in GitHub UI
+
+## Future Considerations
+- Add Codecov or Coveralls integration consuming `lcov.info`
+- Add a minimum coverage threshold once baseline is known
+- Consider combining with PR comments showing coverage diff
+
+
+---
+
+### 2026-05-13T09:33:34Z: User directive
+**By:** Martin Smith (via Copilot)
+**What:** Do NOT auto-commit after agent work. Scribe should skip the git add .squad/ && git commit step. Ask Martin before committing, or omit commits entirely unless explicitly requested.
+**Why:** User request — captured for team memory
+
+
+---
+
+# Decision: bannertext Implementation Patterns
+
+**Author:** Marcus  
+**Date:** 2025  
+**Status:** Accepted  
+
+## Context
+
+Implementing the `bannertext` CLI app from a C++ reference spec. Several design decisions were made to produce idiomatic Rust code.
+
+## Decisions
+
+### 1. `parse_single_char` custom value_parser for `char` args
+
+**Decision:** Use a custom `value_parser = parse_single_char` function on all char-typed CLI arguments. Specify defaults as `default_value = "*"` (string literal) rather than `default_value_t`.
+
+**Rationale:** clap 4.x has no built-in `char` parser. The custom function provides a clear error message when the user provides a multi-character or empty string.
+
+### 2. `generate_banner` as a `pub` function
+
+**Decision:** Make `generate_banner` and `TextAlignment` public, with `main_tests.rs` as a module included via `#[cfg(test)] mod main_tests;`.
+
+**Rationale:** Consistent with the uuidgen/hashcalc pattern. Keeps tests colocated without requiring a separate crate. The `pub` keyword enables unit tests to call the function directly.
+
+### 3. Text truncation uses `chars().take(n)`
+
+**Decision:** When `max_total_length` forces `text_area_width` below the text's character count, truncate using `text.chars().take(text_area_width).collect::<String>()`.
+
+**Rationale:** Byte-slicing (`&text[..n]`) can panic on multi-byte UTF-8 boundaries. Char iteration is safe and handles all Unicode text correctly.
+
+### 4. Repeated-char string building
+
+**Decision:** Use `std::iter::repeat(char).take(n).collect::<String>()` everywhere a repeated-character string is needed.
+
+**Rationale:** Idiomatic Rust; more explicit and composable than `String::from_utf8(vec![c as u8; n])` or format tricks.
+
+### 5. Workspace member ordering
+
+**Decision:** Added `bannertext` after `hashcalc` in the workspace `members` array.
+
+**Rationale:** Alphabetical ordering within purpose groups (existing apps first, new app appended). No functional impact.
+
