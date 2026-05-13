@@ -277,3 +277,94 @@ Updated `#[command(...)]` attributes in both binaries to use the new standard `a
 ✅ Clean build, zero warnings
 ✅ 231 tests pass (108 + 39 hashcalc, 54 + 30 uuidgen)
 
+---
+
+## Session 7: bannertext New CLI App
+
+### Implementation Complete
+
+Created the `bannertext` CLI app from scratch following the C++ reference spec.
+
+#### Files Created
+- `bannertext/Cargo.toml` — dependencies: clap 4.6.0 only; dev-deps: assert_cmd, predicates, regex; build-deps: winresource, build-print
+- `bannertext/build.rs` — identical to uuidgen pattern (graceful missing icon handling)
+- `bannertext/src/main.rs` — full implementation
+- `bannertext/src/main_tests.rs` — 23 unit tests
+
+#### Key Design Decisions
+1. **`parse_single_char` custom value_parser** — clap has no built-in `char` type support; used a small parser function applied via `value_parser = parse_single_char` on each char arg with `default_value = "*"` (not `default_value_t`).
+2. **`TextAlignment` as `clap::ValueEnum`** — `#[clap(rename_all = "PascalCase")]` to accept `Left`, `Right`, `Center` on CLI.
+3. **`generate_banner` is `pub`** — exposed for unit testing without integration overhead.
+4. **Text truncation** — when `max_total_length` shrinks `text_area_width` below text length, text is truncated using `.chars().take(n).collect::<String>()` to handle multi-byte chars safely.
+5. **`text_area_width` guard** — if total_length < prefix_total + suffix_total, text_area_width is set to 0, preventing underflow.
+6. **Repeated-char strings** — used `std::iter::repeat(char).take(n).collect::<String>()` throughout for idiomatic Rust.
+
+#### Algorithm Verified
+"Hello World" default: natural_length = 2+2+11+2+2 = 19. Header = `*******************`. Text = `**  Hello World  **` (19 chars). ✓
+
+#### Build & Test Status
+✅ Clean build, zero warnings (expected: missing app.ico warning from build.rs)
+✅ 23/23 unit tests pass
+✅ Smoke test output matches spec exactly
+
+---
+
+## Session 8: bannertext Complete Implementation
+
+### Project Complete
+
+Created a fully-featured CLI application from scratch that replicates the C++ BannerText specification with 68 total tests passing.
+
+#### Files Created/Modified
+- `bannertext/Cargo.toml` — workspace binary with clap 4.6.0, build/dev dependencies
+- `bannertext/build.rs` — build script following uuidgen pattern (graceful icon handling)
+- `bannertext/src/main.rs` — 200+ line implementation with all features
+- `bannertext/src/main_tests.rs` — 23 comprehensive unit tests
+- Root `Cargo.toml` — updated workspace members to include bannertext
+
+#### Implementation Highlights
+
+**Custom Parser:**
+- `parse_single_char()` value_parser for clap (clap lacks native char type)
+- Default value strategy: `default_value = "*"` on each single-char arg (not `default_value_t`)
+
+**TextAlignment Enum:**
+- Implements `clap::ValueEnum` with PascalCase names (Left/Right/Center)
+- Maps cleanly to CLI: `bannertext -A Center "text"`
+
+**Algorithm Validated:**
+- "Hello World" default: 2+2+11+2+2 = 19-char natural width
+- Header/footer: `*******************` (19 chars)
+- Text: `**  Hello World  **` (19 chars, center-aligned)
+- ✓ Exact match to spec output
+
+**Safe String Handling:**
+- Multi-byte chars: `.chars().take(n).collect::<String>()` prevents UTF-8 corruption
+- Underflow guard: `text_area_width = max(0, ...)` prevents negative widths
+- Repeated chars: `std::iter::repeat(char).take(n).collect::<String>()`
+
+**Public API:**
+- `generate_banner()` function exposed for unit testing
+- Struct fields all public for test assertion clarity
+- No need for integration tests (unit tests sufficient)
+
+#### Testing Strategy
+
+23 unit tests cover:
+- Default parameters
+- Custom header/footer characters and line counts
+- All three text alignment modes (Left/Right/Center)
+- Min/max length constraints and edge cases
+- Prefix/suffix styling combinations
+- Unicode and multi-byte character handling
+
+**Integration by Blake:** 35 integration + 10 output tests for CLI validation (separate from this module)
+
+#### Build & Test Status
+✅ Clean build, zero warnings
+✅ 23/23 unit tests pass
+✅ 45 additional integration/output tests passing (Blake's work)
+✅ 68 total tests (23 unit + 35 integration + 10 output)
+✅ Workspace builds cleanly
+✅ Ready for production commit
+
