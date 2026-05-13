@@ -30,9 +30,9 @@ pub enum TextAlignment {
     after_help = "Examples:\n  bannertext \"Hello World\"\n  bannertext \"Hello World\" --min-total-length 80\n  bannertext \"Hello World\" --min-total-length 80 --text-alignment Center\n  bannertext \"Hello World\" --header-line-char '#' --footer-line-char '#' --text-line-char '#'"
 )]
 struct Args {
-    /// The Text to display
-    #[arg()]
-    message_text: String,
+    /// The Text to display (one or more values)
+    #[arg(num_args(1..), required = true)]
+    message_text: Vec<String>,
 
     /// The character to use for header lines
     #[arg(short = 'H', long, default_value = "*", value_parser = parse_single_char)]
@@ -92,7 +92,7 @@ struct Args {
 }
 
 pub fn generate_banner(
-    text: &str,
+    texts: &[&str],
     header_line_char: char,
     header_line_count: u32,
     footer_line_char: char,
@@ -121,7 +121,9 @@ pub fn generate_banner(
 
     let prefix_total = (title_prefix_count + title_prefix_gap_size) as usize;
     let suffix_total = (title_suffix_count + title_suffix_gap_size) as usize;
-    let natural_length = prefix_total + text.chars().count() + suffix_total;
+
+    let max_text_len = texts.iter().map(|t| t.chars().count()).max().unwrap_or(0);
+    let natural_length = prefix_total + max_text_len + suffix_total;
 
     let mut total_length = natural_length;
     if min_total_length > 0 {
@@ -137,20 +139,6 @@ pub fn generate_banner(
         0
     };
 
-    // Truncate text if needed (handle multi-byte chars safely)
-    let display_text: String = text.chars().take(text_area_width).collect();
-
-    let formatted_text = match text_alignment {
-        TextAlignment::Left => format!("{:<width$}", display_text, width = text_area_width),
-        TextAlignment::Right => format!("{:>width$}", display_text, width = text_area_width),
-        TextAlignment::Center => format!("{:^width$}", display_text, width = text_area_width),
-    };
-
-    let text_line = format!(
-        "{}{}{}{}{}",
-        prefix_chars, prefix_gap, formatted_text, suffix_gap, suffix_chars
-    );
-
     let header_line: String = std::iter::repeat(header_line_char)
         .take(total_length)
         .collect();
@@ -163,7 +151,20 @@ pub fn generate_banner(
     for _ in 0..header_line_count {
         lines.push(header_line.clone());
     }
-    lines.push(text_line);
+
+    for text in texts {
+        let display_text: String = text.chars().take(text_area_width).collect();
+        let formatted_text = match text_alignment {
+            TextAlignment::Left => format!("{:<width$}", display_text, width = text_area_width),
+            TextAlignment::Right => format!("{:>width$}", display_text, width = text_area_width),
+            TextAlignment::Center => format!("{:^width$}", display_text, width = text_area_width),
+        };
+        lines.push(format!(
+            "{}{}{}{}{}",
+            prefix_chars, prefix_gap, formatted_text, suffix_gap, suffix_chars
+        ));
+    }
+
     for _ in 0..footer_line_count {
         lines.push(footer_line.clone());
     }
@@ -174,8 +175,9 @@ pub fn generate_banner(
 fn main() {
     let args = Args::parse();
 
+    let text_refs: Vec<&str> = args.message_text.iter().map(String::as_str).collect();
     let banner = generate_banner(
-        &args.message_text,
+        &text_refs,
         args.header_line_char,
         args.header_line_count,
         args.footer_line_char,

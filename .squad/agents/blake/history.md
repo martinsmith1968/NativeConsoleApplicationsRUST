@@ -36,6 +36,24 @@
 
 #### Key Learnings:
 
+### bannertext Multi-Text Support Test Update
+- **Date:** Session 9 (2026-05-13T10:44:20Z)
+- **Status:** Complete ✓
+- **Outcome:** Updated all three bannertext test files for new `generate_banner(texts: &[&str], ...)` signature; added 18 new tests (6 unit + 7 integration + 5 output); total 86 tests passing
+
+#### Changes Made:
+- **main_tests.rs (29 tests, was 23):** Bulk-replaced all `generate_banner("text", ...)` calls to `generate_banner(&["text"], ...)` via PowerShell regex; updated `default_banner` helper signature; added 6 multi-text unit tests
+- **integration_tests.rs (42 tests, was 35):** Added 7 CLI tests for multiple positional args (2-arg exits zero, 4-line output, text content, 3-arg, 5-line, width-driven-by-longest, single-arg regression)
+- **output_tests.rs (15 tests, was 10):** Added 5 exact snapshot tests (equal-length, second-longer, first-longer, three-messages, single regression)
+
+#### New Test Cases Added:
+- Two messages equal length (width = max of both)
+- Two messages second-is-longer (width driven by second)
+- Two messages first-is-longer (width driven by first)
+- Three messages (5 total output lines)
+- Empty text entry in multi-text slice
+- Single-text slice regression (same behaviour as before)
+
 ### uuidgen Comprehensive Test Expansion (Current Session)
 - **Date:** Current session
 - **Status:** Complete ✓

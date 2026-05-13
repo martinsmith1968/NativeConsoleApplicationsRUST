@@ -529,3 +529,88 @@ fn test_cli_no_args_exit_code() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     cmd.assert().failure();
 }
+
+// ===== Multi-Text (Multiple Positional Args) Tests =====
+
+#[test]
+fn test_cli_two_args_exits_zero() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    cmd.arg("Hello").arg("World").assert().success();
+}
+
+#[test]
+fn test_cli_two_args_produces_four_lines() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    let output = cmd.arg("Hello").arg("World").output().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let lines: Vec<&str> = stdout.trim_end().lines().collect();
+    assert_eq!(
+        lines.len(),
+        4,
+        "Two-arg banner should have 4 lines (header + 2 text + footer)"
+    );
+}
+
+#[test]
+fn test_cli_two_args_both_text_lines_present() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    cmd.arg("Hello")
+        .arg("World")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("**  Hello  **"))
+        .stdout(predicate::str::contains("**  World  **"));
+}
+
+#[test]
+fn test_cli_three_args_exits_zero() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    cmd.arg("Line1").arg("Line2").arg("Line3").assert().success();
+}
+
+#[test]
+fn test_cli_three_args_produces_five_lines() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    let output = cmd
+        .arg("Line1")
+        .arg("Line2")
+        .arg("Line3")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let lines: Vec<&str> = stdout.trim_end().lines().collect();
+    assert_eq!(
+        lines.len(),
+        5,
+        "Three-arg banner should have 5 lines (header + 3 text + footer)"
+    );
+}
+
+#[test]
+fn test_cli_width_driven_by_longest_text() {
+    // "Hi" (2 chars) and "Hello World" (11 chars) → width = prefix(4) + 11 + suffix(4) = 19
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    let output = cmd.arg("Hi").arg("Hello World").output().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let lines: Vec<&str> = stdout.trim_end().lines().collect();
+    assert_eq!(lines.len(), 4);
+    for line in &lines {
+        assert_eq!(
+            line.len(),
+            19,
+            "All lines should be 19 chars (driven by 'Hello World'), got '{}' (len {})",
+            line,
+            line.len()
+        );
+    }
+}
+
+#[test]
+fn test_cli_single_arg_still_produces_three_lines() {
+    // Regression: single positional arg should still produce 3 lines
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    let output = cmd.arg("Hello World").output().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let lines: Vec<&str> = stdout.trim_end().lines().collect();
+    assert_eq!(lines.len(), 3, "Single-arg banner should still produce 3 lines");
+}

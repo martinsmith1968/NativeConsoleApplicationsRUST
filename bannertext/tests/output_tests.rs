@@ -229,3 +229,84 @@ fn test_prefix_gap_zero_output() {
     );
     assert_eq!(lines[2], "*******", "Footer should be 7 '*' chars");
 }
+
+// ===== Multi-Text Exact Output Tests =====
+
+#[test]
+fn test_two_messages_equal_length_exact_output() {
+    // "Hello" (5) and "World" (5) → equal length, natural = prefix(4) + 5 + suffix(4) = 13
+    let stdout = run_bannertext(&["Hello", "World"]);
+    let lines: Vec<&str> = stdout.trim_end().lines().collect();
+
+    assert_eq!(lines.len(), 4, "Two-message banner should have 4 lines");
+    assert_eq!(lines[0], "*************", "Header should be 13 '*' chars");
+    assert_eq!(lines[1], "**  Hello  **", "First text line mismatch");
+    assert_eq!(lines[2], "**  World  **", "Second text line mismatch");
+    assert_eq!(lines[3], "*************", "Footer should be 13 '*' chars");
+}
+
+#[test]
+fn test_two_messages_second_longer_exact_output() {
+    // "Hi" (2) and "Hello World" (11) → width driven by second, natural = 19
+    let stdout = run_bannertext(&["Hi", "Hello World"]);
+    let lines: Vec<&str> = stdout.trim_end().lines().collect();
+
+    assert_eq!(lines.len(), 4, "Two-message banner should have 4 lines");
+    assert_eq!(lines[0].len(), 19, "Header should be 19 chars");
+    assert_eq!(
+        lines[2], "**  Hello World  **",
+        "Second text line should be full width"
+    );
+    assert_eq!(lines[1].len(), 19, "First text line should also be 19 chars");
+    assert!(
+        lines[1].starts_with("**  Hi"),
+        "First text line should start with '**  Hi', got: '{}'",
+        lines[1]
+    );
+}
+
+#[test]
+fn test_two_messages_first_longer_exact_output() {
+    // "Hello World" (11) and "Hi" (2) → width driven by first, natural = 19
+    let stdout = run_bannertext(&["Hello World", "Hi"]);
+    let lines: Vec<&str> = stdout.trim_end().lines().collect();
+
+    assert_eq!(lines.len(), 4, "Two-message banner should have 4 lines");
+    assert_eq!(lines[0].len(), 19, "Header should be 19 chars");
+    assert_eq!(
+        lines[1], "**  Hello World  **",
+        "First text line should be full width"
+    );
+    assert_eq!(lines[2].len(), 19, "Second text line should also be 19 chars");
+    assert!(
+        lines[2].starts_with("**  Hi"),
+        "Second text line should start with '**  Hi', got: '{}'",
+        lines[2]
+    );
+}
+
+#[test]
+fn test_three_messages_exact_output() {
+    // "A" (1), "BB" (2), "CCC" (3) → width driven by "CCC", natural = prefix(4) + 3 + suffix(4) = 11
+    let stdout = run_bannertext(&["A", "BB", "CCC"]);
+    let lines: Vec<&str> = stdout.trim_end().lines().collect();
+
+    assert_eq!(lines.len(), 5, "Three-message banner should have 5 lines");
+    assert_eq!(lines[0], "***********", "Header should be 11 '*' chars");
+    assert_eq!(lines[4], "***********", "Footer should be 11 '*' chars");
+    assert!(lines[1].starts_with("**  A"), "Line 1 should start with '**  A'");
+    assert!(lines[2].starts_with("**  BB"), "Line 2 should start with '**  BB'");
+    assert_eq!(lines[3], "**  CCC  **", "Line 3 should be '**  CCC  **'");
+}
+
+#[test]
+fn test_single_message_regression_exact_output() {
+    // Regression: single positional arg must still produce the same exact 3-line output
+    let stdout = run_bannertext(&["Hello World"]);
+    let lines: Vec<&str> = stdout.trim_end().lines().collect();
+
+    assert_eq!(lines.len(), 3, "Single-message banner should still have 3 lines");
+    assert_eq!(lines[0], "*******************", "Header line mismatch");
+    assert_eq!(lines[1], "**  Hello World  **", "Text line mismatch");
+    assert_eq!(lines[2], "*******************", "Footer line mismatch");
+}
