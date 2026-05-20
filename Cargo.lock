@@ -105,7 +105,6 @@ dependencies = [
  "build-print",
  "clap",
  "predicates",
- "regex",
  "winresource",
 ]
 

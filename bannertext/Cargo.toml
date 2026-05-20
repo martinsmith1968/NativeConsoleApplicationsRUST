@@ -23,4 +23,3 @@ build-print = "1.0.1"
 [dev-dependencies]
 assert_cmd = "2.2.2"
 predicates = "3.1.4"
-regex = "1.12.3"
