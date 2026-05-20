@@ -172,11 +172,26 @@ fn test_cli_header_line_count_three() {
         5,
         "With header-line-count 3, should have 5 lines (3 header + text + footer)"
     );
-    assert!(lines[0].chars().all(|c| c == '*'), "Line 0 should be a header");
-    assert!(lines[1].chars().all(|c| c == '*'), "Line 1 should be a header");
-    assert!(lines[2].chars().all(|c| c == '*'), "Line 2 should be a header");
-    assert!(lines[3].contains("Hello World"), "Line 3 should be text line");
-    assert!(lines[4].chars().all(|c| c == '*'), "Line 4 should be footer");
+    assert!(
+        lines[0].chars().all(|c| c == '*'),
+        "Line 0 should be a header"
+    );
+    assert!(
+        lines[1].chars().all(|c| c == '*'),
+        "Line 1 should be a header"
+    );
+    assert!(
+        lines[2].chars().all(|c| c == '*'),
+        "Line 2 should be a header"
+    );
+    assert!(
+        lines[3].contains("Hello World"),
+        "Line 3 should be text line"
+    );
+    assert!(
+        lines[4].chars().all(|c| c == '*'),
+        "Line 4 should be footer"
+    );
 }
 
 #[test]
@@ -294,7 +309,11 @@ fn test_cli_min_wins_over_natural_length() {
         .unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     let first_line = stdout.trim_end().lines().next().unwrap();
-    assert_eq!(first_line.len(), 40, "Banner should expand to min-total-length");
+    assert_eq!(
+        first_line.len(),
+        40,
+        "Banner should expand to min-total-length"
+    );
 }
 
 #[test]
@@ -309,7 +328,11 @@ fn test_cli_max_truncates_when_natural_exceeds() {
         .unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     let first_line = stdout.trim_end().lines().next().unwrap();
-    assert_eq!(first_line.len(), 15, "Banner should truncate to max-total-length");
+    assert_eq!(
+        first_line.len(),
+        15,
+        "Banner should truncate to max-total-length"
+    );
 }
 
 // ===== Text Alignment Tests =====
@@ -361,7 +384,11 @@ fn test_cli_text_alignment_center() {
     let text_line = lines[1];
     // Strip prefix "**  " (4 bytes) and suffix "  **" (4 bytes)
     let inner = &text_line[4..text_line.len() - 4];
-    assert_eq!(inner.trim(), "Hello World", "Inner text should be 'Hello World'");
+    assert_eq!(
+        inner.trim(),
+        "Hello World",
+        "Inner text should be 'Hello World'"
+    );
     let left_pad = inner.len() - inner.trim_start().len();
     let right_pad = inner.len() - inner.trim_end().len();
     assert!(
@@ -463,12 +490,7 @@ fn test_cli_title_suffix_gap_size_four() {
 #[test]
 fn test_cli_short_header_char() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
-    let output = cmd
-        .arg("Hello World")
-        .arg("-H")
-        .arg("#")
-        .output()
-        .unwrap();
+    let output = cmd.arg("Hello World").arg("-H").arg("#").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     let lines: Vec<&str> = stdout.trim_end().lines().collect();
     assert!(
@@ -565,18 +587,17 @@ fn test_cli_two_args_both_text_lines_present() {
 #[test]
 fn test_cli_three_args_exits_zero() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
-    cmd.arg("Line1").arg("Line2").arg("Line3").assert().success();
+    cmd.arg("Line1")
+        .arg("Line2")
+        .arg("Line3")
+        .assert()
+        .success();
 }
 
 #[test]
 fn test_cli_three_args_produces_five_lines() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
-    let output = cmd
-        .arg("Line1")
-        .arg("Line2")
-        .arg("Line3")
-        .output()
-        .unwrap();
+    let output = cmd.arg("Line1").arg("Line2").arg("Line3").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     let lines: Vec<&str> = stdout.trim_end().lines().collect();
     assert_eq!(
@@ -612,5 +633,9 @@ fn test_cli_single_arg_still_produces_three_lines() {
     let output = cmd.arg("Hello World").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
     let lines: Vec<&str> = stdout.trim_end().lines().collect();
-    assert_eq!(lines.len(), 3, "Single-arg banner should still produce 3 lines");
+    assert_eq!(
+        lines.len(),
+        3,
+        "Single-arg banner should still produce 3 lines"
+    );
 }
