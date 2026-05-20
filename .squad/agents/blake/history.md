@@ -203,6 +203,57 @@
    - Newlines and tabs in content
    - Multiple different length strings (produce different hashes)
 
+   ---
+
+   ## Learnings
+
+   ### hashcalc Test Compilation Failure (Current Session)
+   - **Date:** Current session
+   - **Status:** Identified ⚠️
+   - **Issue:** Compilation failure in `hashcalc\tests\output_tests.rs` prevents all tests from running
+
+   #### Root Cause
+   **Syntax Error on Line 5:** The file contains an incomplete `mod` declaration with no name or body:
+   ```rust
+   use assert_cmd::Command;
+   use std::fs;
+   use std::path::PathBuf;
+
+   mod  // <- INCOMPLETE MOD STATEMENT (Line 5)
+
+   fn get_expected_output_dir() -> PathBuf {
+   ```
+
+   #### Impact
+   - **Build Status:** `cargo test` fails with compilation errors
+   - **Affected:** All tests across the entire workspace cannot run
+   - **Error Messages:** 
+     - `error: expected identifier, found keyword 'fn'`
+     - `error: expected one of ';' or '{', found 'get_expected_output_dir'`
+
+   #### Pattern Comparison
+   Reviewed similar test files in the project:
+   - **bannertext/tests/output_tests.rs:** No mod declaration, starts directly with helper functions
+   - **uuidgen/tests/output_tests.rs:** Helper functions are commented out, but no stray mod keyword
+
+   #### Test Structure in hashcalc/tests/output_tests.rs
+   The file contains 6 integration tests:
+   1. `execute_with_help_request_produces_arguments_list` - validates --help output
+   2. `execute_with_text_only_default_algorithm_produces_expected_output` - SHA256 default
+   3. `execute_with_text_only_sha256_produces_expected_output` - explicit SHA256
+   4. `execute_with_text_only_sha512_produces_expected_output` - SHA512 algorithm
+   5. `execute_with_text_only_sha1_produces_expected_output` - SHA1 algorithm
+   6. `execute_with_text_only_md5_produces_expected_output` - MD5 algorithm
+   7. `execute_with_text_only_base64_produces_expected_output` - Base64 encoding
+
+   All tests follow a pattern:
+   - Load expected output from `tests/ExpectedOutput/{test_name}.example` files
+   - Run hashcalc CLI with specific arguments
+   - Compare actual output to expected output with normalization for line endings and environment variables
+
+   #### Solution
+   **Fix:** Remove line 5 (`mod`) entirely. The file should start with imports, then helper functions, then tests.
+
 2. **Unit Tests for read_file_contents function (6 tests)**
    - Simple file reading
    - Empty files

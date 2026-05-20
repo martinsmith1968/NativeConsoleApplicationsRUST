@@ -13,7 +13,14 @@ fn load_expected_output(filename: &str) -> String {
     let content = fs::read_to_string(&path)
         .expect(&format!("Failed to read expected output file: {:?}", path));
     // Normalize line endings so tests pass regardless of git autocrlf settings
-    content.replace("\r\n", "\n")
+    let content = content.replace("\r\n", "\n");
+    // Replace %ENV_VAR_NAME% tokens with actual environment variable values
+    let mut result = content;
+    for (key, value) in std::env::vars() {
+        let token = format!("%{}%", key);
+        result = result.replace(&token, &value);
+    }
+    result
 }
 
 #[test]

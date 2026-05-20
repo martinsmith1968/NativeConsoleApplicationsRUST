@@ -1,4 +1,20 @@
 use assert_cmd::Command;
+use std::fs;
+use std::path::PathBuf;
+
+fn get_expected_output_dir() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("Expectedoutput")
+}
+
+fn load_expected_output(filename: &str) -> String {
+    let path = get_expected_output_dir().join(format!("{}.example", filename));
+    let content = fs::read_to_string(&path)
+        .expect(&format!("Failed to read expected output file: {:?}", path));
+    // Normalize line endings so tests pass regardless of git autocrlf settings
+    content.replace("\r\n", "\n")
+}
 
 fn run_bannertext(args: &[&str]) -> String {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
@@ -309,4 +325,76 @@ fn test_single_message_regression_exact_output() {
     assert_eq!(lines[0], "*******************", "Header line mismatch");
     assert_eq!(lines[1], "**  Hello World  **", "Text line mismatch");
     assert_eq!(lines[2], "*******************", "Footer line mismatch");
+}
+
+// ===== Expected Output File Tests =====
+
+#[test]
+fn execute_with_help_request_produces_arguments_list() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    let output = cmd.arg("-?").output().unwrap();
+    let actual = String::from_utf8(output.stdout).unwrap();
+    let expected = load_expected_output("Execute_with_help_request_produces_arguments_list");
+
+    assert_eq!(actual, expected, "Help output does not match expected");
+}
+
+#[test]
+fn execute_with_full_help_request_produces_arguments_list() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    let output = cmd.arg("--help").output().unwrap();
+    let actual = String::from_utf8(output.stdout).unwrap();
+    let expected = load_expected_output("Execute_with_full_help_request_produces_arguments_list");
+
+    assert_eq!(actual, expected, "Help output does not match expected");
+}
+
+#[test]
+fn execute_with_text_only_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    let output = cmd.arg("bob").output().unwrap();
+    let actual = String::from_utf8(output.stdout).unwrap();
+    let expected = load_expected_output("Execute_with_text_only_produces_expected_output");
+
+    assert_eq!(actual, expected, "Text-only output does not match expected");
+}
+
+#[test]
+fn execute_with_text_and_min_length_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    let output = cmd
+        .arg("bob")
+        .arg("--min-total-length")
+        .arg("80")
+        .output()
+        .unwrap();
+    let actual = String::from_utf8(output.stdout).unwrap();
+    let expected =
+        load_expected_output("Execute_with_text_and_min_length_produces_expected_output");
+
+    assert_eq!(
+        actual, expected,
+        "Text with min-length output does not match expected"
+    );
+}
+
+#[test]
+fn execute_with_multiple_text_lines_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    let output = cmd
+        .arg("a")
+        .arg("bb")
+        .arg("ccc")
+        .arg("dddd")
+        .arg("eeeee")
+        .output()
+        .unwrap();
+    let actual = String::from_utf8(output.stdout).unwrap();
+    let expected =
+        load_expected_output("Execute_with_multiple_text_lines_produces_expected_output");
+
+    assert_eq!(
+        actual, expected,
+        "Multiple text lines output does not match expected"
+    );
 }
