@@ -42,7 +42,8 @@ fn execute_with_text_only_default_algorithm_produces_expected_output() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     let output = cmd.arg("-t").arg("Hello World").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_text_only_default_algorithm_produces_expected_output");
+    let expected =
+        load_expected_output("Execute_with_text_only_default_algorithm_produces_expected_output");
 
     assert_eq!(
         actual, expected,
