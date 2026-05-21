@@ -8,12 +8,16 @@ fn get_expected_output_dir() -> PathBuf {
         .join("Expectedoutput")
 }
 
+fn normalize_output(s: String) -> String {
+    s.replace("\r\n", "\n")
+}
+
 fn load_expected_output(filename: &str) -> String {
     let path = get_expected_output_dir().join(format!("{}.example", filename));
     let content = fs::read_to_string(&path)
         .expect(&format!("Failed to read expected output file: {:?}", path));
-    // Normalize line endings so tests pass regardless of git autocrlf settings
-    content.replace("\r\n", "\n")
+    // Normalize line endings so comparison works regardless of OS or git autocrlf settings
+    normalize_output(content)
 }
 
 fn run_bannertext(args: &[&str]) -> String {
@@ -350,7 +354,7 @@ fn test_single_message_regression_exact_output() {
 fn execute_with_help_request_produces_arguments_list() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     let output = cmd.arg("-?").env("COLUMNS", "500").output().unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
     let expected = load_expected_output("Execute_with_help_request_produces_arguments_list");
 
     assert_eq!(actual, expected, "Help output does not match expected");
@@ -360,7 +364,7 @@ fn execute_with_help_request_produces_arguments_list() {
 fn execute_with_full_help_request_produces_arguments_list() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     let output = cmd.arg("--help").env("COLUMNS", "500").output().unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
     let expected = load_expected_output("Execute_with_full_help_request_produces_arguments_list");
 
     assert_eq!(actual, expected, "Help output does not match expected");
@@ -370,7 +374,7 @@ fn execute_with_full_help_request_produces_arguments_list() {
 fn execute_with_text_only_produces_expected_output() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     let output = cmd.arg("bob").output().unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
     let expected = load_expected_output("Execute_with_text_only_produces_expected_output");
 
     assert_eq!(actual, expected, "Text-only output does not match expected");
@@ -385,7 +389,7 @@ fn execute_with_text_and_min_length_produces_expected_output() {
         .arg("80")
         .output()
         .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
     let expected =
         load_expected_output("Execute_with_text_and_min_length_produces_expected_output");
 
@@ -406,7 +410,7 @@ fn execute_with_multiple_text_lines_produces_expected_output() {
         .arg("eeeee")
         .output()
         .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
     let expected =
         load_expected_output("Execute_with_multiple_text_lines_produces_expected_output");
 
