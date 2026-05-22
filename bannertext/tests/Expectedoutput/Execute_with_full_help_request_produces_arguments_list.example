@@ -1,5 +1,5 @@
-bannertext v0.1.0-dev - Display a Text Banner in the console
-Copyright © 2025-2026 Martin Smith
+bannertext v%APP_VERSION% - Display a Text Banner in the console
+Copyright © 2025-%CURRENT_YEAR% Martin Smith
 
 Usage: bannertext [OPTIONS] <MESSAGE_TEXT>...
 
