@@ -1,5 +1,5 @@
-hashcalc v0.1.0-dev - Generate a hash of text or file contents
-Copyright © 2025-2026 Martin Smith
+hashcalc v%APP_VERSION% - Generate a hash of text or file contents
+Copyright ┬® 2025-%CURRENT_YEAR% Martin Smith
 
 Usage: hashcalc [OPTIONS]
 

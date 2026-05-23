@@ -1,27 +1,40 @@
 use assert_cmd::Command;
-//use std::fs;
-//use std::path::PathBuf;
+use std::fs;
+use std::path::PathBuf;
 
-//fn get_expected_output_dir() -> PathBuf {
-//    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-//        .join("tests")
-//        .join("ExpectedOutput")
-//}
+fn get_expected_output_dir() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("ExpectedOutput")
+}
 
-//fn load_expected_output(filename: &str) -> String {
-//    let path = get_expected_output_dir().join(format!("{}.example", filename));
-//    let content = fs::read_to_string(&path)
-//        .expect(&format!("Failed to read expected output file: {:?}", path));
-//    // Normalize line endings so tests pass regardless of git autocrlf settings
-//    let content = content.replace("\r\n", "\n");
-//    // Replace %ENV_VAR_NAME% tokens with actual environment variable values
-//    let mut result = content;
-//    for (key, value) in std::env::vars() {
-//        let token = format!("%{}%", key);
-//        result = result.replace(&token, &value);
-//    }
-//    result
-//}
+fn normalize_output(s: String) -> String {
+    s.replace("\r\n", "\n")
+}
+
+fn app_version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}
+
+fn current_year() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let year = 1970u64 + (secs as f64 / (365.2425 * 86400.0)) as u64;
+    year.to_string()
+}
+
+fn load_expected_output(filename: &str) -> String {
+    let path = get_expected_output_dir().join(format!("{}.example", filename));
+    let content = fs::read_to_string(&path)
+        .expect(&format!("Failed to read expected output file: {:?}", path));
+    // Normalize line endings so comparison works regardless of OS or git autocrlf settings
+    normalize_output(content)
+        .replace("%APP_VERSION%", app_version())
+        .replace("%CURRENT_YEAR%", &current_year())
+}
 
 fn validate_guid_format(
     output: &str,
@@ -94,7 +107,7 @@ fn test_help_request_produces_arguments_list() {
 
     // Verify help output contains key sections
     assert!(
-        actual.contains("uuidgen v0.1.0-dev"),
+        actual.contains(&format!("uuidgen v{}", app_version())),
         "Help output missing version info"
     );
     assert!(
@@ -109,6 +122,16 @@ fn test_help_request_produces_arguments_list() {
         actual.contains("Examples:"),
         "Help output missing examples section"
     );
+}
+
+#[test]
+fn execute_with_help_request_produces_arguments_list() {
+    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
+    let output = cmd.arg("-?").env("COLUMNS", "500").output().unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
+    let expected = load_expected_output("Execute_with_help_request_produces_arguments_list");
+
+    assert_eq!(actual, expected, "Help output does not match expected");
 }
 
 #[test]

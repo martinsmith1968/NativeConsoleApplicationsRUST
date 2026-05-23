@@ -1,11 +1,14 @@
-$app_output_path = Join-Path $PSScriptRoot -ChildPath ".." "target" "release"
-$temp_base_path  = [System.IO.Path]::GetTempPath()
-$run_id          = [System.Guid]::NewGuid().ToString("N")
-$temp_run_path   = Join-Path -Path $temp_base_path -ChildPath $run_id
+$app_output_path     = Join-Path $PSScriptRoot -ChildPath ".." "target" "release"
+$temp_base_path      = [System.IO.Path]::GetTempPath()
+$run_id              = [System.Guid]::NewGuid().ToString("N")
+$temp_run_path       = Join-Path -Path $temp_base_path -ChildPath $run_id
+$current_app_version = "0.1.0-dev"
+$current_year        = (Get-Date).Year
 
 Write-Host "App Output Path : $($app_output_path)"
 Write-Host "Temp Path       : $($temp_base_path)"
 Write-Host "Run Path        : $($temp_run_path)"
+Write-Host "App Version     : $($current_app_version)"
 
 
 # Start
@@ -57,8 +60,16 @@ function Set-ExpectedOutput {
 
     $parameters = $arguments.Split("|")
 
-    Write-Host "  $($app_name) - Generating : $($output_filename)"
-    & $app_full_path $parameters | Set-Content -Path (Join-Path -Path $expected_output_path -ChildPath "$($output_filename).example") -Encoding UTF8
+    $example_filename = "$($output_filename).example"
+
+    Write-Host "  $($app_name) - Generating : $($example_filename)"
+    & $app_full_path $parameters | Set-Content -Path (Join-Path -Path $expected_output_path -ChildPath $example_filename) -Encoding UTF8
+
+    Write-Host "  $($app_name) - Adjusting : $($example_filename)"
+    $text = (Get-Content -Path (Join-Path -Path $expected_output_path -ChildPath $example_filename) -Raw)
+    $text = $text -replace $current_app_version, "%APP_VERSION%"
+    $text = $text -replace "-${current_year}", '-%CURRENT_YEAR%'
+    Set-Content -Path (Join-Path -Path $expected_output_path -ChildPath $example_filename) -Value $text -Encoding UTF8 -NoNewline
 }
 
 

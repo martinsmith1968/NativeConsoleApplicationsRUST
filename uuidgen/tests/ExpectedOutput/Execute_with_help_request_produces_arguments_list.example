@@ -1,5 +1,5 @@
-uuidgen v0.1.0-dev - Generate Unique IDs (UUIDs) with controlled output and formatting
-Copyright ┬® 2025-2026 Martin Smith
+uuidgen v%APP_VERSION% - Generate Unique IDs (UUIDs) with controlled output and formatting
+Copyright ┬® 2025-%CURRENT_YEAR% Martin Smith
 
 Usage: uuidgen [OPTIONS]
 
