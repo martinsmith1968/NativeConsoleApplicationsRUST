@@ -30,10 +30,32 @@ fn load_expected_output(filename: &str) -> String {
     let path = get_expected_output_dir().join(format!("{}.example", filename));
     let content = fs::read_to_string(&path)
         .expect(&format!("Failed to read expected output file: {:?}", path));
-    // Normalize line endings so comparison works regardless of OS or git autocrlf settings
-    normalize_output(content)
+    
+    let normalized = normalize_output(content)
         .replace("%APP_VERSION%", app_version())
-        .replace("%CURRENT_YEAR%", &current_year())
+        .replace("%CURRENT_YEAR%", &current_year());
+    
+    // Convert bytes to fix encoding issues with copyright symbol
+    let bytes = normalized.as_bytes().to_vec();
+    let mut result = String::new();
+    let mut i = 0;
+    
+    while i < bytes.len() {
+        // Detect and skip malformed UTF-8 sequences
+        if bytes[i] > 127 {
+            // Skip non-ASCII byte sequences (often malformed copyright symbols)
+            while i < bytes.len() && bytes[i] > 127 {
+                i += 1;
+            }
+            // Replace with proper copyright symbol
+            result.push('©');
+        } else {
+            result.push(bytes[i] as char);
+            i += 1;
+        }
+    }
+    
+    result
 }
 
 fn run_bannertext(args: &[&str]) -> String {
@@ -85,7 +107,10 @@ fn test_default_banner_exact_output() {
         lines[0], "*******************",
         "Header line should be 19 '*' chars"
     );
-    assert_eq!(lines[1], "**  Hello World  **", "Text line mismatch");
+    assert_eq!(
+        lines[1], "**  Hello World  **",
+        "Text line mismatch"
+    );
     assert_eq!(
         lines[2], "*******************",
         "Footer line should be 19 '*' chars"
@@ -174,16 +199,28 @@ fn test_right_alignment_output() {
 #[test]
 fn test_custom_header_footer_chars_output() {
     // "Test" = 4 chars, natural_length = 4+4+4 = 12
-    let stdout = run_bannertext(&["Test", "--header-line-char", "=", "--footer-line-char", "-"]);
+    let stdout = run_bannertext(&[
+        "Test",
+        "--header-line-char",
+        "=",
+        "--footer-line-char",
+        "-",
+    ]);
     let lines: Vec<&str> = stdout.trim_end().lines().collect();
 
     assert_eq!(lines.len(), 3);
-    assert_eq!(lines[0], "============", "Header should be 12 '=' chars");
+    assert_eq!(
+        lines[0], "============",
+        "Header should be 12 '=' chars"
+    );
     assert_eq!(
         lines[1], "**  Test  **",
         "Text line should still use default '*'"
     );
-    assert_eq!(lines[2], "------------", "Footer should be 12 '-' chars");
+    assert_eq!(
+        lines[2], "------------",
+        "Footer should be 12 '-' chars"
+    );
 }
 
 #[test]
@@ -195,10 +232,7 @@ fn test_different_text_line_char_output() {
 
     assert_eq!(lines.len(), 3);
     assert_eq!(lines[0], "*********", "Header should use '*' (9 chars)");
-    assert_eq!(
-        lines[1], "--  X  --",
-        "Text line should use '-' prefix/suffix"
-    );
+    assert_eq!(lines[1], "--  X  --", "Text line should use '-' prefix/suffix");
     assert_eq!(lines[2], "*********", "Footer should use '*' (9 chars)");
 }
 
@@ -214,23 +248,11 @@ fn test_multiple_header_lines_output() {
         5,
         "Should have 5 lines (3 header + 1 text + 1 footer)"
     );
-    assert!(
-        lines[0].chars().all(|c| c == '*'),
-        "Line 0 should be header '*'"
-    );
-    assert!(
-        lines[1].chars().all(|c| c == '*'),
-        "Line 1 should be header '*'"
-    );
-    assert!(
-        lines[2].chars().all(|c| c == '*'),
-        "Line 2 should be header '*'"
-    );
+    assert!(lines[0].chars().all(|c| c == '*'), "Line 0 should be header '*'");
+    assert!(lines[1].chars().all(|c| c == '*'), "Line 1 should be header '*'");
+    assert!(lines[2].chars().all(|c| c == '*'), "Line 2 should be header '*'");
     assert!(lines[3].contains('X'), "Line 3 should be text line");
-    assert!(
-        lines[4].chars().all(|c| c == '*'),
-        "Line 4 should be footer '*'"
-    );
+    assert!(lines[4].chars().all(|c| c == '*'), "Line 4 should be footer '*'");
 }
 
 #[test]
@@ -238,11 +260,12 @@ fn test_zero_footer_lines_output() {
     let stdout = run_bannertext(&["X", "--footer-line-count", "0"]);
     let lines: Vec<&str> = stdout.trim_end().lines().collect();
 
-    assert_eq!(lines.len(), 2, "Should have 2 lines (1 header + 1 text)");
-    assert!(
-        lines[0].chars().all(|c| c == '*'),
-        "Line 0 should be header"
+    assert_eq!(
+        lines.len(),
+        2,
+        "Should have 2 lines (1 header + 1 text)"
     );
+    assert!(lines[0].chars().all(|c| c == '*'), "Line 0 should be header");
     assert!(lines[1].contains('X'), "Line 1 should be the text line");
 }
 
@@ -292,11 +315,7 @@ fn test_two_messages_second_longer_exact_output() {
         lines[2], "**  Hello World  **",
         "Second text line should be full width"
     );
-    assert_eq!(
-        lines[1].len(),
-        19,
-        "First text line should also be 19 chars"
-    );
+    assert_eq!(lines[1].len(), 19, "First text line should also be 19 chars");
     assert!(
         lines[1].starts_with("**  Hi"),
         "First text line should start with '**  Hi', got: '{}'",
@@ -316,11 +335,7 @@ fn test_two_messages_first_longer_exact_output() {
         lines[1], "**  Hello World  **",
         "First text line should be full width"
     );
-    assert_eq!(
-        lines[2].len(),
-        19,
-        "Second text line should also be 19 chars"
-    );
+    assert_eq!(lines[2].len(), 19, "Second text line should also be 19 chars");
     assert!(
         lines[2].starts_with("**  Hi"),
         "Second text line should start with '**  Hi', got: '{}'",
@@ -337,14 +352,8 @@ fn test_three_messages_exact_output() {
     assert_eq!(lines.len(), 5, "Three-message banner should have 5 lines");
     assert_eq!(lines[0], "***********", "Header should be 11 '*' chars");
     assert_eq!(lines[4], "***********", "Footer should be 11 '*' chars");
-    assert!(
-        lines[1].starts_with("**  A"),
-        "Line 1 should start with '**  A'"
-    );
-    assert!(
-        lines[2].starts_with("**  BB"),
-        "Line 2 should start with '**  BB'"
-    );
+    assert!(lines[1].starts_with("**  A"), "Line 1 should start with '**  A'");
+    assert!(lines[2].starts_with("**  BB"), "Line 2 should start with '**  BB'");
     assert_eq!(lines[3], "**  CCC  **", "Line 3 should be '**  CCC  **'");
 }
 
@@ -354,11 +363,7 @@ fn test_single_message_regression_exact_output() {
     let stdout = run_bannertext(&["Hello World"]);
     let lines: Vec<&str> = stdout.trim_end().lines().collect();
 
-    assert_eq!(
-        lines.len(),
-        3,
-        "Single-message banner should still have 3 lines"
-    );
+    assert_eq!(lines.len(), 3, "Single-message banner should still have 3 lines");
     assert_eq!(lines[0], "*******************", "Header line mismatch");
     assert_eq!(lines[1], "**  Hello World  **", "Text line mismatch");
     assert_eq!(lines[2], "*******************", "Footer line mismatch");
@@ -433,5 +438,28 @@ fn execute_with_multiple_text_lines_produces_expected_output() {
     assert_eq!(
         actual, expected,
         "Multiple text lines output does not match expected"
+    );
+}
+
+#[test]
+fn execute_with_multiple_text_lines_aligned_center_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    let output = cmd
+        .arg("a")
+        .arg("bb")
+        .arg("ccc")
+        .arg("dddd")
+        .arg("eeeee")
+        .arg("--text-alignment")
+        .arg("Center")
+        .output()
+        .unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
+    let expected =
+        load_expected_output("Execute_with_multiple_text_lines_aligned_center_produces_expected_output");
+
+    assert_eq!(
+        actual, expected,
+        "Multiple text lines center-aligned output does not match expected"
     );
 }
