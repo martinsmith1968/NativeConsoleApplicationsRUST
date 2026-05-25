@@ -2,5 +2,6 @@
 members  = [
     "uuidgen",
     "hashcalc",
+    "bannertext",
 ]
 resolver = "2"

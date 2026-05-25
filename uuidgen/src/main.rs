@@ -26,6 +26,7 @@ enum UUIDType {
 #[derive(Parser, Debug)]
 #[command(
     version,
+    bin_name = env!("CARGO_PKG_NAME"),
     about = concat!("uuidgen v", env!("CARGO_PKG_VERSION"), " - Generate Unique IDs (UUIDs) with controlled output and formatting\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
     long_about = concat!("uuidgen v", env!("CARGO_PKG_VERSION"), " - Generate Unique IDs (UUIDs) with controlled output and formatting\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
     author,
@@ -72,7 +73,7 @@ struct Args {
     help: Option<bool>,
 
     /// Print version
-    #[arg(short = 'V', long, action = clap::ArgAction::Version)]
+    #[arg(short = 'V', long, visible_short_alias = '!', action = clap::ArgAction::Version)]
     version: Option<bool>,
 }
 

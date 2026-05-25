@@ -6,12 +6,12 @@
 
 ### General
 
-- [ ] Rename Help short char to '?'
+- [X] Rename Help short char to '?'
   - May need to be done via fluent builder as derive doesn't seem to work
   - See :
     - https://github.com/clap-rs/clap/issues/1127
     - https://stackoverflow.com/questions/78354022/when-i-disable-the-default-help-option-and-add-it-as-a-custom-arg-it-says-that
-- [ ] CI Build GitHub Action
+- [X] CI Build GitHub Action
   - https://docs.github.com/en/actions/tutorials/build-and-test-code/rust
   - https://github.com/actions-rust-lang/setup-rust-toolchain
   - https://users.rust-lang.org/t/github-actions-for-rust/116704
@@ -25,9 +25,9 @@
   - https://medium.com/credera-engineering/matrix-strategies-in-github-actions-56dd6defeb04
   - https://oneuptime.com/blog/post/2025-12-20-github-actions-matrix-include-exclude/view
   - https://users.rust-lang.org/t/how-to-build-both-32-and-64-bit-app-on-windows/26365/2
-- [ ] Project / Solution Structure for Executables, libraries, tests, externals, etc
+- [X] Project / Solution Structure for Executables, libraries, tests, externals, etc
   - i.e. Support multiple cargo targets 
-- [ ] Tests
+- [X] Tests
   - https://doc.rust-lang.org/rust-by-example/testing/unit_testing.html
   - https://doc.rust-lang.org/book/ch11-01-writing-tests.html
   - https://www.reddit.com/r/rust/comments/18u8n38/mistakes_to_avoid_while_writing_unit_test_for/
@@ -37,20 +37,22 @@
   - https://www.freecodecamp.org/news/unit-testing-in-rust/
   - https://www.walknsqualk.com/020-rust-unit-test-layout/
 - [ ] Introduce some app output tests
-- [ ] Invoke via CI
-- [ ] Add Windows File Properties
-  - See : https://stackoverflow.com/questions/74509880/add-exe-file-details-to-binary-of-compiled-rust-code
-  -     : https://github.com/BenjaminRi/winresource
-  -     : https://crates.io/crates/windows_exe_info
-  -     : https://doc.rust-lang.org/cargo/reference/build-scripts.html
-  -     : https://www.40tude.fr/docs/06_programmation/rust/014_build_system/from_src_to_exe.html
+- [X] Invoke via CI
+- [X] Add Windows File Properties
+  - https://stackoverflow.com/questions/74509880/add-exe-file-details-to-binary-of-compiled-rust-code
+  - https://github.com/BenjaminRi/winresource
+  - https://crates.io/crates/windows_exe_info
+  - https://doc.rust-lang.org/cargo/reference/build-scripts.html
+  - https://www.40tude.fr/docs/06_programmation/rust/014_build_system/from_src_to_exe.html
+- [ ] Add Linux File Properties
+  - Verify if possible ?
 
 ### UUIDGen
 
-- [ ] Move UUIDType (uuid/nanoid) to become a command (so won't require -t prefix) 
+- [ ] Move UUIDType (uuid/nanoid) to become a command (so won't require -t prefix)
+  - Needs to support a default command (guid) to maintain usability
 
 ### HashCalc
-- 
 - [X] Implement all required hashers
   - Will require each hasher in its own file / module
     - https://doc.rust-lang.org/rust-by-example/mod/split.html
@@ -61,3 +63,5 @@
 ## Enhancements
 
 - [ ] All App implementations
+  - [ ] BannerText
+  - [ ] PrintFormat

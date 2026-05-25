@@ -251,6 +251,33 @@ This allows both trait methods to be available through explicit qualification wh
 
 - `src/bin/hashcalc/main.rs` - Import conflict resolution only (feature already implemented)
 
+## Session 9: bannertext Multi-Text Support
+
+### Implementation Complete
+
+Changed `bannertext` to accept multiple positional text arguments displayed as separate lines inside one header/footer wrapper.
+
+#### Changes Made
+
+1. `Args.message_text: String` → `Vec<String>` with `#[arg(num_args(1..))]` and `required = true`
+2. `generate_banner(text: &str, ...)` → `generate_banner(texts: &[&str], ...)`
+3. Width: `texts.iter().map(|t| t.chars().count()).max().unwrap_or(0)` across all texts
+4. Text loop: each entry in `texts` gets its own formatted line between the same header/footer
+5. Empty slice: `unwrap_or(0)` guards against empty input; no panic
+6. `main`: builds `Vec<&str>` from `Vec<String>` via `.iter().map(String::as_str).collect()`
+
+#### Build Status
+✅ Clean build, zero warnings  
+✅ `bannertext "Hello" "World"` → correct 2-line output with consistent width  
+
+#### Session Outcome
+**Implementation:** COMPLETED ✅  
+**Integration:** Blake's 86 tests ready to merge (18 new multi-text tests + 68 regression)  
+**Documentation:** Decisions merged to .squad/decisions/decisions.md ✅  
+**Orchestration Log:** .squad/orchestration-log/2026-05-13T10:44:20Z-marcus.md ✅
+
+---
+
 ## Learnings
 
 - Architecture: keep CLI parsing minimal in main.rs and delegate hashing to `src/bin/hashcalc/hashers/*`. This separation made the output-format change low risk.
@@ -264,6 +291,9 @@ This allows both trait methods to be available through explicit qualification wh
 - Added --write (-w) option to hashcalc to write output to a sidecar file named `{input_filename}.{algorithm}` in the same directory as the input. Implemented in src\bin\hashcalc\main.rs and covered by integration tests.
 - Output format for written files mirrors stdout: `{filename} [{algorithm}] : {hash}`. Errors surface with clear messages and non-zero exit codes on misuse or write failures.
 - Standard `about`/`long_about` pattern: `about` = `"{app_name} v{version} - {description}"` for brief usage; `long_about` appends the copyright line so it only shows with `--help`. Use `env!("CARGO_PKG_VERSION")` alongside `env!("BUILD_YEAR")`.
+- Dependency upgrade sweep: `cargo search` confirmed `sha1 = 0.11.0`, `sha2 = 0.11.0`, `tempfile = 3.27.0`, `winresource = 0.1.31`, `build-print = 1.0.1`, `hex = 0.4.3`, `md5 = 0.8.0`, and `strfmt = 0.2.5` were already at latest published versions.
+- Updated workspace manifest minimums where newer releases existed: `clap 4.6.1`, `assert_cmd 2.2.2`, `predicates 3.1.4`, `regex 1.12.3`, `uuid 1.23.1`, and `nanoid 0.5.0`.
+- `cargo update`, `cargo build --workspace`, and `cargo test --workspace` all completed successfully after the upgrade; full workspace test count was 345 passing tests with zero failures.
 
 ## Session 6: about/long_about Format Standardisation
 
@@ -276,4 +306,95 @@ Updated `#[command(...)]` attributes in both binaries to use the new standard `a
 ### Build & Test Status
 ✅ Clean build, zero warnings
 ✅ 231 tests pass (108 + 39 hashcalc, 54 + 30 uuidgen)
+
+---
+
+## Session 7: bannertext New CLI App
+
+### Implementation Complete
+
+Created the `bannertext` CLI app from scratch following the C++ reference spec.
+
+#### Files Created
+- `bannertext/Cargo.toml` — dependencies: clap 4.6.0 only; dev-deps: assert_cmd, predicates, regex; build-deps: winresource, build-print
+- `bannertext/build.rs` — identical to uuidgen pattern (graceful missing icon handling)
+- `bannertext/src/main.rs` — full implementation
+- `bannertext/src/main_tests.rs` — 23 unit tests
+
+#### Key Design Decisions
+1. **`parse_single_char` custom value_parser** — clap has no built-in `char` type support; used a small parser function applied via `value_parser = parse_single_char` on each char arg with `default_value = "*"` (not `default_value_t`).
+2. **`TextAlignment` as `clap::ValueEnum`** — `#[clap(rename_all = "PascalCase")]` to accept `Left`, `Right`, `Center` on CLI.
+3. **`generate_banner` is `pub`** — exposed for unit testing without integration overhead.
+4. **Text truncation** — when `max_total_length` shrinks `text_area_width` below text length, text is truncated using `.chars().take(n).collect::<String>()` to handle multi-byte chars safely.
+5. **`text_area_width` guard** — if total_length < prefix_total + suffix_total, text_area_width is set to 0, preventing underflow.
+6. **Repeated-char strings** — used `std::iter::repeat(char).take(n).collect::<String>()` throughout for idiomatic Rust.
+
+#### Algorithm Verified
+"Hello World" default: natural_length = 2+2+11+2+2 = 19. Header = `*******************`. Text = `**  Hello World  **` (19 chars). ✓
+
+#### Build & Test Status
+✅ Clean build, zero warnings (expected: missing app.ico warning from build.rs)
+✅ 23/23 unit tests pass
+✅ Smoke test output matches spec exactly
+
+---
+
+## Session 8: bannertext Complete Implementation
+
+### Project Complete
+
+Created a fully-featured CLI application from scratch that replicates the C++ BannerText specification with 68 total tests passing.
+
+#### Files Created/Modified
+- `bannertext/Cargo.toml` — workspace binary with clap 4.6.0, build/dev dependencies
+- `bannertext/build.rs` — build script following uuidgen pattern (graceful icon handling)
+- `bannertext/src/main.rs` — 200+ line implementation with all features
+- `bannertext/src/main_tests.rs` — 23 comprehensive unit tests
+- Root `Cargo.toml` — updated workspace members to include bannertext
+
+#### Implementation Highlights
+
+**Custom Parser:**
+- `parse_single_char()` value_parser for clap (clap lacks native char type)
+- Default value strategy: `default_value = "*"` on each single-char arg (not `default_value_t`)
+
+**TextAlignment Enum:**
+- Implements `clap::ValueEnum` with PascalCase names (Left/Right/Center)
+- Maps cleanly to CLI: `bannertext -A Center "text"`
+
+**Algorithm Validated:**
+- "Hello World" default: 2+2+11+2+2 = 19-char natural width
+- Header/footer: `*******************` (19 chars)
+- Text: `**  Hello World  **` (19 chars, center-aligned)
+- ✓ Exact match to spec output
+
+**Safe String Handling:**
+- Multi-byte chars: `.chars().take(n).collect::<String>()` prevents UTF-8 corruption
+- Underflow guard: `text_area_width = max(0, ...)` prevents negative widths
+- Repeated chars: `std::iter::repeat(char).take(n).collect::<String>()`
+
+**Public API:**
+- `generate_banner()` function exposed for unit testing
+- Struct fields all public for test assertion clarity
+- No need for integration tests (unit tests sufficient)
+
+#### Testing Strategy
+
+23 unit tests cover:
+- Default parameters
+- Custom header/footer characters and line counts
+- All three text alignment modes (Left/Right/Center)
+- Min/max length constraints and edge cases
+- Prefix/suffix styling combinations
+- Unicode and multi-byte character handling
+
+**Integration by Blake:** 35 integration + 10 output tests for CLI validation (separate from this module)
+
+#### Build & Test Status
+✅ Clean build, zero warnings
+✅ 23/23 unit tests pass
+✅ 45 additional integration/output tests passing (Blake's work)
+✅ 68 total tests (23 unit + 35 integration + 10 output)
+✅ Workspace builds cleanly
+✅ Ready for production commit
 

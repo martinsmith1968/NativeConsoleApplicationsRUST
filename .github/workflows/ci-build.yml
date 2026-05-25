@@ -39,118 +39,118 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Get Current Build Date
-      run: |
-        echo "build_date=$(date +'%y%j')" >> $GITHUB_ENV
-        echo "build_year=$(date +'%Y')" >> $GITHUB_ENV
+      - name: Get Current Build Date
+        run: |
+          echo "build_date=$(date +'%y%j')" >> $GITHUB_ENV
+          echo "build_year=$(date +'%Y')" >> $GITHUB_ENV
 
-    - name: Evaluate pipeline conditions
-      run: |
-        is_primary_branch=false
-        is_pull_request_build=false
-        is_release_candidate_branch=false
+      - name: Evaluate pipeline conditions
+        run: |
+          is_primary_branch=false
+          is_pull_request_build=false
+          is_release_candidate_branch=false
 
-        # Primary Branch ?
-        if [ "${{ github.ref }}" == 'refs/heads/${{ env.PRIMARY_BRANCH_NAME }}' ]
-        then
-          is_primary_branch=true
-        fi
+          # Primary Branch ?
+          if [ "${{ github.ref }}" == 'refs/heads/${{ env.PRIMARY_BRANCH_NAME }}' ]
+          then
+            is_primary_branch=true
+          fi
 
-        # Pull Request ?
-        if [ "${{ github.event_name }}" == "pull_request" ]
-        then
-          is_pull_request_build=true
-        fi
+          # Pull Request ?
+          if [ "${{ github.event_name }}" == "pull_request" ]
+          then
+            is_pull_request_build=true
+          fi
 
-        # If Release Candidate branch ?
-        if [[ "${{ github.ref }}" == refs/heads/${{ env.BRANCH_PREFIX_RELEASE_CANDIDATE }}* ]]
-        then
-          is_release_candidate_branch=true
-        fi
+          # If Release Candidate branch ?
+          if [[ "${{ github.ref }}" == refs/heads/${{ env.BRANCH_PREFIX_RELEASE_CANDIDATE }}* ]]
+          then
+            is_release_candidate_branch=true
+          fi
 
-        # Set for later steps
-        echo "is_primary_branch=${is_primary_branch}" >> $GITHUB_ENV
-        echo "is_pull_request_build=${is_pull_request_build}" >> $GITHUB_ENV
-        echo "is_release_candidate_branch=${is_release_candidate_branch}" >> $GITHUB_ENV
+          # Set for later steps
+          echo "is_primary_branch=${is_primary_branch}" >> $GITHUB_ENV
+          echo "is_pull_request_build=${is_pull_request_build}" >> $GITHUB_ENV
+          echo "is_release_candidate_branch=${is_release_candidate_branch}" >> $GITHUB_ENV
 
-    - name: Determine Tagging
-      run: |
-        should_tag=false
+      - name: Determine Tagging
+        run: |
+          should_tag=false
 
-        if $is_primary_branch;
-        then
-            if ! $is_pull_request_build;
-            then
-                should_tag=true
-            fi
-        fi
+          if $is_primary_branch;
+          then
+              if ! $is_pull_request_build;
+              then
+                  should_tag=true
+              fi
+          fi
 
-        echo "should_tag=${should_tag}" >> $GITHUB_ENV
+          echo "should_tag=${should_tag}" >> $GITHUB_ENV
 
-    - name: Determine GitHub Releasing
-      run: |
-        should_release=true
-        release_is_draft=true
-        release_is_prerelease=false
-        release_modifier='-ci'
+      - name: Determine GitHub Releasing
+        run: |
+          should_release=true
+          release_is_draft=true
+          release_is_prerelease=false
+          release_modifier='-ci'
 
-        if $is_primary_branch
-        then
-            release_is_draft=false
-            release_is_prerelease=false
-            release_modifier=''
-        fi
-        if $is_release_candidate_branch
-        then
-            release_modifier='-alpha'
-        fi
-        if $is_pull_request_build; then
-            release_is_draft=false
-            release_is_prerelease=true
-            release_modifier='-beta'
-        fi
+          if $is_primary_branch
+          then
+              release_is_draft=false
+              release_is_prerelease=false
+              release_modifier=''
+          fi
+          if $is_release_candidate_branch
+          then
+              release_modifier='-alpha'
+          fi
+          if $is_pull_request_build; then
+              release_is_draft=false
+              release_is_prerelease=true
+              release_modifier='-beta'
+          fi
 
-        echo "should_release=${should_release}" >> $GITHUB_ENV
-        echo "release_is_draft=${release_is_draft}" >> $GITHUB_ENV
-        echo "release_is_prerelease=${release_is_prerelease}" >> $GITHUB_ENV
-        echo "release_modifier=${release_modifier}" >> $GITHUB_ENV
+          echo "should_release=${should_release}" >> $GITHUB_ENV
+          echo "release_is_draft=${release_is_draft}" >> $GITHUB_ENV
+          echo "release_is_prerelease=${release_is_prerelease}" >> $GITHUB_ENV
+          echo "release_modifier=${release_modifier}" >> $GITHUB_ENV
 
-    - name: Set Product Version
-      run: echo "product_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}" >> $GITHUB_ENV
+      - name: Set Product Version
+        run: echo "product_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}" >> $GITHUB_ENV
 
-    - name: Set Executable Version
-      run: echo "executable_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}.${{ env.build_date }}.${{ github.run_number }}${{ github.run_attempt }}${{ env.release_modifier }}" >> $GITHUB_ENV
+      - name: Set Executable Version
+        run: echo "executable_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}.${{ env.build_date }}.${{ github.run_number }}${{ github.run_attempt }}${{ env.release_modifier }}" >> $GITHUB_ENV
 
-    - name: Set Executable Build Version (for RUST)
-      run: echo "executable_build_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}.${{ env.build_date }}" >> $GITHUB_ENV
+      - name: Set Executable Build Version (for RUST)
+        run: echo "executable_build_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}.${{ env.build_date }}" >> $GITHUB_ENV
 
-    - name: Checkout
-      uses: actions/checkout@v6.0.2
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
 
-    - name: Discover Buildable Projects
-      shell: pwsh
-      run: |
-        Install-Module -Name PSToml -Force
+      - name: Discover Buildable Projects
+        shell: pwsh
+        run: |
+          Install-Module -Name PSToml -Force
 
-        $toml_filename = "Cargo.toml"
-        $contents = Get-Content $toml_filename -Raw
+          $toml_filename = "Cargo.toml"
+          $contents = Get-Content $toml_filename -Raw
 
-        $toml_object = $contents | ConvertFrom-Toml
+          $toml_object = $contents | ConvertFrom-Toml
 
-        $projects = $toml_object.workspace.members
-        Write-Host "Found $($projects.Count) Project Names"
-        foreach ($project in $projects) {
-          Write-Host " - $project"
-        }
+          $projects = $toml_object.workspace.members
+          Write-Host "Found $($projects.Count) Project Names"
+          foreach ($project in $projects) {
+            Write-Host " - $project"
+          }
 
-        $binary_names = [string]::join(',', $projects)
+          $binary_names = [string]::join(',', $projects)
 
-        echo "BINARY_NAMES=$binary_names" >> $env:GITHUB_ENV
+          echo "BINARY_NAMES=$binary_names" >> $env:GITHUB_ENV
 
-    - name: Show Configuration
-      run: env | sort
+      - name: Show Configuration
+        run: env | sort
 
     outputs:
       build_date: ${{ env.build_date }}
@@ -171,8 +171,8 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ 'windows-latest' ] #, 'ubuntu-latest' ]
-        arch: [ 'x64' ] #,'x86' ]
+        os: [ 'windows-latest' , 'ubuntu-latest' ]
+        arch: [ 'x64' ,'x86' ]
         # See : https://doc.rust-lang.org/rustc/platform-support.html
         include:
           - os: windows-latest
@@ -232,7 +232,7 @@ jobs:
         run: |
           foreach ($project in "${{ needs.setup.outputs.binary_names }}".Split(',')) {
             $project = $project.Trim()
-            
+
             Write-Host
             Write-Host "--------------------------------------------------------------------------------"
             Write-Host "Setting version for project '$project' to '${{ needs.setup.outputs.executable_build_version }}'"
@@ -256,7 +256,7 @@ jobs:
                 break
               }
             }
-            
+
             Set-Content -Path $file_path -Value $lines
 
             Write-Host
@@ -269,7 +269,7 @@ jobs:
         run: |
           $build_output_folder    = Join-Path "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}"
           $build_artifacts_folder = Join-Path "${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}"
-          
+
           echo "BUILD_OUTPUT_FOLDER=$build_output_folder" >> $env:GITHUB_ENV
           echo "BUILD_ARTIFACTS_FOLDER=$build_artifacts_folder" >> $env:GITHUB_ENV
 
@@ -294,7 +294,7 @@ jobs:
             $executable_extension = ""
           }
 
-          if (-not(Test-Path "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -PathType Container)) {
+          if (-not (Test-Path "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -PathType Container)) {
             New-Item -path "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -ItemType Directory
           }
 
@@ -304,7 +304,7 @@ jobs:
             if ([string]::IsNullOrWhiteSpace($project)) {
               continue
             }
-            
+
             Write-Host "Copying project to '${{ env.BASE_BUILD_COLLECT_FOLDER }}': $project"
             $project = $project.Trim()
             Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "$($project)$($executable_extension)") "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
@@ -327,8 +327,6 @@ jobs:
           base_path: ${{ env.BASE_BUILD_COLLECT_FOLDER }}
           files: |
             *
-
-      # gci |  where { $_.UnixMode -like '*x*' }
 
       - name: Debug Files - BUILD_ARTIFACTS_FOLDER
         shell: pwsh
@@ -401,14 +399,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Tag git
-      uses: pkgdeps/git-tag-action@v3.0.1
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        github_repo: ${{ github.repository }}
-        git_commit_sha: ${{ github.sha }}
-        git_tag_prefix: "v"
-        version: ${{ needs.setup.outputs.executable_version }}
+      - name: Tag git
+        uses: pkgdeps/git-tag-action@v3.0.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_repo: ${{ github.repository }}
+          git_commit_sha: ${{ github.sha }}
+          git_tag_prefix: "v"
+          version: ${{ needs.setup.outputs.executable_version }}
 
 
   ##########################################################
@@ -426,37 +424,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v6.0.2
-      with:
-        fetch-depth: 0
-        fetch-tags: true
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
-    - uses: actions/download-artifact@v8.0.1
-      with:
-        path: release
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          path: release
 
-    - name: Debug Files - release
-      shell: pwsh
-      run: Get-ChildItem "release" -recurse
+      - name: Debug Files - release
+        shell: pwsh
+        run: Get-ChildItem "release" -recurse
 
-    - name: Build Changelog
-      id: build_changelog
-      uses: mikepenz/release-changelog-builder-action@v6.2.2
-      with:
-        failOnError: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Changelog
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@v6.2.2
+        with:
+          failOnError: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Create Release
-      uses: ncipollo/release-action@v1.21.0
-      with:
-        tag: v${{ needs.setup.outputs.executable_version }}
-        name: Release ${{ needs.setup.outputs.executable_version }}
-        body: ${{ steps.build_changelog.outputs.changelog }}
-        draft: ${{ needs.setup.outputs.release_is_draft }}
-        prerelease: ${{ needs.setup.outputs.release_is_prerelease }}
-        removeArtifacts: true
-        artifacts: 'release/**/*.zip'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release
+        uses: ncipollo/release-action@v1.21.0
+        with:
+          tag: v${{ needs.setup.outputs.executable_version }}
+          name: Release ${{ needs.setup.outputs.executable_version }}
+          body: ${{ steps.build_changelog.outputs.changelog }}
+          draft: ${{ needs.setup.outputs.release_is_draft }}
+          prerelease: ${{ needs.setup.outputs.release_is_prerelease }}
+          removeArtifacts: true
+          artifacts: 'release/**/*.zip'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
