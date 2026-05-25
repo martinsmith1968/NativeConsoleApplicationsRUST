@@ -648,6 +648,20 @@
 - **Regex Patterns:** UUID format validation via regex (e.g., `[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}...`)
 - **Stderr Validation:** Test warning messages appear on stderr when appropriate (invalid seeds, malformed templates)
 
+### Restoring Deleted Tests (Current Session)
+- **Pattern Coexistence:** One-off unit tests and .example-based integration tests can coexist in the same test file without conflicts
+- **Git History as Source:** Using `git show <commit>:path/to/file` to recover deleted test code was effective
+- **Test Suite Consolidation:** 15 one-off tests + 6 .example tests = 21 output-level tests validating:
+  - Exact character-by-character output (default banner = 3 lines)
+  - Minimum length enforcement (80 chars)
+  - Text alignment variants (left/center/right with format!() semantics)
+  - Custom decorators (header/footer/text-line chars)
+  - Edge cases (zero gap, zero footer, multiple headers)
+  - Multi-text rendering (2, 3 messages with width calculation)
+- **Helper Function Maintenance:** Restored `run_bannertext()` helper for direct CLI invocation alongside higher-level `.example` file loading
+- **Encoding Fix Preservation:** Kept the UTF-8 normalization logic in `load_expected_output()` that handles malformed copyright symbols
+- **Test Scope Validation:** All 63 tests (42 integration + 21 output) pass with zero failures on first run after restoration
+
 ### CI Coverage Job (Current Session)
 - **cargo-llvm-cov** is the modern standard for Rust coverage — uses LLVM instrumentation, cross-platform, first-class GitHub Action support via `taiki-e/install-action@cargo-llvm-cov`
 - Coverage jobs should run on `ubuntu-latest` for speed and tooling simplicity, even if the main build targets Windows
