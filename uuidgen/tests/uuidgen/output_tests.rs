@@ -30,16 +30,16 @@ fn load_expected_output(filename: &str) -> String {
     let path = get_expected_output_dir().join(format!("{}.example", filename));
     let content = fs::read_to_string(&path)
         .expect(&format!("Failed to read expected output file: {:?}", path));
-    
+
     let normalized = normalize_output(content)
         .replace("%APP_VERSION%", app_version())
         .replace("%CURRENT_YEAR%", &current_year());
-    
+
     // Convert bytes to fix encoding issues with copyright symbol
     let bytes = normalized.as_bytes().to_vec();
     let mut result = String::new();
     let mut i = 0;
-    
+
     while i < bytes.len() {
         // Detect and skip malformed UTF-8 sequences
         if bytes[i] > 127 {
@@ -54,7 +54,7 @@ fn load_expected_output(filename: &str) -> String {
             i += 1;
         }
     }
-    
+
     result
 }
 
