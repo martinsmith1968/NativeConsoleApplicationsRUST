@@ -76,7 +76,7 @@ fn test_help_request_produces_arguments_list() {
     let actual = String::from_utf8(output.stdout).unwrap();
 
     assert!(
-        actual.contains("bannertext v0.1.0-dev"),
+        actual.contains(&format!("bannertext v{}", app_version())),
         "Help output should contain version info, got:\n{}",
         actual
     );
