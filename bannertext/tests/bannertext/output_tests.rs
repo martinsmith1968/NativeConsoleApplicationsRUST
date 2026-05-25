@@ -72,7 +72,7 @@ fn run_bannertext(args: &[&str]) -> String {
 #[test]
 fn test_help_request_produces_arguments_list() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
-    let output = cmd.arg("-?").output().unwrap();
+    let output = cmd.arg("--help").output().unwrap();
     let actual = String::from_utf8(output.stdout).unwrap();
 
     assert!(
