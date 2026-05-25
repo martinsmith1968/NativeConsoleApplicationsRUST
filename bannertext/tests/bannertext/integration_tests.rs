@@ -25,7 +25,7 @@ fn test_cli_version_flag() {
 #[test]
 fn test_cli_help_short_alias() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
-    cmd.arg("-?")
+    cmd.arg("--help")
         .assert()
         .success()
         .stdout(predicate::str::contains("Usage:"));
