@@ -1,36 +1,6 @@
-$app_output_path     = Join-Path $PSScriptRoot -ChildPath ".." "target" "release"
-$temp_base_path      = [System.IO.Path]::GetTempPath()
-$run_id              = [System.Guid]::NewGuid().ToString("N")
-$temp_run_path       = Join-Path -Path $temp_base_path -ChildPath $run_id
-$current_app_version = "0.1.0-dev"
-$current_year        = (Get-Date).Year
-
-Write-Host "App Output Path : $($app_output_path)"
-Write-Host "Temp Path       : $($temp_base_path)"
-Write-Host "Run Path        : $($temp_run_path)"
-Write-Host "App Version     : $($current_app_version)"
-
-
-# Start
-
-$allfiles = Get-ChildItem -Path $app_output_path -File -Filter "*.exe"
-Write-Host "Found $($allfiles.Length) candidate executables"
-
-# Build Apps List
-$apps = @{}
-foreach ($file in $allfiles | Where-Object { $_.FullName.contains("release") }) {
-    $apps[$file.Name] = $file
-}
-foreach ($file in $allfiles | Where-Object { $_.FullName.contains("debug") }) {
-    if ( $apps.ContainsKey($file.Name) ) {
-        continue
-    }
-    $file_name_only = [System.IO.Path]::GetFileNameWithoutExtension($file.Name)
-    $apps[$file_name_only] = $file
-}
-
 function Search-AppByName {
     param (
+        [hashtable]$apps,
         [string]$app_name
     )
     Write-Host "Looking for app : $($app_name)..." -ForegroundColor Yellow
@@ -39,7 +9,6 @@ function Search-AppByName {
     }
     return $null
 }
-
 
 function Set-ExpectedOutput {
     param (
@@ -73,9 +42,54 @@ function Set-ExpectedOutput {
 }
 
 
+#---------------------------------------------------------------------------------------------------
+
+$app_output_path     = Join-Path $PSScriptRoot -ChildPath ".." "target" "release"
+$temp_base_path      = [System.IO.Path]::GetTempPath()
+$run_id              = [System.Guid]::NewGuid().ToString("N")
+$temp_run_path       = Join-Path -Path $temp_base_path -ChildPath $run_id
+$current_app_version = "0.1.0-dev"
+$current_year        = (Get-Date).Year
+
+Write-Host "App Output Path : $($app_output_path)"
+Write-Host "Temp Path       : $($temp_base_path)"
+Write-Host "Run Path        : $($temp_run_path)"
+Write-Host "App Version     : $($current_app_version)"
+
+$allfiles = @{}
+if (Test-Path -Path $app_output_path) {
+    $allfiles = Get-ChildItem -Path $app_output_path -File -Filter "*.exe"
+    Write-Host "Found $($allfiles.Length) candidate executables"
+}
+
+# Build Apps List
+$apps = @{}
+if ($allfiles.Count -gt 0) {
+    foreach ($file in $allfiles | Where-Object { $_.FullName.contains("release") }) {
+        $apps[$file.Name] = $file
+    }
+    foreach ($file in $allfiles | Where-Object { $_.FullName.contains("debug") }) {
+        if ( $apps.ContainsKey($file.Name) ) {
+            continue
+        }
+        $file_name_only = [System.IO.Path]::GetFileNameWithoutExtension($file.Name)
+        $apps[$file_name_only] = $file
+    }
+}
+
+# Valiadate
+if ( $apps.Count -eq 0 ) {
+    Write-Host "No apps found in output path. Please build the apps before running this script." -ForegroundColor Red
+    Write-Host "Searched Path : $($app_output_path)" -ForegroundColor Red
+    Write-Host "Run: cargo build --release" -ForegroundColor Yellow
+    exit 1
+}
+Write-Host "$($apps.Count) Apps found" -ForegroundColor Green
+
+
 # Generate For : bannertext
 $app_name = "bannertext.exe"
-$app = Search-AppByName -app_name $app_name
+$app = Search-AppByName -apps $apps -app_name $app_name
 if ( $null -ne $app ) {
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-?"                             -output_filename "Execute_with_help_request_produces_arguments_list"
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "--help"                         -output_filename "Execute_with_full_help_request_produces_arguments_list"
@@ -88,9 +102,10 @@ if ( $null -ne $app ) {
 
 # Generate For : hashcalc
 $app_name = "hashcalc.exe"
-$app = Search-AppByName -app_name $app_name
+$app = Search-AppByName -apps $apps -app_name $app_name
 if ( $null -ne $app ) {
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-?"                         -output_filename "Execute_with_help_request_produces_arguments_list"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "--help"                     -output_filename "Execute_with_full_help_request_produces_arguments_list"
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-t|Hello World"             -output_filename "Execute_with_text_only_default_algorithm_produces_expected_output"
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-t|Hello World|-a|sha256"   -output_filename "Execute_with_text_only_sha256_produces_expected_output"
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-t|Hello World|-a|sha512"   -output_filename "Execute_with_text_only_sha512_produces_expected_output"
@@ -102,9 +117,10 @@ if ( $null -ne $app ) {
 
 # Generate For : uuidgen
 $app_name = "uuidgen.exe"
-$app = Search-AppByName -app_name $app_name
+$app = Search-AppByName -apps $apps -app_name $app_name
 if ( $null -ne $app ) {
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-?"                     -output_filename "Execute_with_help_request_produces_arguments_list"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "--help"                 -output_filename "Execute_with_full_help_request_produces_arguments_list"
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-t|guid"                -output_filename "Execute_for_default_type_guid_produces_expected_output"
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-t|guid|-c|5"           -output_filename "Execute_for_5_instance_default_type_guid_produces_expected_output"
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-t|guid|-y"             -output_filename "Execute_for_default_type_guid_hyphenated_produces_expected_output"
