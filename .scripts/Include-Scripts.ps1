@@ -4,18 +4,20 @@ function Build-AppsList {
     )
 
     $allfiles = @{}
-    if (Test-Path -Path $base_path_name) {
+    if (Test-Path -Path $base_path_name -PathType Container) {
         $allfiles = Get-ChildItem -Path $base_path_name -File -Filter "*.exe" -Recurse
         Write-Host "Found $($allfiles.Length) candidate executables"
     }    
 
+    $allfiles = $allfiles | Where-Object { -Not $_.FullName.contains("deps") } | Where-Object { -Not $_.FullName.contains("_build-") }
+
     $apps = @{}
 
-    foreach ($file in $files | Where-Object { $_.FullName.contains("release") }) {
+    foreach ($file in $allfiles | Where-Object { $_.FullName.contains("release") }) {
         $apps[$file.Name] = $file
     }
 
-    foreach ($file in $files | Where-Object { $_.FullName.contains("debug") }) {
+    foreach ($file in $allfiles | Where-Object { $_.FullName.contains("debug") }) {
         if ( $apps.ContainsKey($file.Name) ) {
             continue
         }
@@ -37,4 +39,3 @@ function Search-AppByName {
     }
     return $null
 }
-
