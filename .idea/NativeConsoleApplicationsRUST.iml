@@ -9,6 +9,8 @@
       <sourceFolder url="file://$MODULE_DIR$/uuidgen/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/bannertext/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/bannertext/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/printformat/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/printformat/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
