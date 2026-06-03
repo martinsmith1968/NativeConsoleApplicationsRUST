@@ -677,6 +677,12 @@
 - Upload `lcov.info` as an artifact for future Codecov/Coveralls integration
 - `tag` and `release` jobs must NOT depend on `coverage` — they gate only on `build`
 
+### printformat Alignment and Padding Tests (Current Session)
+- **Alignment needs exact stdout assertions:** Right, left, center, fill, and mixed-width cases are best covered with black-box CLI tests using literal expected strings so spacing regressions are obvious.
+- **Escaped braces deserve CLI coverage:** `{{}}` and mixed literal/placeholder formats can regress independently of plain `{}` replacement, so integration tests should pin those outputs explicitly.
+- **Snapshot helpers can mask trailing-space bugs:** `normalize_output()` trims line-end whitespace, so exact alignment assertions that depend on trailing spaces belong in integration tests; snapshot files are still safe for cases without trailing spaces.
+- **Help snapshots drift when examples change:** Adding formatter examples in clap help required the existing `Execute_with_help_request_produces_arguments_list.example` snapshot to stay in sync.
+
 ## Files Modified (Current Session)
 - `uuidgen/src/main.rs` - Added 8 edge case unit tests
 - `uuidgen/tests/integration_tests.rs` - Created with 30 CLI black-box tests (NEW FILE)

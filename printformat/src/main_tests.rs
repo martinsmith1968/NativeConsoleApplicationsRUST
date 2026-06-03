@@ -51,3 +51,52 @@ fn test_apply_format_preserves_surrounding_text() {
     let actual = apply_format("pre {} post", &args(&["mid"])).unwrap();
     assert_eq!(actual, "pre mid post");
 }
+
+#[test]
+fn test_apply_format_right_align() {
+    let actual = apply_format("{:>10}", &args(&["hello"])).unwrap();
+    assert_eq!(actual, "     hello");
+}
+
+#[test]
+fn test_apply_format_left_align() {
+    let actual = apply_format("{:<10}", &args(&["hello"])).unwrap();
+    assert_eq!(actual, "hello     ");
+}
+
+#[test]
+fn test_apply_format_center_align() {
+    let actual = apply_format("{:^11}", &args(&["hello"])).unwrap();
+    assert_eq!(actual, "   hello   ");
+}
+
+#[test]
+fn test_apply_format_fill_char() {
+    let actual = apply_format("{:*^11}", &args(&["hello"])).unwrap();
+    assert_eq!(actual, "***hello***");
+}
+
+#[test]
+fn test_apply_format_zero_pad() {
+    let actual = apply_format("{:0>5}", &args(&["42"])).unwrap();
+    assert_eq!(actual, "00042");
+}
+
+#[test]
+fn test_apply_format_width_no_align() {
+    let actual = apply_format("{:10}", &args(&["hi"])).unwrap();
+    assert_eq!(actual.len(), 10);
+    assert!(actual.contains("hi"));
+}
+
+#[test]
+fn test_apply_format_escaped_braces() {
+    let actual = apply_format("{{}} and {}", &args(&["value"])).unwrap();
+    assert_eq!(actual, "{} and value");
+}
+
+#[test]
+fn test_apply_format_multiple_with_alignment() {
+    let actual = apply_format("{:>5} | {:<5}", &args(&["a", "b"])).unwrap();
+    assert_eq!(actual, "    a | b    ");
+}

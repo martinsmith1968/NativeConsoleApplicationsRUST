@@ -113,3 +113,26 @@ fn execute_with_format_and_no_args_produces_expected_output() {
         "No-argument output does not match expected"
     );
 }
+
+#[test]
+fn execute_with_right_align_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    let output = cmd.arg("{:>10}").arg("hello").output().unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
+    let expected = load_expected_output("Execute_with_right_align_produces_expected_output");
+
+    assert_eq!(actual, expected, "Right-aligned output does not match expected");
+}
+
+#[test]
+fn execute_with_fill_char_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    let output = cmd.arg("{:*^11}").arg("hello").output().unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
+    let expected = load_expected_output("Execute_with_fill_char_produces_expected_output");
+
+    assert_eq!(
+        actual, expected,
+        "Fill-character output does not match expected"
+    );
+}

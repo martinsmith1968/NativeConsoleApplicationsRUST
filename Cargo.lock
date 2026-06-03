@@ -561,6 +561,7 @@ dependencies = [
  "build-print",
  "clap",
  "predicates",
+ "strfmt",
  "winresource",
 ]
 

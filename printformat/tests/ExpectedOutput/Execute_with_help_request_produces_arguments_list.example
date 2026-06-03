@@ -13,15 +13,18 @@ Arguments:
 Options:
   -h, --help
           Print help
-          
+
           [aliases: -?]
 
   -V, --version
           Print version
-          
+
           [aliases: -!]
 
 Examples:
   printformat "Hello, {}!" "World"
   printformat "{} + {} = {}" "1" "2" "3"
+  printformat "{:>10}" "right"
+  printformat "{:<10}" "left"
+  printformat "{:*^20}" "center"
   printformat "No placeholders"

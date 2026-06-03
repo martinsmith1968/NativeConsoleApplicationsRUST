@@ -298,6 +298,7 @@ Changed `bannertext` to accept multiple positional text arguments displayed as s
 - `printformat` uses a small `apply_format(&str, &[String]) -> Result<String, String>` helper in `printformat\src\main.rs` so placeholder counting and ordered replacement stay testable and isolated from clap parsing.
 - Help/output fixtures for new apps should be validated against real clap output; `printformat` help omits `[OPTIONS]` because only custom help/version actions exist.
 - Key paths for this app: `printformat\src\main.rs`, `printformat\src\main_tests.rs`, `printformat\tests\printformat\integration_tests.rs`, and `printformat\tests\ExpectedOutput\*`.
+- `printformat` now preprocesses unnamed `{}` and `{:spec}` placeholders into numbered `strfmt` fields before rendering, which adds string alignment/fill/width support while preserving escaped braces and clear brace syntax errors.
 
 ## Session 6: about/long_about Format Standardisation
 
