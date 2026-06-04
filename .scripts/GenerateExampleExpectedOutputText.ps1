@@ -129,4 +129,20 @@ if ( $null -ne $app ) {
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-t|nanoid|-c|5"         -output_filename "execute_app_for_5_instance_nanoid_produces_expected_output"
 }
 
+# Generate For : printformat
+$app_name = "printformat.exe"
+$app = Search-AppByName -apps $apps -app_name $app_name
+if ( $null -ne $app ) {
+    Clear-ExpectedOutput -app_full_name $app.FullName
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "-?"                     -output_filename "execute_app_with_help_request_produces_arguments_list"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "--help"                 -output_filename "execute_app_with_full_help_request_produces_arguments_list"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "bob"                    -output_filename "execute_app_with_text_only_produces_expected_output"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "{} {}|Hello|World"      -output_filename "execute_app_with_2_placeholders_and_string_values_produces_expected_output"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "{} is {}|TATLTUAE|42"   -output_filename "execute_app_with_2_placeholders_and_mixed_values_produces_expected_output"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "!{:<10}!|bob"           -output_filename "execute_app_with_left_aligned_text_parameter_produces_expected_output"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "!{:>10}!|bob"           -output_filename "execute_app_with_right_aligned_text_parameter_produces_expected_output"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "!{:^10}!|bob"           -output_filename "execute_app_with_center_aligned_text_parameter_produces_expected_output"
+    Set-ExpectedOutput -app_full_path $app.FullName -arguments "!{:-^10}!|bob"          -output_filename "execute_app_with_center_aligned_character_padded_text_parameter_produces_expected_output"
+}
+
 Write-Host "DONE: Expected Output Text Population Complete." -ForegroundColor Green

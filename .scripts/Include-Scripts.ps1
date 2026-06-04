@@ -28,6 +28,8 @@ function Build-AppsList {
     return $apps
 }
 
+#---------------------------------------------------------------------------------------------------
+
 function Search-AppByName {
     param (
         [hashtable]$apps,
