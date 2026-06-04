@@ -1,5 +1,131 @@
 # Marcus Backend Dev - History & Learnings
 
+## Session 6: C# Format String Support Investigation
+
+### Investigation Summary: Feasibility of C# Format String Support
+
+**Objective:** Research whether Rust crates exist that can parse/handle C# style format strings (e.g., `{0:D3}`, `{0:F2}`, `{0,-10}`) and assess feasibility of adding C# format string support to printformat.
+
+#### Research Findings
+
+**Available Rust Format Crates Investigated:**
+
+1. **strfmt (current dependency, v0.2.5)**
+   - **Supported:** Rust-style format specs (alignment, width, fill chars): `{:>10}`, `{:<10}`, `{:^11}`, `{:*^11}`, `{:0>5}`
+   - **Beta support:** Numeric types (i64, f64) with Rust spec syntax: `{x:<7.2}`, `{y:+.2E}`
+   - **Limitation:** Does NOT support C# style specs (D3, F2, N, C, X, G, etc.)
+   - **Alignment:** Uses `:` prefix like Rust. C# uses `,` for alignment like `{0,-10}` or `{0,10}`
+   - **Maintenance:** Actively maintained, reasonable quality
+
+2. **dyn-fmt (v0.4.3)**
+   - **Scope:** Dynamic string formatting with `{}` placeholders
+   - **Limitation:** No format specifier support, only auto-indexing
+   - **Not suitable:** for C# format specs
+
+3. **formatx (v0.2.4)**
+   - **Scope:** Runtime formatting macro derived from std::fmt syntax
+   - **Status:** Rust format spec syntax only, no C# support
+
+4. **Other crates checked:**
+   - `dyf` - Dynamic string formatting (Rust-style specs)
+   - `sscanf` - Inverse formatting (parsing, not formatting)
+   - `time-format`, `file-format` - Domain-specific, not general formatting
+   - **Result:** No C# format string crates found on crates.io
+
+**Crate Search Results:**
+- Cargo search "csharp format", "dotnet format", "composite format", "format string" - **zero C# format-specific crates found**
+- Generic search found only Rust-style formatting crates
+- `csbindgen` crate exists but is for C# FFI generation, not format strings
+
+#### Current printformat Implementation Analysis
+
+**What already works:**
+- `{0}`, `{1}`, `{2}` — numeric positional placeholders ✅
+- `{}` — auto-indexed placeholders ✅
+- Rust-style alignment: `{0:>10}`, `{0:<10}`, `{0:^11}` ✅
+- Fill characters: `{0:*^11}` ✅
+- Zero padding: `{0:0>5}` ✅
+- Escaped braces: `{{}}` ✅
+
+**What doesn't work (C# specific):**
+- `{0:D3}` — integer padding (C# specific format specifier)
+- `{0:F2}` — float decimal places (C# specific)
+- `{0:N}` — number with thousands separators
+- `{0:C}` — currency formatting
+- `{0:X}` — hexadecimal (C# semantic)
+- `{0:G}` — general numeric format
+- `{0,-10}` — C# alignment with comma (works but with different syntax: `{0:<10}`)
+- `{0:00.00}` — custom numeric patterns
+
+#### Technical Feasibility Assessment
+
+**Option 1: Use existing C# format-parsing crate**
+- **Status:** ❌ No C# format string crates exist on crates.io
+- **Risk:** Medium — could implement custom crate, but maintenance burden
+- **Effort:** High (would need to build/maintain from scratch)
+
+**Option 2: Translate C# specs → Rust specs at runtime**
+- **Feasibility:** ⚠️ **Partial** — Some C# specs map to Rust equivalently:
+  
+  | C# Spec | Translatable? | Rust Equivalent | Notes |
+  |---------|--------------|-----------------|-------|
+  | `{0,-10}` | ✅ Yes | `{0:<10}` | Left-align, width 10 |
+  | `{0,10}` | ✅ Yes | `{0:>10}` | Right-align, width 10 |
+  | `{0:D3}` | ⚠️ Partial | `{0:0>3}` | Integer zero-pad, width 3 |
+  | `{0:X}` | ❌ No | N/A | Hex formatting — strfmt/Rust fmt don't natively support |
+  | `{0:F2}` | ✅ Yes | `{0:.2}` | Float precision (strfmt_map beta feature) |
+  | `{0:N}`, `{0:C}` | ❌ No | N/A | Thousands separator, currency — not in Rust std::fmt |
+  | `{0:G}` | ❌ No | N/A | General numeric — not standard in Rust |
+  | `{0:00.00}` | ❌ No | N/A | Custom patterns beyond Rust spec syntax |
+
+- **Translator complexity:** Medium — regex parser + 50-100 lines to map specs
+- **Implementation effort:** 2-4 hours for basic translator
+- **Limitations:** ~50% of C# specs don't have Rust equivalents
+
+**Option 3: Add custom C# format handler alongside strfmt**
+- **Approach:** Parse C# specs, apply custom formatting logic for numeric types
+- **Effort:** 4-8 hours (implement hex, thousands separator, currency awareness)
+- **Dependency cost:** Likely need 1-2 additional crates for number formatting
+- **Risk:** Increased complexity, more surface for bugs
+
+#### Recommendation
+
+**Primary:** ✅ **Implement a lightweight C# → Rust format translator**
+
+**Rationale:**
+1. **No C#-native crates exist** — Would have to build/maintain custom implementation anyway
+2. **Partial coverage is acceptable** — Most common C# specs ARE translatable
+3. **Low-risk integration** — Fits as a preprocessing layer in `preprocess_format()` 
+4. **User documentation is key** — Be explicit about which C# specs are supported vs. not
+5. **Minimal dependency bloat** — Avoid adding extra crates if possible
+
+**Implementation Plan:**
+1. Add C# format spec detection (heuristic: numeric indices + colon-based specs)
+2. Create `translate_csharp_to_rust()` function to map specs:
+   - `{0:D3}` → `{0:0>3}` (integer zero-pad)
+   - `{0,-10}` → `{0:<10}` (left-align)
+   - `{0,10}` → `{0:>10}` (right-align)
+   - `{0:F2}` → `{0:.2}` (float precision, requires strfmt_map)
+   - Unsupported specs → return error with clear message
+3. Integrate into existing `preprocess_format()` as a first-pass translation
+4. Add test cases for both supported and unsupported C# specs
+5. Update help text to document C# support scope
+
+**Not recommended:**
+- ❌ Implement full numeric formatting (currency, thousands separator) — too much scope
+- ❌ Add new dependencies — stick with strfmt + manual translation
+- ❌ Support custom format patterns like `{0:00.00}` — beyond Rust std::fmt equivalence
+
+#### Key Learnings
+
+- **C# format strings have a different paradigm** than Rust — C# uses index-based positional args, Rust prefers named keys
+- **strfmt is well-designed for Rust-style specs** but wasn't built with C# in mind
+- **A translation layer is cleaner than a full rewrite** — leverage existing strfmt machinery
+- **Clear error messages matter** — users need to know which specs aren't supported
+- **Partial support is better than none** — 60-70% feature parity is reasonable for a CLI tool
+
+---
+
 ## Session 5: hashcalc CLI Refactor - Text Parameter to Option Flag
 
 ### Refactoring Complete
@@ -299,6 +425,7 @@ Changed `bannertext` to accept multiple positional text arguments displayed as s
 - Help/output fixtures for new apps should be validated against real clap output; `printformat` help omits `[OPTIONS]` because only custom help/version actions exist.
 - Key paths for this app: `printformat\src\main.rs`, `printformat\src\main_tests.rs`, `printformat\tests\printformat\integration_tests.rs`, and `printformat\tests\ExpectedOutput\*`.
 - `printformat` now preprocesses unnamed `{}` and `{:spec}` placeholders into numbered `strfmt` fields before rendering, which adds string alignment/fill/width support while preserving escaped braces and clear brace syntax errors.
+- `printformat` now supports `--csharp`/`-c` as an opt-in translation layer that rewrites C# composite placeholders like `{0,-10}`, `{1,10}`, `{0:D5}`, and `{0:F2}` into `strfmt`-compatible fields before rendering; unsupported `X`, `N`, and `C` specifiers fail fast with explicit errors.
 
 ## Session 6: about/long_about Format Standardisation
 

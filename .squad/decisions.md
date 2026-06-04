@@ -700,3 +700,278 @@ Implementing the `bannertext` CLI app from a C++ reference spec. Several design 
 
 **Rationale:** Alphabetical ordering within purpose groups (existing apps first, new app appended). No functional impact.
 
+---
+
+# Decision: printformat Implementation
+
+**Author:** Marcus (Backend Dev)  
+**Date:** Current session  
+**Status:** Implemented ✓
+
+## Summary
+
+Implemented a new workspace member named `printformat` as a Rust CLI utility that formats text by replacing `{}` placeholders with positional arguments and prints the final string with `println!`.
+
+## Decisions
+
+- Followed the existing app conventions used by `uuidgen`, `hashcalc`, and `bannertext` for `Cargo.toml`, `build.rs`, clap metadata, help/version flags, and test layout.
+- Used a dedicated `apply_format(&str, &[String]) -> Result<String, String>` function for placeholder counting and ordered `replacen("{}", arg, 1)` substitution.
+- Enforced exact placeholder/argument count matching; mismatches write a clear `Error:` message to stderr and exit with code `1`.
+- Added unit tests for `apply_format`, CLI integration tests, and exact-output fixture tests for help and representative formatting cases.
+- Added `printformat` to the workspace members list and copied `uuidgen\app.ico` for Windows resource embedding consistency.
+
+## Verification
+
+✓ `cargo build -p printformat`  
+✓ `cargo test -p printformat --quiet`  
+✓ `cargo test --workspace --quiet`
+
+---
+
+# Decision: printformat Alignment Implementation
+
+**Author:** Marcus (Backend Dev)  
+**Date:** Current session  
+**Status:** Implemented ✓  
+**Impact:** Medium — Extends printformat feature set with formatting support
+
+## Summary
+
+Extended `printformat` to support Rust `std::fmt`-style string alignment, fill, and width handling by preprocessing unnamed placeholders into numbered fields and rendering with `strfmt`.
+
+## Decisions
+
+- Added `strfmt = "0.2.5"` to `printformat\Cargo.toml` so formatting is delegated to a library that already understands Rust-like string alignment syntax.
+- Replaced the `replacen("{}", ...)` formatter in `printformat\src\main.rs` with a two-step approach: preprocess the format string, then call `strfmt` with a numbered variable map.
+- Auto-number only unnamed placeholders (`{}` and `{:spec}`) from left to right while leaving explicit placeholders like `{0}` and `{1:>5}` unchanged.
+- Preserve escaped braces as `{{` and `}}`, and surface malformed brace syntax early with clear errors for unclosed `{` and bare `}`.
+- Keep argument validation tied to the count of auto-numbered placeholders, matching the current CLI contract where each CLI argument supplies one unnamed slot.
+- Treat supported formatting as string formatting only; numeric-specific formatting remains out of scope because CLI arguments are passed through as strings.
+
+## Verification
+
+✓ `cargo build -p printformat`  
+✓ `cargo test -p printformat`  
+✓ `cargo test --workspace --quiet`
+
+---
+
+# Decision: printformat Alignment Tests
+
+**Author:** Blake (Tester)  
+**Date:** Current session  
+**Status:** Implemented ✓
+
+## Summary
+
+Added comprehensive alignment test suite for `printformat` covering Rust-style alignment, fill characters, and width specifications.
+
+## Implementation
+
+- Added an integration-test section for alignment and padding behavior in `printformat/tests/printformat/integration_tests.rs`.
+- Covered right, left, center, fill-char, width-only, mixed-format, multi-argument, and escaped-brace CLI scenarios.
+- Added two exact-output snapshot tests in `printformat/tests/printformat/output_tests.rs` backed by new `.example` files for right-align and fill-char center output.
+- Updated the existing help-output snapshot to include the new alignment examples shown by clap help text.
+
+## Validation
+
+✓ Verified Marcus's implementation readiness by checking `strfmt` in `Cargo.toml` and `preprocess_format` in `src/main.rs` before testing.  
+✓ Ran `cargo test -p printformat --quiet` successfully.
+
+---
+
+# Decision: printformat Test Coverage
+
+**Author:** Blake (Tester)  
+**Date:** Current session  
+**Status:** Implemented ✓
+
+## Summary
+
+Expanded test coverage for `printformat` with focused unit tests and comprehensive CLI integration tests.
+
+## Implementation
+
+- Added focused `apply_format` unit tests for placeholder substitution, empty input, adjacent placeholders, and mismatch errors.
+- Expanded CLI integration coverage to include help/version aliases, happy paths, edge cases, clap failure on missing required args, and explicit exit-code checks.
+- Kept exact-output snapshot coverage in `.example` files for help text plus representative zero-, one-, and multi-argument formatting scenarios.
+- Used `--help` in exact-output tests for portability; `-?` remains covered in integration tests.
+
+## Validation
+
+✓ Validation was run with `cargo test` from `printformat\` once the implementation was present.
+
+---
+
+# Decision: Dependency Version Upgrades
+
+**Author:** Marcus (Backend Dev)  
+**Date:** Current session  
+**Status:** Implemented ✓
+
+## Summary
+
+Updated workspace manifest minimum versions for several crates and regenerated `Cargo.lock`.
+
+## Changes
+
+- Updated workspace manifest minimum versions only where a newer published crate version was confirmed.
+- Left `sha1`, `sha2`, `tempfile`, `winresource`, `build-print`, `hex`, `md5`, and `strfmt` unchanged because the currently declared versions are already the latest published releases.
+- Bumped manifest minimums for `clap`, `assert_cmd`, `predicates`, `regex`, `uuid`, and `nanoid`, then regenerated `Cargo.lock` with `cargo update`.
+
+## Verification
+
+✓ Verified the dependency refresh with `cargo build --workspace` and `cargo test --workspace`; all crates still compile and all 345 tests pass.
+
+---
+
+# Decision: Research – C# Format String Support
+
+**Author:** Marcus (Backend Dev)  
+**Date:** Current session  
+**Status:** Investigation Complete  
+**Impact:** Medium — Foundation for C# format translation feature
+
+## Problem Statement
+
+Martin Smith requested investigation into whether `printformat` can support C# style format strings like `{0:D3}`, `{0:F2}`, `{0,-10}`, etc.
+
+## Research Findings
+
+**No C# format-specific Rust crates exist** on crates.io. Searched alternatives: `dyn-fmt`, `formatx`, `dyf` — all Rust-style only.
+
+### Current Support
+
+**printformat already handles:**
+- `{0}` `{1}` numeric positional placeholders ✅
+- `{}` auto-indexed placeholders ✅
+- Rust-style alignment: `{:>10}`, `{:<10}`, `{:^11}` ✅
+- Fill chars: `{:*^11}` ✅
+- Zero-padding: `{:0>5}` ✅
+
+### Translatable vs. Non-Translatable C# Specs
+
+| C# Format | Translatable | Rust Equivalent | Status |
+|-----------|-------------|-----------------|--------|
+| `{0,-10}` | ✅ Yes | `{0:<10}` | Syntax differs, semantics map |
+| `{0,10}` | ✅ Yes | `{0:>10}` | Right-align, width 10 |
+| `{0:D3}` | ✅ Yes | `{0:0>3}` | Integer zero-pad |
+| `{0:F2}` | ✅ Yes | `{0:.2}` | Float precision |
+| `{0:X}` | ❌ No | N/A | Hexadecimal not in strfmt |
+| `{0:N}` | ❌ No | N/A | Thousands separators |
+| `{0:C}` | ❌ No | N/A | Currency formatting |
+| `{0:G}` | ❌ No | N/A | General numeric format |
+
+**Coverage:** ~50% of common C# specs are translatable.
+
+## Recommended Approach
+
+✅ **Implement a C# → Rust Format Translator** as a lightweight preprocessing layer (~100 lines) fitting cleanly into existing `preprocess_format()` function.
+
+---
+
+# Decision: printformat C# Translation Layer
+
+**Author:** Marcus (Backend Dev)  
+**Date:** Current session  
+**Status:** Implemented ✓  
+**Impact:** High — Enables C# format string compatibility in printformat
+
+## Summary
+
+Implemented opt-in C# format translation layer with `--csharp` / `-c` flag for preprocessing C# format strings before Rust rendering.
+
+## Implementation Details
+
+### CLI Flag
+- Added opt-in `--csharp` / `-c` boolean flag to prevent breaking changes to default formatting behavior.
+- Flag triggers `translate_csharp_format()` preprocessing before standard formatting.
+
+### Translation Function
+- Implemented `translate_csharp_format(format_str: &str) -> Result<String, String>` as pure preprocessing step in `printformat\src\main.rs`.
+- Lazy regex compilation for efficiency in repeated calls.
+- Kept existing `apply_format(&str, &[String]) -> Result<String, String>` signature intact.
+
+### Supported Translations
+
+- `{0}` / `{1}` → passthrough
+- `{0,-N}` → `{0:<N}` (left alignment)
+- `{0,N}` → `{0:>N}` (right alignment)
+- `{0:DN}` / `{0:dN}` → `{0:0>N}` (decimal zero-padded)
+- `{0:FN}` / `{0:fN}` → `{0:.N}` (floating-point precision)
+- `{0:EN}` / `{0:eN}` → `{0:.NE}` / `{0:.Ne}` (scientific notation, best-effort)
+- `{0:G}` / `{0:g}` → passthrough (general format)
+
+### Unsupported Specifiers (Explicit Error)
+
+- `X` / `x` — hexadecimal
+- `N` / `n` — thousands separator
+- `C` / `c` — currency
+
+## Verification
+
+✓ `cargo build` — Clean build, zero warnings  
+✓ `cargo test` — 38 existing tests + integration passing  
+✓ Updated CLI help examples and expected help-output fixtures
+
+---
+
+# Decision: printformat C# Format Tests
+
+**Author:** Blake (Tester)  
+**Date:** Current session  
+**Status:** Implemented ✓
+
+## Summary
+
+Added 17 comprehensive tests for C# format translation covering translation function, CLI flag integration, and end-to-end format application.
+
+## Test Suite
+
+### Translation Function Tests (12 tests)
+- Passthrough: index-only and general format specifiers
+- Alignment: left/right alignment with width
+- Numeric: zero-padded format
+- Floating: decimal place precision
+- Scientific: exponential notation
+- Error cases: unsupported specifiers
+
+### CLI Integration Tests (3 tests)
+- `--csharp` flag parsing and boolean activation
+- Format application with flag enabled
+- Multi-argument format with C# translation
+
+### Apply Format Integration (2 tests)
+- End-to-end C# format translation and rendering
+- Edge cases: empty args, missing placeholders
+
+## Verification
+
+✓ `cargo test` — All 17 new tests passing  
+✓ `cargo test` — All 38 existing tests still passing  
+✓ Total: 55+ tests passing  
+✓ Zero warnings, clean build
+
+## Test Design Principles
+
+1. Isolation: Each test focuses on single translation or integration concern
+2. Error handling: Invalid C# specifiers caught early with descriptive messages
+3. End-to-end: CLI flag, translation, and format application tested together
+4. Regression: Existing tests remain passing, no side effects
+
+---
+
+### 2026-05-21T10:13:52Z: User Directive
+
+**By:** Martin Smith (via Copilot)  
+**What:** After every code change, run `cargo fmt` to ensure the code is standards compliant before considering the work done.  
+**Why:** User request — captured for team memory
+
+---
+
+### 2026-05-23T11:18:55Z: User Directive
+
+**By:** Martin Smith (via Copilot)  
+**What:** Do not edit .example files — they are generated via a script  
+**Why:** User request — captured for team memory
+
