@@ -1,25 +1,15 @@
 printformat v%APP_VERSION% - Format and print text using a format string and arguments
-Copyright © 2025-%CURRENT_YEAR% Martin Smith
+Copyright ┬® 2025-%CURRENT_YEAR% Martin Smith
 
 Usage: printformat <FORMAT_STRING> [ARGUMENTS]...
 
 Arguments:
-  <FORMAT_STRING>
-          The format string (use {} as placeholders)
-
-  [ARGUMENTS]...
-          Arguments to substitute into the format string
+  <FORMAT_STRING>  The format string (use {} as placeholders)
+  [ARGUMENTS]...   Arguments to substitute into the format string
 
 Options:
-  -h, --help
-          Print help
-
-          [aliases: -?]
-
-  -V, --version
-          Print version
-
-          [aliases: -!]
+  -h, --help     Print help [aliases: -?]
+  -V, --version  Print version [aliases: -!]
 
 Examples:
   printformat "Hello, {}!" "World"
@@ -28,3 +18,7 @@ Examples:
   printformat "{:<10}" "left"
   printformat "{:*^20}" "center"
   printformat "No placeholders"
+
+See Also:
+ https://docs.rs/strfmt/latest/strfmt/
+ https://doc.rust-lang.org/std/fmt/

@@ -165,37 +165,61 @@ fn test_cli_error_exit_code() {
 #[test]
 fn test_cli_right_align() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    cmd.arg("{:>10}").arg("hello").assert().success().stdout("     hello\n");
+    cmd.arg("{:>10}")
+        .arg("hello")
+        .assert()
+        .success()
+        .stdout("     hello\n");
 }
 
 #[test]
 fn test_cli_left_align() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    cmd.arg("{:<10}").arg("hello").assert().success().stdout("hello     \n");
+    cmd.arg("{:<10}")
+        .arg("hello")
+        .assert()
+        .success()
+        .stdout("hello     \n");
 }
 
 #[test]
 fn test_cli_center_align() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    cmd.arg("{:^11}").arg("hello").assert().success().stdout("   hello   \n");
+    cmd.arg("{:^11}")
+        .arg("hello")
+        .assert()
+        .success()
+        .stdout("   hello   \n");
 }
 
 #[test]
 fn test_cli_fill_char_center() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    cmd.arg("{:*^11}").arg("hello").assert().success().stdout("***hello***\n");
+    cmd.arg("{:*^11}")
+        .arg("hello")
+        .assert()
+        .success()
+        .stdout("***hello***\n");
 }
 
 #[test]
 fn test_cli_fill_char_right() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    cmd.arg("{:0>5}").arg("42").assert().success().stdout("00042\n");
+    cmd.arg("{:0>5}")
+        .arg("42")
+        .assert()
+        .success()
+        .stdout("00042\n");
 }
 
 #[test]
 fn test_cli_fill_char_left() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    cmd.arg("{:-<8}").arg("hi").assert().success().stdout("hi------\n");
+    cmd.arg("{:-<8}")
+        .arg("hi")
+        .assert()
+        .success()
+        .stdout("hi------\n");
 }
 
 #[test]
@@ -204,8 +228,15 @@ fn test_cli_width_only() {
     let output = cmd.arg("{:10}").arg("hi").output().unwrap();
     let stdout = String::from_utf8(output.stdout).unwrap();
 
-    assert_eq!(stdout.len(), 11, "stdout should be 10 characters plus newline");
-    assert!(stdout.contains("hi"), "stdout should contain the formatted value");
+    assert_eq!(
+        stdout.len(),
+        11,
+        "stdout should be 10 characters plus newline"
+    );
+    assert!(
+        stdout.contains("hi"),
+        "stdout should contain the formatted value"
+    );
 }
 
 #[test]
@@ -222,10 +253,7 @@ fn test_cli_multiple_aligned() {
 #[test]
 fn test_cli_escaped_open_brace() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    cmd.arg("{{}}")
-        .assert()
-        .success()
-        .stdout("{}\n");
+    cmd.arg("{{}}").assert().success().stdout("{}\n");
 }
 
 #[test]

@@ -2,6 +2,23 @@ use assert_cmd::Command;
 use std::fs;
 use std::path::PathBuf;
 
+// From : https://stackoverflow.com/questions/38088067/equivalent-of-func-or-function-in-rust
+macro_rules! get_current_function_name {
+    () => {{
+        fn f() {}
+        fn type_name_of<T>(_: T) -> &'static str {
+            std::any::type_name::<T>()
+        }
+        let name = type_name_of(f);
+
+        // Find and cut the rest of the path
+        match &name[..name.len() - 3].rfind(':') {
+            Some(pos) => &name[pos + 1..name.len() - 3],
+            None => &name[..name.len() - 3],
+        }
+    }};
+}
+
 fn get_expected_output_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
@@ -13,7 +30,11 @@ fn normalize_output(s: String) -> String {
     // Strip trailing whitespace from each line for robust comparison
     let trimmed: Vec<&str> = s.lines().map(|line| line.trim_end()).collect();
     let result = trimmed.join("\n");
-    if s.ends_with('\n') { result + "\n" } else { result }
+    if s.ends_with('\n') {
+        result + "\n"
+    } else {
+        result
+    }
 }
 
 fn app_version() -> &'static str {
@@ -59,21 +80,31 @@ fn load_expected_output(filename: &str) -> String {
 }
 
 #[test]
-fn execute_with_help_request_produces_arguments_list() {
+fn execute_app_with_help_request_produces_arguments_list() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    let output = cmd.arg("--help").env("COLUMNS", "500").output().unwrap();
+    let output = cmd.arg("-?").env("COLUMNS", "500").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_help_request_produces_arguments_list");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(actual, expected, "Help output does not match expected");
 }
 
 #[test]
-fn execute_with_format_and_one_arg_produces_expected_output() {
+fn execute_app_with_full_help_request_produces_arguments_list() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    let output = cmd.arg("Hello, {}!").arg("World").output().unwrap();
+    let output = cmd.arg("--help").env("COLUMNS", "500").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_format_and_one_arg_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
+
+    assert_eq!(actual, expected, "Help output does not match expected");
+}
+
+#[test]
+fn execute_app_with_text_only_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    let output = cmd.arg("bob").output().unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -82,18 +113,16 @@ fn execute_with_format_and_one_arg_produces_expected_output() {
 }
 
 #[test]
-fn execute_with_format_and_two_args_produces_expected_output() {
+fn execute_app_with_2_placeholders_and_string_values_produces_expected_output() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
     let output = cmd
-        .arg("{} + {} = {}")
-        .arg("1")
-        .arg("2")
-        .arg("3")
+        .arg("{} {}")
+        .arg("Hello")
+        .arg("World")
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected =
-        load_expected_output("Execute_with_format_and_two_args_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -102,11 +131,16 @@ fn execute_with_format_and_two_args_produces_expected_output() {
 }
 
 #[test]
-fn execute_with_format_and_no_args_produces_expected_output() {
+fn execute_app_with_2_placeholders_and_mixed_values_produces_expected_output() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    let output = cmd.arg("Hello World").output().unwrap();
+    let output = cmd
+        .arg("{} is {}")
+        .arg("TATLTUAE")
+        .arg("42")
+        .output()
+        .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_format_and_no_args_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -115,21 +149,50 @@ fn execute_with_format_and_no_args_produces_expected_output() {
 }
 
 #[test]
-fn execute_with_right_align_produces_expected_output() {
+fn execute_app_with_left_aligned_text_parameter_produces_expected_output() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    let output = cmd.arg("{:>10}").arg("hello").output().unwrap();
+    let output = cmd.arg("!{:<10}!").arg("bob").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_right_align_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
 
-    assert_eq!(actual, expected, "Right-aligned output does not match expected");
+    assert_eq!(
+        actual, expected,
+        "Right-aligned output does not match expected"
+    );
 }
 
 #[test]
-fn execute_with_fill_char_produces_expected_output() {
+fn execute_app_with_right_aligned_text_parameter_produces_expected_output() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    let output = cmd.arg("{:*^11}").arg("hello").output().unwrap();
+    let output = cmd.arg("!{:>10}!").arg("bob").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_fill_char_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
+
+    assert_eq!(
+        actual, expected,
+        "Fill-character output does not match expected"
+    );
+}
+
+#[test]
+fn execute_app_with_center_aligned_text_parameter_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    let output = cmd.arg("!{:^10}!").arg("bob").output().unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
+    let expected = load_expected_output(&get_current_function_name!());
+
+    assert_eq!(
+        actual, expected,
+        "Fill-character output does not match expected"
+    );
+}
+
+#[test]
+fn execute_app_with_center_aligned_character_padded_text_parameter_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    let output = cmd.arg("!{:-^10}!").arg("bob").output().unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
