@@ -294,6 +294,11 @@ Changed `bannertext` to accept multiple positional text arguments displayed as s
 - Dependency upgrade sweep: `cargo search` confirmed `sha1 = 0.11.0`, `sha2 = 0.11.0`, `tempfile = 3.27.0`, `winresource = 0.1.31`, `build-print = 1.0.1`, `hex = 0.4.3`, `md5 = 0.8.0`, and `strfmt = 0.2.5` were already at latest published versions.
 - Updated workspace manifest minimums where newer releases existed: `clap 4.6.1`, `assert_cmd 2.2.2`, `predicates 3.1.4`, `regex 1.12.3`, `uuid 1.23.1`, and `nanoid 0.5.0`.
 - `cargo update`, `cargo build --workspace`, and `cargo test --workspace` all completed successfully after the upgrade; full workspace test count was 345 passing tests with zero failures.
+- New CLI app pattern: mirror the existing workspace app layout (`Cargo.toml`, `build.rs`, `src/main.rs`, `src/main_tests.rs`, `tests/<app>.rs`, `tests/<app>/*`, `tests/ExpectedOutput/*`) when adding a new utility crate.
+- `printformat` uses a small `apply_format(&str, &[String]) -> Result<String, String>` helper in `printformat\src\main.rs` so placeholder counting and ordered replacement stay testable and isolated from clap parsing.
+- Help/output fixtures for new apps should be validated against real clap output; `printformat` help omits `[OPTIONS]` because only custom help/version actions exist.
+- Key paths for this app: `printformat\src\main.rs`, `printformat\src\main_tests.rs`, `printformat\tests\printformat\integration_tests.rs`, and `printformat\tests\ExpectedOutput\*`.
+- `printformat` now preprocesses unnamed `{}` and `{:spec}` placeholders into numbered `strfmt` fields before rendering, which adds string alignment/fill/width support while preserving escaped braces and clear brace syntax errors.
 
 ## Session 6: about/long_about Format Standardisation
 

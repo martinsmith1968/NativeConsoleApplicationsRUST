@@ -2,6 +2,23 @@ use assert_cmd::Command;
 use std::fs;
 use std::path::PathBuf;
 
+// From : https://stackoverflow.com/questions/38088067/equivalent-of-func-or-function-in-rust
+macro_rules! get_current_function_name {
+    () => {{
+        fn f() {}
+        fn type_name_of<T>(_: T) -> &'static str {
+            std::any::type_name::<T>()
+        }
+        let name = type_name_of(f);
+
+        // Find and cut the rest of the path
+        match &name[..name.len() - 3].rfind(':') {
+            Some(pos) => &name[pos + 1..name.len() - 3],
+            None => &name[..name.len() - 3],
+        }
+    }};
+}
+
 fn get_expected_output_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
@@ -389,37 +406,37 @@ fn test_single_message_regression_exact_output() {
 // ===== Expected Output File Tests =====
 
 #[test]
-fn execute_with_help_request_produces_arguments_list() {
+fn execute_app_with_help_request_produces_arguments_list() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     let output = cmd.arg("-?").env("COLUMNS", "500").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_help_request_produces_arguments_list");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(actual, expected, "Help output does not match expected");
 }
 
 #[test]
-fn execute_with_full_help_request_produces_arguments_list() {
+fn execute_app_with_full_help_request_produces_arguments_list() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     let output = cmd.arg("--help").env("COLUMNS", "500").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_full_help_request_produces_arguments_list");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(actual, expected, "Help output does not match expected");
 }
 
 #[test]
-fn execute_with_text_only_produces_expected_output() {
+fn execute_app_with_text_only_produces_expected_output() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     let output = cmd.arg("bob").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_text_only_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(actual, expected, "Text-only output does not match expected");
 }
 
 #[test]
-fn execute_with_text_and_min_length_produces_expected_output() {
+fn execute_app_with_text_and_min_length_produces_expected_output() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     let output = cmd
         .arg("bob")
@@ -428,8 +445,7 @@ fn execute_with_text_and_min_length_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected =
-        load_expected_output("Execute_with_text_and_min_length_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -438,7 +454,7 @@ fn execute_with_text_and_min_length_produces_expected_output() {
 }
 
 #[test]
-fn execute_with_multiple_text_lines_produces_expected_output() {
+fn execute_app_with_multiple_text_lines_produces_expected_output() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     let output = cmd
         .arg("a")
@@ -449,8 +465,7 @@ fn execute_with_multiple_text_lines_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected =
-        load_expected_output("Execute_with_multiple_text_lines_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -459,7 +474,7 @@ fn execute_with_multiple_text_lines_produces_expected_output() {
 }
 
 #[test]
-fn execute_with_multiple_text_lines_aligned_center_produces_expected_output() {
+fn execute_app_with_multiple_text_lines_aligned_center_produces_expected_output() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     let output = cmd
         .arg("a")
@@ -472,9 +487,7 @@ fn execute_with_multiple_text_lines_aligned_center_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output(
-        "Execute_with_multiple_text_lines_aligned_center_produces_expected_output",
-    );
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,

@@ -648,6 +648,11 @@
 - **Regex Patterns:** UUID format validation via regex (e.g., `[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}...`)
 - **Stderr Validation:** Test warning messages appear on stderr when appropriate (invalid seeds, malformed templates)
 
+### printformat Test Authoring (Current Session)
+- **Portable help snapshots:** Keep exact-output help tests on `--help`; reserve `-?` alias checks for integration tests to avoid cross-platform argument quirks.
+- **Formatter mismatch behavior:** Placeholder count validation is the critical contract, so integration tests should assert `Error:` plus exit code 1 while unit tests check the underlying error mentions placeholders.
+- **Coverage split works well:** Unit tests prove `apply_format()` substitution rules, integration tests cover CLI parsing and exit codes, and `.example` files lock down exact stdout for representative happy paths.
+
 ### Restoring Deleted Tests (Current Session)
 - **Pattern Coexistence:** One-off unit tests and .example-based integration tests can coexist in the same test file without conflicts
 - **Git History as Source:** Using `git show <commit>:path/to/file` to recover deleted test code was effective
@@ -671,6 +676,12 @@
 - No threshold gates on initial coverage adoption — let the team see the baseline before enforcing minimums
 - Upload `lcov.info` as an artifact for future Codecov/Coveralls integration
 - `tag` and `release` jobs must NOT depend on `coverage` — they gate only on `build`
+
+### printformat Alignment and Padding Tests (Current Session)
+- **Alignment needs exact stdout assertions:** Right, left, center, fill, and mixed-width cases are best covered with black-box CLI tests using literal expected strings so spacing regressions are obvious.
+- **Escaped braces deserve CLI coverage:** `{{}}` and mixed literal/placeholder formats can regress independently of plain `{}` replacement, so integration tests should pin those outputs explicitly.
+- **Snapshot helpers can mask trailing-space bugs:** `normalize_output()` trims line-end whitespace, so exact alignment assertions that depend on trailing spaces belong in integration tests; snapshot files are still safe for cases without trailing spaces.
+- **Help snapshots drift when examples change:** Adding formatter examples in clap help required the existing `Execute_with_help_request_produces_arguments_list.example` snapshot to stay in sync.
 
 ## Files Modified (Current Session)
 - `uuidgen/src/main.rs` - Added 8 edge case unit tests

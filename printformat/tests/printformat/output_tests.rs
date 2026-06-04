@@ -26,7 +26,15 @@ fn get_expected_output_dir() -> PathBuf {
 }
 
 fn normalize_output(s: String) -> String {
-    s.replace("\r\n", "\n")
+    let s = s.replace("\r\n", "\n");
+    // Strip trailing whitespace from each line for robust comparison
+    let trimmed: Vec<&str> = s.lines().map(|line| line.trim_end()).collect();
+    let result = trimmed.join("\n");
+    if s.ends_with('\n') {
+        result + "\n"
+    } else {
+        result
+    }
 }
 
 fn app_version() -> &'static str {
@@ -52,19 +60,15 @@ fn load_expected_output(filename: &str) -> String {
         .replace("%APP_VERSION%", app_version())
         .replace("%CURRENT_YEAR%", &current_year());
 
-    // Convert bytes to fix encoding issues with copyright symbol
     let bytes = normalized.as_bytes().to_vec();
     let mut result = String::new();
     let mut i = 0;
 
     while i < bytes.len() {
-        // Detect and skip malformed UTF-8 sequences
         if bytes[i] > 127 {
-            // Skip non-ASCII byte sequences (often malformed copyright symbols)
             while i < bytes.len() && bytes[i] > 127 {
                 i += 1;
             }
-            // Replace with proper copyright symbol
             result.push('©');
         } else {
             result.push(bytes[i] as char);
@@ -77,7 +81,7 @@ fn load_expected_output(filename: &str) -> String {
 
 #[test]
 fn execute_app_with_help_request_produces_arguments_list() {
-    let mut cmd = Command::cargo_bin("hashcalc").unwrap();
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
     let output = cmd.arg("-?").env("COLUMNS", "500").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
     let expected = load_expected_output(&get_current_function_name!());
@@ -86,26 +90,48 @@ fn execute_app_with_help_request_produces_arguments_list() {
 }
 
 #[test]
-fn execute_app_with_text_only_default_algorithm_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("hashcalc").unwrap();
-    let output = cmd.arg("-t").arg("Hello World").output().unwrap();
+fn execute_app_with_full_help_request_produces_arguments_list() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    let output = cmd.arg("--help").env("COLUMNS", "500").output().unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
+    let expected = load_expected_output(&get_current_function_name!());
+
+    assert_eq!(actual, expected, "Help output does not match expected");
+}
+
+#[test]
+fn execute_app_with_text_only_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    let output = cmd.arg("bob").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
     let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
-        "Text with default algorithm output does not match expected"
+        "Single-argument output does not match expected"
     );
 }
 
 #[test]
-fn execute_app_with_text_only_sha256_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("hashcalc").unwrap();
+fn execute_app_with_2_placeholders_and_string_values_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    let output = cmd.arg("{} {}").arg("Hello").arg("World").output().unwrap();
+    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
+    let expected = load_expected_output(&get_current_function_name!());
+
+    assert_eq!(
+        actual, expected,
+        "Three-argument output does not match expected"
+    );
+}
+
+#[test]
+fn execute_app_with_2_placeholders_and_mixed_values_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
     let output = cmd
-        .arg("-t")
-        .arg("Hello World")
-        .arg("-a")
-        .arg("sha256")
+        .arg("{} is {}")
+        .arg("TATLTUAE")
+        .arg("42")
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
@@ -113,82 +139,58 @@ fn execute_app_with_text_only_sha256_produces_expected_output() {
 
     assert_eq!(
         actual, expected,
-        "Text with SHA256 output does not match expected"
+        "No-argument output does not match expected"
     );
 }
 
 #[test]
-fn execute_app_with_text_only_sha512_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("hashcalc").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("Hello World")
-        .arg("-a")
-        .arg("sha512")
-        .output()
-        .unwrap();
+fn execute_app_with_left_aligned_text_parameter_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    let output = cmd.arg("!{:<10}!").arg("bob").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
     let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
-        "Text with SHA512 output does not match expected"
+        "Right-aligned output does not match expected"
     );
 }
 
 #[test]
-fn execute_app_with_text_only_sha1_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("hashcalc").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("Hello World")
-        .arg("-a")
-        .arg("sha1")
-        .output()
-        .unwrap();
+fn execute_app_with_right_aligned_text_parameter_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    let output = cmd.arg("!{:>10}!").arg("bob").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
     let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
-        "Text with SHA1 output does not match expected"
+        "Fill-character output does not match expected"
     );
 }
 
 #[test]
-fn execute_app_with_text_only_md5_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("hashcalc").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("Hello World")
-        .arg("-a")
-        .arg("md5")
-        .output()
-        .unwrap();
+fn execute_app_with_center_aligned_text_parameter_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    let output = cmd.arg("!{:^10}!").arg("bob").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
     let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
-        "Text with MD5 output does not match expected"
+        "Fill-character output does not match expected"
     );
 }
 
 #[test]
-fn execute_app_with_text_only_base64_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("hashcalc").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("Hello World")
-        .arg("-a")
-        .arg("base64")
-        .output()
-        .unwrap();
+fn execute_app_with_center_aligned_character_padded_text_parameter_produces_expected_output() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    let output = cmd.arg("!{:-^10}!").arg("bob").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
     let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
-        "Text with base64 output does not match expected"
+        "Fill-character output does not match expected"
     );
 }

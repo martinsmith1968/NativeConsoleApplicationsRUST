@@ -554,6 +554,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "printformat"
+version = "0.1.0-dev"
+dependencies = [
+ "assert_cmd",
+ "build-print",
+ "clap",
+ "predicates",
+ "strfmt",
+ "winresource",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
