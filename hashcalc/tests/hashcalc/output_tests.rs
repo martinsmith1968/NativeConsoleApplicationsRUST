@@ -2,6 +2,23 @@ use assert_cmd::Command;
 use std::fs;
 use std::path::PathBuf;
 
+// From : https://stackoverflow.com/questions/38088067/equivalent-of-func-or-function-in-rust
+macro_rules! get_current_function_name {
+    () => {{
+        fn f() {}
+        fn type_name_of<T>(_: T) -> &'static str {
+            std::any::type_name::<T>()
+        }
+        let name = type_name_of(f);
+
+        // Find and cut the rest of the path
+        match &name[..name.len() - 3].rfind(':') {
+            Some(pos) => &name[pos + 1..name.len() - 3],
+            None => &name[..name.len() - 3],
+        }
+    }};
+}
+
 fn get_expected_output_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
@@ -59,22 +76,21 @@ fn load_expected_output(filename: &str) -> String {
 }
 
 #[test]
-fn execute_with_help_request_produces_arguments_list() {
+fn execute_app_with_help_request_produces_arguments_list() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     let output = cmd.arg("-?").env("COLUMNS", "500").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_help_request_produces_arguments_list");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(actual, expected, "Help output does not match expected");
 }
 
 #[test]
-fn execute_with_text_only_default_algorithm_produces_expected_output() {
+fn execute_app_with_text_only_default_algorithm_produces_expected_output() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     let output = cmd.arg("-t").arg("Hello World").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected =
-        load_expected_output("Execute_with_text_only_default_algorithm_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -83,7 +99,7 @@ fn execute_with_text_only_default_algorithm_produces_expected_output() {
 }
 
 #[test]
-fn execute_with_text_only_sha256_produces_expected_output() {
+fn execute_app_with_text_only_sha256_produces_expected_output() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     let output = cmd
         .arg("-t")
@@ -93,7 +109,7 @@ fn execute_with_text_only_sha256_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_text_only_sha256_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -102,7 +118,7 @@ fn execute_with_text_only_sha256_produces_expected_output() {
 }
 
 #[test]
-fn execute_with_text_only_sha512_produces_expected_output() {
+fn execute_app_with_text_only_sha512_produces_expected_output() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     let output = cmd
         .arg("-t")
@@ -112,7 +128,7 @@ fn execute_with_text_only_sha512_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_text_only_sha512_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -121,7 +137,7 @@ fn execute_with_text_only_sha512_produces_expected_output() {
 }
 
 #[test]
-fn execute_with_text_only_sha1_produces_expected_output() {
+fn execute_app_with_text_only_sha1_produces_expected_output() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     let output = cmd
         .arg("-t")
@@ -131,7 +147,7 @@ fn execute_with_text_only_sha1_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_text_only_sha1_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -140,7 +156,7 @@ fn execute_with_text_only_sha1_produces_expected_output() {
 }
 
 #[test]
-fn execute_with_text_only_md5_produces_expected_output() {
+fn execute_app_with_text_only_md5_produces_expected_output() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     let output = cmd
         .arg("-t")
@@ -150,7 +166,7 @@ fn execute_with_text_only_md5_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_text_only_md5_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -159,7 +175,7 @@ fn execute_with_text_only_md5_produces_expected_output() {
 }
 
 #[test]
-fn execute_with_text_only_base64_produces_expected_output() {
+fn execute_app_with_text_only_base64_produces_expected_output() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     let output = cmd
         .arg("-t")
@@ -169,7 +185,7 @@ fn execute_with_text_only_base64_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = load_expected_output("Execute_with_text_only_base64_produces_expected_output");
+    let expected = load_expected_output(&get_current_function_name!());
 
     assert_eq!(
         actual, expected,
