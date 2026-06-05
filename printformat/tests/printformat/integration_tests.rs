@@ -278,3 +278,229 @@ fn test_cli_align_with_mixed() {
         .stdout(predicate::str::contains(" 30"))
         .stdout("Name: Alice      Age:  30\n");
 }
+
+#[test]
+fn test_cli_csharp_basic_format() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    cmd.arg("--format-type")
+        .arg("CSharp")
+        .arg("{0} is {1} years old")
+        .arg("Alice")
+        .arg("30")
+        .assert()
+        .success()
+        .stdout("Alice is 30 years old\n");
+}
+
+#[test]
+fn test_cli_csharp_alignment() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    cmd.arg("--format-type")
+        .arg("CSharp")
+        .arg("{0,-10} | {1,10}")
+        .arg("left")
+        .arg("right")
+        .assert()
+        .success()
+        .stdout("left       |      right\n");
+}
+
+#[test]
+fn test_cli_csharp_zero_padding() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    cmd.arg("--format-type")
+        .arg("CSharp")
+        .arg("{0:D5}")
+        .arg("42")
+        .assert()
+        .success()
+        .stdout("00042\n");
+}
+
+#[test]
+fn test_cli_csharp_unsupported_hex() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    cmd.arg("--format-type")
+        .arg("CSharp")
+        .arg("{0:X}")
+        .arg("42")
+        .assert()
+        .failure()
+        .code(1)
+        .stderr(predicate::str::contains(
+            "C# format specifier 'X' (hex) is not supported",
+        ));
+}
+
+// ===== C Format Tests =====
+
+#[test]
+fn test_c_format_string_substitution() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%s")
+        .arg("hello")
+        .assert()
+        .success()
+        .stdout("hello\n");
+}
+
+#[test]
+fn test_c_format_integer() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%d")
+        .arg("42")
+        .assert()
+        .success()
+        .stdout("42\n");
+}
+
+#[test]
+fn test_c_format_zero_padded_integer() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%05d")
+        .arg("42")
+        .assert()
+        .success()
+        .stdout("00042\n");
+}
+
+#[test]
+fn test_c_format_float_precision() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%.2f")
+        .arg("3.14159")
+        .assert()
+        .success()
+        .stdout("3.14\n");
+}
+
+#[test]
+fn test_c_format_right_aligned_string() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%10s")
+        .arg("hi")
+        .assert()
+        .success()
+        .stdout("        hi\n");
+}
+
+#[test]
+fn test_c_format_left_aligned_string() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%-10s")
+        .arg("hi")
+        .assert()
+        .success()
+        .stdout("hi        \n");
+}
+
+#[test]
+fn test_c_format_hex_lowercase() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%x")
+        .arg("255")
+        .assert()
+        .success()
+        .stdout("ff\n");
+}
+
+#[test]
+fn test_c_format_hex_uppercase() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%X")
+        .arg("255")
+        .assert()
+        .success()
+        .stdout("FF\n");
+}
+
+#[test]
+fn test_c_format_escaped_percent() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("100%%")
+        .assert()
+        .success()
+        .stdout("100%\n");
+}
+
+#[test]
+fn test_c_format_multiple_args() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%s is %d years old")
+        .arg("Alice")
+        .arg("30")
+        .assert()
+        .success()
+        .stdout("Alice is 30 years old\n");
+}
+
+#[test]
+fn test_c_format_too_few_args_fails() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%d %d")
+        .arg("1")
+        .assert()
+        .failure()
+        .code(1)
+        .stderr(predicate::str::contains("placeholder"));
+}
+
+#[test]
+fn test_c_format_invalid_integer_fails() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%d")
+        .arg("notanumber")
+        .assert()
+        .failure()
+        .code(1)
+        .stderr(predicate::str::contains("integer"));
+}
+
+#[test]
+fn test_c_format_unsupported_n_specifier_fails() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%n")
+        .assert()
+        .failure()
+        .code(1)
+        .stderr(predicate::str::contains("not supported"));
+}

@@ -15,6 +15,7 @@ LegalCopyright = "Copyright © 2025-2026 Martin Smith"
 
 [dependencies]
 clap = { version = "4.6.1", features = ["derive", "wrap_help"] }
+sprintf = "0.4"
 strfmt = "0.2.5"
 
 [build-dependencies]

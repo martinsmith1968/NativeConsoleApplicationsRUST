@@ -875,3 +875,9 @@ Changed the test to use `--help` instead of `-?`:
 **CI/CD Consideration:**
 - Tests passing on Windows ≠ tests passing on Linux; always validate on target platforms
 - Special character handling in args is a subtle cross-platform issue that's easy to overlook
+
+### printformat C# Translation Test Coverage (Current Session)
+- Writing tests to the agreed spec before implementation is complete is valuable for cross-role handoff; compile failures clearly signal what Marcus still needs to expose.
+- C# alignment translation should be validated at two levels: string-to-string translation (`{0,-10}` -> `{0:<10}`) and end-to-end formatting output (`hello     ` / `     hello`).
+- Error assertions for unsupported specifiers are best kept resilient by checking the key term (`hex`, `thousands`, `currency`) rather than depending on one exact error sentence.
+- Escaped braces deserve dedicated coverage because translation layers can accidentally rewrite literals that normal formatting tests would miss.

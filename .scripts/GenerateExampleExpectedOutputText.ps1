@@ -24,7 +24,20 @@ function Set-ExpectedOutput {
     $example_filename = "$($output_filename).example"
 
     Write-Host "  $($app_name) - Generating : $($example_filename)"
-    & $app_full_path $parameters | Set-Content -Path (Join-Path -Path $expected_output_path -ChildPath $example_filename) -Encoding UTF8
+    # Use ProcessStartInfo with redirected stdout so the binary has no Win32 console,
+    # forcing clap to honour the COLUMNS env var (500) rather than the terminal width.
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = $app_full_path
+    $parameters | ForEach-Object { $psi.ArgumentList.Add($_) }
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError  = $true
+    $psi.UseShellExecute        = $false
+    $psi.CreateNoWindow         = $true
+    $psi.EnvironmentVariables["COLUMNS"] = "500"
+    $proc = [System.Diagnostics.Process]::Start($psi)
+    $stdout = $proc.StandardOutput.ReadToEnd()
+    $proc.WaitForExit()
+    Set-Content -Path (Join-Path -Path $expected_output_path -ChildPath $example_filename) -Value $stdout -Encoding UTF8 -NoNewline
 
     Write-Host "  $($app_name) - Adjusting : $($example_filename)"
     $text = (Get-Content -Path (Join-Path -Path $expected_output_path -ChildPath $example_filename) -Raw)
@@ -60,6 +73,8 @@ Write-Host "App Output Path : $($app_output_path)"
 Write-Host "Temp Path       : $($temp_base_path)"
 Write-Host "Run Path        : $($temp_run_path)"
 Write-Host "App Version     : $($current_app_version)"
+
+$env:COLUMNS = "500"
 
 
 # Build Apps List
