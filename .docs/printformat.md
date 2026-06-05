@@ -54,9 +54,9 @@ Arguments:
   [ARGUMENTS]...   Arguments to substitute into the format string
 
 Options:
-  -c, --csharp   Use C# style format strings (e.g., {0}, {0:D3}, {0,-10})
-  -h, --help     Print help [aliases: -?]
-  -V, --version  Print version [aliases: -!]
+  -t, --format-type <FORMAT_TYPE>  Format type to use for the format string [default: Rust] [possible values: Rust, CSharp, C]
+  -h, --help                       Print help [aliases: -?]
+  -V, --version                    Print version [aliases: -!]
 
 Examples:
   printformat "Hello, {}!" "World"
@@ -65,11 +65,16 @@ Examples:
   printformat "{:<10}" "left"
   printformat "{:*^20}" "center"
   printformat "No placeholders"
-  printformat --csharp "{0} is {1} years old" "Alice" "30"
-  printformat --csharp "{0,-10} | {1,10}" "left" "right"
-  printformat -c "{0:D5}" "42"
+  printformat --format-type CSharp "{0} is {1} years old" "Alice" "30"
+  printformat --format-type CSharp "{0,-10} | {1,10}" "left" "right"
+  printformat --format-type CSharp "{0:D5}" "42"
+  printformat --format-type C "%s is %d years old" "Alice" "30"
+  printformat --format-type C "%10s | %-10s" "right" "left"
+  printformat --format-type C "%05d" "42"
+  printformat --format-type C "%.2f" "3.14159"
 
 See Also:
  https://docs.rs/strfmt/latest/strfmt/
  https://doc.rust-lang.org/std/fmt/
+ https://cplusplus.com/reference/cstdio/printf/
 ```

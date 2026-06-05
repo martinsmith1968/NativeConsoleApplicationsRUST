@@ -336,7 +336,8 @@ fn test_cli_csharp_unsupported_hex() {
 
 #[test]
 fn test_c_format_string_substitution() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("%s")
@@ -348,7 +349,8 @@ fn test_c_format_string_substitution() {
 
 #[test]
 fn test_c_format_integer() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("%d")
@@ -360,7 +362,8 @@ fn test_c_format_integer() {
 
 #[test]
 fn test_c_format_zero_padded_integer() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("%05d")
@@ -372,7 +375,8 @@ fn test_c_format_zero_padded_integer() {
 
 #[test]
 fn test_c_format_float_precision() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("%.2f")
@@ -384,7 +388,8 @@ fn test_c_format_float_precision() {
 
 #[test]
 fn test_c_format_right_aligned_string() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("%10s")
@@ -396,7 +401,8 @@ fn test_c_format_right_aligned_string() {
 
 #[test]
 fn test_c_format_left_aligned_string() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("%-10s")
@@ -408,7 +414,8 @@ fn test_c_format_left_aligned_string() {
 
 #[test]
 fn test_c_format_hex_lowercase() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("%x")
@@ -420,7 +427,8 @@ fn test_c_format_hex_lowercase() {
 
 #[test]
 fn test_c_format_hex_uppercase() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("%X")
@@ -432,7 +440,8 @@ fn test_c_format_hex_uppercase() {
 
 #[test]
 fn test_c_format_escaped_percent() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("100%%")
@@ -443,7 +452,8 @@ fn test_c_format_escaped_percent() {
 
 #[test]
 fn test_c_format_multiple_args() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("%s is %d years old")
@@ -456,7 +466,8 @@ fn test_c_format_multiple_args() {
 
 #[test]
 fn test_c_format_too_few_args_fails() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("%d %d")
@@ -469,7 +480,8 @@ fn test_c_format_too_few_args_fails() {
 
 #[test]
 fn test_c_format_invalid_integer_fails() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("%d")
@@ -482,7 +494,8 @@ fn test_c_format_invalid_integer_fails() {
 
 #[test]
 fn test_c_format_unsupported_n_specifier_fails() {
-    Command::cargo_bin("printformat").unwrap()
+    Command::cargo_bin("printformat")
+        .unwrap()
         .arg("--format-type")
         .arg("C")
         .arg("%n")
@@ -491,4 +504,3 @@ fn test_c_format_unsupported_n_specifier_fails() {
         .code(1)
         .stderr(predicate::str::contains("not supported"));
 }
-

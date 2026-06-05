@@ -450,12 +450,18 @@ mod c_format_tests {
 
     #[test]
     fn test_apply_c_format_right_aligned_string() {
-        assert_eq!(apply_c_format("%10s", &args(&["hi"])).unwrap(), "        hi");
+        assert_eq!(
+            apply_c_format("%10s", &args(&["hi"])).unwrap(),
+            "        hi"
+        );
     }
 
     #[test]
     fn test_apply_c_format_left_aligned_string() {
-        assert_eq!(apply_c_format("%-10s", &args(&["hi"])).unwrap(), "hi        ");
+        assert_eq!(
+            apply_c_format("%-10s", &args(&["hi"])).unwrap(),
+            "hi        "
+        );
     }
 
     #[test]

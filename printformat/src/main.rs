@@ -1,5 +1,5 @@
 use clap::{Parser, ValueEnum};
-use sprintf::{vsprintf, Printf as SprintfPrintf};
+use sprintf::{Printf as SprintfPrintf, vsprintf};
 use std::collections::HashMap;
 use strfmt::strfmt;
 
@@ -433,10 +433,8 @@ fn extract_c_specifiers(format_str: &str) -> Result<Vec<char>, String> {
                 if chars.peek() == Some(&'.') {
                     chars.next();
                     if chars.peek() == Some(&'*') {
-                        return Err(
-                            "dynamic precision (*) is not supported in C format strings"
-                                .to_string(),
-                        );
+                        return Err("dynamic precision (*) is not supported in C format strings"
+                            .to_string());
                     }
                     while chars.peek().map(|c| c.is_ascii_digit()).unwrap_or(false) {
                         chars.next();
@@ -454,28 +452,24 @@ fn extract_c_specifiers(format_str: &str) -> Result<Vec<char>, String> {
                     }
                 }
 
-                let spec = chars.next().ok_or_else(|| {
-                    "incomplete format specifier at end of string".to_string()
-                })?;
+                let spec = chars
+                    .next()
+                    .ok_or_else(|| "incomplete format specifier at end of string".to_string())?;
 
                 match spec {
-                    'd' | 'i' | 'u' | 'o' | 'x' | 'X' | 'f' | 'F' | 'e' | 'E' | 'g' | 'G'
-                    | 's' | 'c' => {
+                    'd' | 'i' | 'u' | 'o' | 'x' | 'X' | 'f' | 'F' | 'e' | 'E' | 'g' | 'G' | 's'
+                    | 'c' => {
                         specifiers.push(spec);
                     }
-                    'n' => {
-                        return Err("format specifier '%n' is not supported".to_string())
-                    }
+                    'n' => return Err("format specifier '%n' is not supported".to_string()),
                     'p' => {
-                        return Err(
-                            "format specifier '%p' (pointer) is not supported".to_string()
-                        )
+                        return Err("format specifier '%p' (pointer) is not supported".to_string());
                     }
                     'a' | 'A' => {
                         return Err(format!(
                             "format specifier '%{}' (hex float) is not supported",
                             spec
-                        ))
+                        ));
                     }
                     _ => return Err(format!("unknown format specifier '%{}'", spec)),
                 }
@@ -489,9 +483,9 @@ fn extract_c_specifiers(format_str: &str) -> Result<Vec<char>, String> {
 fn arg_to_printf(s: &str, spec: char) -> Result<Box<dyn SprintfPrintf>, String> {
     Ok(match spec {
         'd' | 'i' => {
-            let n: i64 = s.parse().map_err(|_| {
-                format!("argument '{}' is not a valid integer for %{}", s, spec)
-            })?;
+            let n: i64 = s
+                .parse()
+                .map_err(|_| format!("argument '{}' is not a valid integer for %{}", s, spec))?;
             Box::new(n) as Box<dyn SprintfPrintf>
         }
         'u' | 'o' | 'x' | 'X' => {
@@ -504,9 +498,9 @@ fn arg_to_printf(s: &str, spec: char) -> Result<Box<dyn SprintfPrintf>, String> 
             Box::new(n) as Box<dyn SprintfPrintf>
         }
         'f' | 'F' | 'e' | 'E' | 'g' | 'G' => {
-            let f: f64 = s.parse().map_err(|_| {
-                format!("argument '{}' is not a valid number for %{}", s, spec)
-            })?;
+            let f: f64 = s
+                .parse()
+                .map_err(|_| format!("argument '{}' is not a valid number for %{}", s, spec))?;
             Box::new(f) as Box<dyn SprintfPrintf>
         }
         's' => Box::new(s.to_string()) as Box<dyn SprintfPrintf>,
