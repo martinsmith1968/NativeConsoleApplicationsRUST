@@ -61,6 +61,8 @@ Write-Host "Temp Path       : $($temp_base_path)"
 Write-Host "Run Path        : $($temp_run_path)"
 Write-Host "App Version     : $($current_app_version)"
 
+$env:COLUMNS = "500"
+
 
 # Build Apps List
 $apps = Build-AppsList -base_path_name $app_output_path

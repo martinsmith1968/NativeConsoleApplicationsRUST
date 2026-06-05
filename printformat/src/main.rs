@@ -1,6 +1,24 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use std::collections::HashMap;
 use strfmt::strfmt;
+
+#[derive(ValueEnum, Clone, Debug, Default)]
+enum FormatType {
+    #[default]
+    #[value(name = "Rust")]
+    Rust,
+    #[value(name = "CSharp")]
+    CSharp,
+}
+
+impl std::fmt::Display for FormatType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FormatType::Rust => write!(f, "Rust"),
+            FormatType::CSharp => write!(f, "CSharp"),
+        }
+    }
+}
 
 /// Format and print text using a format string and arguments
 #[derive(Parser, Debug)]
@@ -13,12 +31,12 @@ use strfmt::strfmt;
     help_expected = true,
     disable_help_flag = true,
     disable_version_flag = true,
-    after_help = "Examples:\n  printformat \"Hello, {}!\" \"World\"\n  printformat \"{} + {} = {}\" \"1\" \"2\" \"3\"\n  printformat \"{:>10}\" \"right\"\n  printformat \"{:<10}\" \"left\"\n  printformat \"{:*^20}\" \"center\"\n  printformat \"No placeholders\"\n  printformat --csharp \"{0} is {1} years old\" \"Alice\" \"30\"\n  printformat --csharp \"{0,-10} | {1,10}\" \"left\" \"right\"\n  printformat -c \"{0:D5}\" \"42\"\n\nSee Also:\n https://docs.rs/strfmt/latest/strfmt/\n https://doc.rust-lang.org/std/fmt/"
+    after_help = "Examples:\n  printformat \"Hello, {}!\" \"World\"\n  printformat \"{} + {} = {}\" \"1\" \"2\" \"3\"\n  printformat \"{:>10}\" \"right\"\n  printformat \"{:<10}\" \"left\"\n  printformat \"{:*^20}\" \"center\"\n  printformat \"No placeholders\"\n  printformat --format-type CSharp \"{0} is {1} years old\" \"Alice\" \"30\"\n  printformat --format-type CSharp \"{0,-10} | {1,10}\" \"left\" \"right\"\n  printformat --format-type CSharp \"{0:D5}\" \"42\"\n\nSee Also:\n https://docs.rs/strfmt/latest/strfmt/\n https://doc.rust-lang.org/std/fmt/"
 )]
 struct Args {
-    /// Use C# style format strings (e.g., {0}, {0:D3}, {0,-10})
-    #[arg(short = 'c', long = "csharp")]
-    csharp: bool,
+    /// Format type to use for the format string
+    #[arg(short = 't', long = "format-type", value_enum, default_value_t = FormatType::Rust)]
+    format_type: FormatType,
 
     /// The format string (use {} as placeholders)
     #[arg(index = 1, required = true)]
@@ -39,11 +57,10 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let result = if args.csharp {
-        translate_csharp_format(&args.format_string)
-            .and_then(|translated| apply_indexed_format(&translated, &args.arguments))
-    } else {
-        apply_format(&args.format_string, &args.arguments)
+    let result = match args.format_type {
+        FormatType::CSharp => translate_csharp_format(&args.format_string)
+            .and_then(|translated| apply_indexed_format(&translated, &args.arguments)),
+        FormatType::Rust => apply_format(&args.format_string, &args.arguments),
     };
 
     match result {

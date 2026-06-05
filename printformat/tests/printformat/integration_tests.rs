@@ -282,7 +282,8 @@ fn test_cli_align_with_mixed() {
 #[test]
 fn test_cli_csharp_basic_format() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    cmd.arg("--csharp")
+    cmd.arg("--format-type")
+        .arg("CSharp")
         .arg("{0} is {1} years old")
         .arg("Alice")
         .arg("30")
@@ -294,7 +295,8 @@ fn test_cli_csharp_basic_format() {
 #[test]
 fn test_cli_csharp_alignment() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    cmd.arg("-c")
+    cmd.arg("--format-type")
+        .arg("CSharp")
         .arg("{0,-10} | {1,10}")
         .arg("left")
         .arg("right")
@@ -306,7 +308,8 @@ fn test_cli_csharp_alignment() {
 #[test]
 fn test_cli_csharp_zero_padding() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    cmd.arg("-c")
+    cmd.arg("--format-type")
+        .arg("CSharp")
         .arg("{0:D5}")
         .arg("42")
         .assert()
@@ -317,7 +320,8 @@ fn test_cli_csharp_zero_padding() {
 #[test]
 fn test_cli_csharp_unsupported_hex() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
-    cmd.arg("--csharp")
+    cmd.arg("--format-type")
+        .arg("CSharp")
         .arg("{0:X}")
         .arg("42")
         .assert()

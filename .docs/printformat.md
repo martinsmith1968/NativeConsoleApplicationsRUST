@@ -47,13 +47,14 @@ The full help text looks something like this :
 printformat v0.1.0-dev - Format and print text using a format string and arguments
 Copyright ┬® 2025-2026 Martin Smith
 
-Usage: printformat <FORMAT_STRING> [ARGUMENTS]...
+Usage: printformat [OPTIONS] <FORMAT_STRING> [ARGUMENTS]...
 
 Arguments:
   <FORMAT_STRING>  The format string (use {} as placeholders)
   [ARGUMENTS]...   Arguments to substitute into the format string
 
 Options:
+  -c, --csharp   Use C# style format strings (e.g., {0}, {0:D3}, {0,-10})
   -h, --help     Print help [aliases: -?]
   -V, --version  Print version [aliases: -!]
 
@@ -64,4 +65,11 @@ Examples:
   printformat "{:<10}" "left"
   printformat "{:*^20}" "center"
   printformat "No placeholders"
+  printformat --csharp "{0} is {1} years old" "Alice" "30"
+  printformat --csharp "{0,-10} | {1,10}" "left" "right"
+  printformat -c "{0:D5}" "42"
+
+See Also:
+ https://docs.rs/strfmt/latest/strfmt/
+ https://doc.rust-lang.org/std/fmt/
 ```
