@@ -238,4 +238,140 @@ mod csharp_tests {
         let actual = apply_format(&translated, &args(&["hello"])).unwrap();
         assert_eq!(actual, "     hello");
     }
+
+    // Numeric zero-padding (D specifier — equivalent to C# "00000" custom format)
+
+    #[test]
+    fn test_csharp_d5_zero_pads_short_number() {
+        let translated = translate_csharp_format("{0:D5}").unwrap();
+        let actual = apply_format(&translated, &args(&["42"])).unwrap();
+        assert_eq!(actual, "00042");
+    }
+
+    #[test]
+    fn test_csharp_d5_single_digit() {
+        let translated = translate_csharp_format("{0:D5}").unwrap();
+        let actual = apply_format(&translated, &args(&["7"])).unwrap();
+        assert_eq!(actual, "00007");
+    }
+
+    #[test]
+    fn test_csharp_d5_exact_width() {
+        let translated = translate_csharp_format("{0:D5}").unwrap();
+        let actual = apply_format(&translated, &args(&["12345"])).unwrap();
+        assert_eq!(actual, "12345");
+    }
+
+    #[test]
+    fn test_csharp_d5_longer_than_width_no_truncation() {
+        let translated = translate_csharp_format("{0:D5}").unwrap();
+        let actual = apply_format(&translated, &args(&["123456"])).unwrap();
+        assert_eq!(actual, "123456");
+    }
+
+    #[test]
+    fn test_csharp_d3_zero_pads_single_digit() {
+        let translated = translate_csharp_format("{0:D3}").unwrap();
+        let actual = apply_format(&translated, &args(&["7"])).unwrap();
+        assert_eq!(actual, "007");
+    }
+
+    #[test]
+    fn test_csharp_d1_no_pad_needed() {
+        let translated = translate_csharp_format("{0:D1}").unwrap();
+        let actual = apply_format(&translated, &args(&["42"])).unwrap();
+        assert_eq!(actual, "42");
+    }
+
+    #[test]
+    fn test_csharp_lowercase_d5() {
+        let translated = translate_csharp_format("{0:d5}").unwrap();
+        let actual = apply_format(&translated, &args(&["42"])).unwrap();
+        assert_eq!(actual, "00042");
+    }
+
+    #[test]
+    fn test_csharp_d_no_precision_no_padding() {
+        let translated = translate_csharp_format("{0:D}").unwrap();
+        let actual = apply_format(&translated, &args(&["42"])).unwrap();
+        assert_eq!(actual, "42");
+    }
+
+    #[test]
+    fn test_csharp_d5_multiple_args() {
+        let translated = translate_csharp_format("{0:D5} and {1:D3}").unwrap();
+        let actual = apply_format(&translated, &args(&["42", "7"])).unwrap();
+        assert_eq!(actual, "00042 and 007");
+    }
+
+    // Text alignment / padding
+
+    #[test]
+    fn test_csharp_left_align_short_text() {
+        // "hi" left-aligned in width 10 → "hi" + 8 spaces
+        let translated = translate_csharp_format("{0,-10}").unwrap();
+        let actual = apply_format(&translated, &args(&["hi"])).unwrap();
+        assert_eq!(actual, "hi        ");
+    }
+
+    #[test]
+    fn test_csharp_right_align_short_text() {
+        // "hi" right-aligned in width 10 → 8 spaces + "hi"
+        let translated = translate_csharp_format("{0,10}").unwrap();
+        let actual = apply_format(&translated, &args(&["hi"])).unwrap();
+        assert_eq!(actual, "        hi");
+    }
+
+    #[test]
+    fn test_csharp_left_align_text_longer_than_width_no_truncation() {
+        // "toolong" is 7 chars, width 5 — no truncation, full string returned
+        let translated = translate_csharp_format("{0,-5}").unwrap();
+        let actual = apply_format(&translated, &args(&["toolong"])).unwrap();
+        assert_eq!(actual, "toolong");
+    }
+
+    #[test]
+    fn test_csharp_right_align_text_longer_than_width_no_truncation() {
+        let translated = translate_csharp_format("{0,5}").unwrap();
+        let actual = apply_format(&translated, &args(&["toolong"])).unwrap();
+        assert_eq!(actual, "toolong");
+    }
+
+    #[test]
+    fn test_csharp_align_width_one_exact_fit() {
+        let translated = translate_csharp_format("{0,1}").unwrap();
+        let actual = apply_format(&translated, &args(&["x"])).unwrap();
+        assert_eq!(actual, "x");
+    }
+
+    #[test]
+    fn test_csharp_mixed_alignment_table_row() {
+        // Simulates a table row: left-padded label, right-padded value
+        let translated = translate_csharp_format("{0,-10} | {1,10}").unwrap();
+        let actual = apply_format(&translated, &args(&["Name", "Value"])).unwrap();
+        assert_eq!(actual, "Name       |      Value");
+    }
+
+    #[test]
+    fn test_csharp_multiple_left_aligned_columns() {
+        // Three columns each 8 chars wide, left-aligned
+        let translated = translate_csharp_format("{0,-8} {1,-8} {2,-8}").unwrap();
+        let actual = apply_format(&translated, &args(&["abc", "de", "f"])).unwrap();
+        assert_eq!(actual, "abc      de       f       ");
+    }
+
+    #[test]
+    fn test_csharp_right_align_zero_value() {
+        let translated = translate_csharp_format("{0,5}").unwrap();
+        let actual = apply_format(&translated, &args(&["0"])).unwrap();
+        assert_eq!(actual, "    0");
+    }
+
+    #[test]
+    fn test_csharp_left_align_empty_string() {
+        // Empty string left-aligned in width 4 → 4 spaces
+        let translated = translate_csharp_format("{0,-4}").unwrap();
+        let actual = apply_format(&translated, &args(&[""])).unwrap();
+        assert_eq!(actual, "    ");
+    }
 }

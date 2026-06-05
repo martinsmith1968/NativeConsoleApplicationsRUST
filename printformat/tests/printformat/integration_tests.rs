@@ -278,3 +278,52 @@ fn test_cli_align_with_mixed() {
         .stdout(predicate::str::contains(" 30"))
         .stdout("Name: Alice      Age:  30\n");
 }
+
+#[test]
+fn test_cli_csharp_basic_format() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    cmd.arg("--csharp")
+        .arg("{0} is {1} years old")
+        .arg("Alice")
+        .arg("30")
+        .assert()
+        .success()
+        .stdout("Alice is 30 years old\n");
+}
+
+#[test]
+fn test_cli_csharp_alignment() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    cmd.arg("-c")
+        .arg("{0,-10} | {1,10}")
+        .arg("left")
+        .arg("right")
+        .assert()
+        .success()
+        .stdout("left       |      right\n");
+}
+
+#[test]
+fn test_cli_csharp_zero_padding() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    cmd.arg("-c")
+        .arg("{0:D5}")
+        .arg("42")
+        .assert()
+        .success()
+        .stdout("00042\n");
+}
+
+#[test]
+fn test_cli_csharp_unsupported_hex() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    cmd.arg("--csharp")
+        .arg("{0:X}")
+        .arg("42")
+        .assert()
+        .failure()
+        .code(1)
+        .stderr(predicate::str::contains(
+            "C# format specifier 'X' (hex) is not supported",
+        ));
+}

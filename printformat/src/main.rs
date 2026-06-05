@@ -163,7 +163,10 @@ fn count_required_args(format_str: &str) -> Result<usize, String> {
                         .ok_or_else(|| "placeholder index missing in format string".to_string())?
                         .trim();
                     let index = placeholder.parse::<usize>().map_err(|_| {
-                        format!("invalid placeholder index `{}` in format string", placeholder)
+                        format!(
+                            "invalid placeholder index `{}` in format string",
+                            placeholder
+                        )
                     })?;
                     required_count = required_count.max(index + 1);
                 }
@@ -341,9 +344,9 @@ fn combine_translated_spec(
         (None, Some(spec)) if spec.is_empty() => Ok(None),
         (None, Some(spec)) => Ok(Some(spec)),
         (Some(alignment), Some(spec)) if spec.is_empty() => Ok(Some(alignment)),
-        (Some(_), Some(spec)) if spec.starts_with("0>") => Err(
-            "combining C# alignment with zero-padding is not supported".to_string(),
-        ),
+        (Some(_), Some(spec)) if spec.starts_with("0>") => {
+            Err("combining C# alignment with zero-padding is not supported".to_string())
+        }
         (Some(alignment), Some(spec)) => Ok(Some(format!("{}{}", alignment, spec))),
     }
 }

@@ -1,7 +1,7 @@
 printformat v%APP_VERSION% - Format and print text using a format string and arguments
 Copyright ┬® 2025-%CURRENT_YEAR% Martin Smith
 
-Usage: printformat <FORMAT_STRING> [ARGUMENTS]...
+Usage: printformat [OPTIONS] <FORMAT_STRING> [ARGUMENTS]...
 
 Arguments:
   <FORMAT_STRING>
@@ -11,6 +11,9 @@ Arguments:
           Arguments to substitute into the format string
 
 Options:
+  -c, --csharp
+          Use C# style format strings (e.g., {0}, {0:D3}, {0,-10})
+
   -h, --help
           Print help
           
@@ -28,6 +31,9 @@ Examples:
   printformat "{:<10}" "left"
   printformat "{:*^20}" "center"
   printformat "No placeholders"
+  printformat --csharp "{0} is {1} years old" "Alice" "30"
+  printformat --csharp "{0,-10} | {1,10}" "left" "right"
+  printformat -c "{0:D5}" "42"
 
 See Also:
  https://docs.rs/strfmt/latest/strfmt/
