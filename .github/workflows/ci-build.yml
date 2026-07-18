@@ -171,7 +171,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ 'windows-latest' , 'ubuntu-latest' ]
+        os: [ 'windows-latest' ] #, 'ubuntu-latest' ]
         arch: [ 'x64' ,'x86' ]
         # See : https://doc.rust-lang.org/rustc/platform-support.html
         #     : https://superuser.com/questions/791506/how-to-determine-if-a-linux-binary-file-is-32-bit-or-64-bit
