@@ -283,6 +283,7 @@ jobs:
         run: cargo build --all-targets --future-incompat-report --profile ${{ env.BUILD_CONFIG }} --verbose --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
 
       - name: Check Build Output
+        shell: pwsh
         run: |
           $build_output_folder = "${{ env.BUILD_OUTPUT_FOLDER }}"
           Write-Host "Checking build output folder: $build_output_folder"
