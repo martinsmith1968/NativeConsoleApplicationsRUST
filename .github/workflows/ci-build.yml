@@ -307,15 +307,23 @@ jobs:
           filePath='${{ env.BUILD_OUTPUT_FOLDER }}/${{ env.BUILD_CONFIG }}'
           echo "Checking architecture for '$filePath'"
 
-          for i in $(find $filePath -type f -executable); do
+          found=false
+          for i in $(find $filePath -maxdepth 1 -type f -executable); do
+            found=true
             echo "-- Checking: $i"
 
             flag=$(od -An -t x1 -j 4 -N 1 $i | xargs)
+            echo "  Found architecture flag: $flag"
             if [ "$flag" != "${{ matrix.arch_flag }}" ]; then
               echo "Architecture mismatch for '$i'. Expected: ${{ matrix.arch_flag }}, Actual: $flag"
               exit 1
             fi
           done
+
+          if [[ ! $found ]]; then
+            echo "No executable files found in '$filePath'"
+            exit 1
+          fi
 
       - name: Verify Output Architecture - Windows
         if: ${{ matrix.platform  == 'windows' }}
