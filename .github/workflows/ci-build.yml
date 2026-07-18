@@ -174,23 +174,29 @@ jobs:
         os: [ 'windows-latest' , 'ubuntu-latest' ]
         arch: [ 'x64' ,'x86' ]
         # See : https://doc.rust-lang.org/rustc/platform-support.html
+        #     : https://superuser.com/questions/791506/how-to-determine-if-a-linux-binary-file-is-32-bit-or-64-bit
+        #     : https://superuser.com/questions/358434/how-to-check-if-a-binary-is-32-or-64-bit-on-windows
         include:
           - os: windows-latest
             arch: x64
             target: x86_64-pc-windows-msvc
             platform: windows
+            arch_flag: 0x8664
           - os: windows-latest
             arch: x86
             target: i686-pc-windows-msvc
             platform: windows
+            arch_flag: 0x014c
           - os: ubuntu-latest
             arch: x64
             target: x86_64-unknown-linux-gnu
             platform: linux
+            arch_flag: 02
           - os: ubuntu-latest
             arch: x86
             target: i686-unknown-linux-gnu
             platform: linux
+            arch_flag: 01
 
     name: Build - ${{ matrix.platform }} - ${{ matrix.arch }}
 
@@ -276,8 +282,14 @@ jobs:
       - name: Build
         run: cargo build --all-targets --future-incompat-report --profile ${{ env.BUILD_CONFIG }} --verbose --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
 
-      #- name: Check Build Output
-      #  run: sigcheck uuidgen.exe (Requires SysInternals)
+      - name: Check Build Output
+        run: |
+          $build_output_folder = "${{ env.BUILD_OUTPUT_FOLDER }}"
+          Write-Host "Checking build output folder: $build_output_folder"
+          if (-not (Test-Path $build_output_folder -PathType Container)) {
+            Write-Error "Build output folder does not exist: $build_output_folder"
+            exit 1
+          }
 
       - name: Run tests
         run: cargo test --verbose --release
@@ -285,6 +297,51 @@ jobs:
       - name: Debug Files - BUILD_OUTPUT_FOLDER
         shell: pwsh
         run: Get-ChildItem "${{ env.BUILD_OUTPUT_FOLDER }}" -recurse
+
+      - name: Verify Output Architecture - Linux
+        if: ${{ matrix.platform  == 'linux' }}
+        run: |
+          # https://superuser.com/questions/791506/how-to-determine-if-a-linux-binary-file-is-32-bit-or-64-bit
+          filePath=##TODO
+          flag=$(od -An -t x1 -j 4 -N 1 $filePath)
+          if [ "$flag" != "${{ matrix.arch_flag }}" ]; then
+            echo "Architecture mismatch for '$filePath'. Expected: ${{ matrix.arch_flag }}, Actual: $flag"
+            exit 1
+          fi
+
+      - name: Verify Output Architecture - Windows
+        if: ${{ matrix.platform  == 'windows' }}
+        shell: pwsh
+        run: |
+          # https://superuser.com/questions/358434/how-to-check-if-a-binary-is-32-or-64-bit-on-windows
+
+          $filePath = "##TODO"
+
+          function Get-ArchitectureFlag {
+              param($FilePath)
+
+              [int32]$MACHINE_OFFSET = 4
+              [int32]$PE_POINTER_OFFSET = 60
+
+              [byte[]]$data = New-Object -TypeName System.Byte[] -ArgumentList 4096
+              $stream = New-Object -TypeName System.IO.FileStream -ArgumentList ($FilePath, 'Open', 'Read')
+              $stream.Read($data, 0, 4096) | Out-Null
+
+              [int32]$PE_HEADER_ADDR = [System.BitConverter]::ToInt32($data, $PE_POINTER_OFFSET)
+              [int32]$machineUint = [System.BitConverter]::ToUInt16($data, $PE_HEADER_ADDR + $MACHINE_OFFSET)
+              $stream.Close()
+
+              $result = "0x{0:x}" -f $machineUint
+
+              $result
+          }
+
+          $flag = Get-ArchitectureFlag -FilePath $filePath
+
+          if ($actual_arch_flag -ne $expected_arch_flag) {
+            Write-Error "Architecture mismatch for '$executable_path'. Expected: 0x$('{0:X}' -f $expected_arch_flag), Actual: 0x$('{0:X}' -f $actual_arch_flag)"
+            exit 1
+          }
 
       - name: Copy relevant files to output folder
         shell: pwsh
