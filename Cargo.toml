@@ -1,8 +1,8 @@
 [workspace]
 members  = [
-    "uuidgen",
-    "hashcalc",
     "bannertext",
+    "hashcalc",
     "printformat",
+    "uuidgen",
 ]
 resolver = "2"
