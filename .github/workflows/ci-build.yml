@@ -303,12 +303,19 @@ jobs:
         if: ${{ matrix.platform  == 'linux' }}
         run: |
           # https://superuser.com/questions/791506/how-to-determine-if-a-linux-binary-file-is-32-bit-or-64-bit
-          filePath=##TODO
-          flag=$(od -An -t x1 -j 4 -N 1 $filePath)
-          if [ "$flag" != "${{ matrix.arch_flag }}" ]; then
-            echo "Architecture mismatch for '$filePath'. Expected: ${{ matrix.arch_flag }}, Actual: $flag"
-            exit 1
-          fi
+
+          filePath='${{ env.BUILD_OUTPUT_FOLDER }}/${{ env.BUILD_CONFIG }}'
+          echo "Checking architecture for '$filePath'"
+
+          for i in $( find /usr/bin -type f -executable); do
+            echo "-- Checking: $i"
+
+            flag=$(od -An -t x1 -j 4 -N 1 $i)
+            if [ "$flag" != "${{ matrix.arch_flag }}" ]; then
+              echo "Architecture mismatch for '$i'. Expected: ${{ matrix.arch_flag }}, Actual: $flag"
+              exit 1
+            fi
+          done
 
       - name: Verify Output Architecture - Windows
         if: ${{ matrix.platform  == 'windows' }}
@@ -316,7 +323,7 @@ jobs:
         run: |
           # https://superuser.com/questions/358434/how-to-check-if-a-binary-is-32-or-64-bit-on-windows
 
-          $filePath = "##TODO"
+          $filePath = '${{ env.BUILD_OUTPUT_FOLDER }}/${{ matrix.target }}/release/${{ needs.setup.outputs.binary_names }}'
 
           function Get-ArchitectureFlag {
               param($FilePath)
