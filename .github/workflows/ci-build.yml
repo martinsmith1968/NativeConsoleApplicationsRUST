@@ -310,7 +310,7 @@ jobs:
           for i in $( find /usr/bin -type f -executable); do
             echo "-- Checking: $i"
 
-            flag=$(od -An -t x1 -j 4 -N 1 $i)
+            flag=$(od -An -t x1 -j 4 -N 1 $i | xargs)
             if [ "$flag" != "${{ matrix.arch_flag }}" ]; then
               echo "Architecture mismatch for '$i'. Expected: ${{ matrix.arch_flag }}, Actual: $flag"
               exit 1
