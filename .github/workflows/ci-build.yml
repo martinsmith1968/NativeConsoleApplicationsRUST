@@ -171,7 +171,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ 'windows-latest' ] #, 'ubuntu-latest' ]
+        os: [ 'windows-latest' , 'ubuntu-latest' ]
         arch: [ 'x64' ] #,'x86' ]
         # See : https://doc.rust-lang.org/rustc/platform-support.html
         #     : https://superuser.com/questions/791506/how-to-determine-if-a-linux-binary-file-is-32-bit-or-64-bit
@@ -187,11 +187,11 @@ jobs:
           #  target: i686-pc-windows-msvc
           #  platform: windows
           #  arch_flag: '0x014c'
-          #- os: ubuntu-latest
-          #  arch: x64
-          #  target: x86_64-unknown-linux-gnu
-          #  platform: linux
-          #  arch_flag: '02'
+          - os: ubuntu-latest
+            arch: x64
+            target: x86_64-unknown-linux-gnu
+            platform: linux
+            arch_flag: '02'
           #- os: ubuntu-latest
           #  arch: x86
           #  target: i686-unknown-linux-gnu
