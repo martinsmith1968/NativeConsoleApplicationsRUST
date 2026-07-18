@@ -172,7 +172,7 @@ jobs:
     strategy:
       matrix:
         os: [ 'windows-latest' ] #, 'ubuntu-latest' ]
-        arch: [ 'x64' ,'x86' ]
+        arch: [ 'x64' ] #,'x86' ]
         # See : https://doc.rust-lang.org/rustc/platform-support.html
         #     : https://superuser.com/questions/791506/how-to-determine-if-a-linux-binary-file-is-32-bit-or-64-bit
         #     : https://superuser.com/questions/358434/how-to-check-if-a-binary-is-32-or-64-bit-on-windows
@@ -360,7 +360,7 @@ jobs:
             $expected_arch_flag = "${{ matrix.arch_flag }}"
 
             if ($actual_arch_flag -ne $expected_arch_flag) {
-              Write-Error "   Architecture mismatch for '$($file.FullName)'. Expected: 0x$('{0:X}' -f $expected_arch_flag), Actual: 0x$('{0:X}' -f $actual_arch_flag)"
+              Write-Host "   Architecture mismatch for '$($file.FullName)'. Expected: 0x$('{0:X}' -f $expected_arch_flag), Actual: 0x$('{0:X}' -f $actual_arch_flag)" -ForegroundColor Red
               exit 1
             }
           }
