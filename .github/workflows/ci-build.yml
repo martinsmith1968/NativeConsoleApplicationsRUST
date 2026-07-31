@@ -319,7 +319,7 @@ jobs:
         run: Get-ChildItem "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -recurse
 
       - name: Compress Artifacts
-        uses: OctopusDeploy/create-zip-package-action@v4.1.1
+        uses: OctopusDeploy/create-zip-package-action@v4.1.2
         with:
           package_id: ${{ env.PROJECT_NAME }}.${{ matrix.platform }}.${{ matrix.arch }}
           version: v${{ needs.setup.outputs.executable_version }}
