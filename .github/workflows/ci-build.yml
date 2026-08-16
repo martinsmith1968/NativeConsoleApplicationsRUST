@@ -176,6 +176,7 @@ jobs:
         # See : https://doc.rust-lang.org/rustc/platform-support.html
         #     : https://superuser.com/questions/791506/how-to-determine-if-a-linux-binary-file-is-32-bit-or-64-bit
         #     : https://superuser.com/questions/358434/how-to-check-if-a-binary-is-32-or-64-bit-on-windows
+        #     : https://www.youtube.com/watch?v=YWh06kGvxjo
         include:
           - os: windows-latest
             arch: x64
@@ -229,6 +230,19 @@ jobs:
 
       - name: Rustfmt Check
         uses: actions-rust-lang/rustfmt@v1.1.2
+
+      - name: Install 32-bit build dependencies (Linux)
+        if: ${{ matrix.platform == 'linux' && matrix.arch == 'x86' }}
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib g++-multilib
+
+      - name: Install Visual C++ build tools (Windows 32-bit)
+        if: ${{ matrix.platform == 'windows' && matrix.arch == 'x86' }}
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
 
       - name: Setup Rust Target
         run: rustup target add ${{ matrix.target }}
