@@ -293,8 +293,8 @@ jobs:
       - name: Set Build Parameters
         shell: pwsh
         run: |
-          $build_output_folder    = Join-Path "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}" "${{ matrix.target }}" "${{ env.BUILD_CONFIG }}"
-          $build_artifacts_folder = Join-Path "${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}" "${{ matrix.target }}" "${{ env.BUILD_CONFIG }}"
+          $build_output_folder    = Join-Path "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}" "${{ matrix.target }}"
+          $build_artifacts_folder = Join-Path "${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}" "${{ matrix.target }}"
 
           echo "BUILD_OUTPUT_FOLDER=$build_output_folder" >> $env:GITHUB_ENV
           echo "BUILD_ARTIFACTS_FOLDER=$build_artifacts_folder" >> $env:GITHUB_ENV
@@ -326,7 +326,7 @@ jobs:
 
           pwd
 
-          filePath='${{ env.BUILD_OUTPUT_FOLDER }}/${{ env.BUILD_CONFIG }}'
+          filePath='${{ env.BUILD_OUTPUT_FOLDER }}/${{ matrix.target }}/${{ env.BUILD_CONFIG }}'
           echo "Checking architecture for '$filePath'"
 
           file_count=0
