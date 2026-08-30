@@ -1,6 +1,7 @@
 # Native Windows Console Applications in RUST
 
-A set of native, self-contained console apps for Windows in Rust.
+A set of native, self-contained console apps for Windows and Linux in Rust.
+Both 64 and 32-bit versions are available for each platform.
 
 > NOTE: Uses Jetbrains RustRover
 
@@ -46,6 +47,7 @@ These include :
 
 - [BannerText](.docs/bannertext.md)
 - [HashCalc](.docs/hashcalc.md)
+- [PrintFormat](.docs/printformat.md)
 - [UUIDGen](.docs/uuidgen.md)
 
 ## Additional Docs
