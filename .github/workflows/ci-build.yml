@@ -357,7 +357,7 @@ jobs:
 
           Get-Location
 
-          $filePath = (Join-Path '${{ env.BUILD_OUTPUT_FOLDER }}' '${{ env.BUILD_CONFIG }}')
+          $filePath = (Join-Path '${{ env.BUILD_OUTPUT_FOLDER }}' '${{ matrix.target }}' '${{ env.BUILD_CONFIG }}')
           Write-Host "Checking architecture for '$filePath'"
 
           function Get-ArchitectureFlag {
