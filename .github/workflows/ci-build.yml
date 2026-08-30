@@ -367,12 +367,11 @@ jobs:
                 [int32]$multiple
               )
 
-              $remainder = $value % $multiple
-              if ($remainder -eq 0) {
-                  return $value
-              } else {
-                  return $value + ($multiple - $remainder)
+              while ($value.length % $multiple -ne 0) {
+                  $value = $value.PadLeft($value.length + 1, '0')
               }
+
+              $value
           }
 
           function Get-ArchitectureFlag {
@@ -391,7 +390,7 @@ jobs:
               [int32]$machineUint = [System.BitConverter]::ToUInt16($data, $PE_HEADER_ADDR + $MACHINE_OFFSET)
               $stream.Close()
 
-              $result = PadToMultipleOf(("0x{0:x}" -f $machineUint), 2)
+              $result = "0x" + (PadToMultipleOf ("{0:x}" -f $machineUint) 2)
 
               $result
           }
