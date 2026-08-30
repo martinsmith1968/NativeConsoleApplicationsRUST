@@ -331,7 +331,7 @@ jobs:
 
           file_count=0
           for i in $(find $filePath -maxdepth 1 -type f -executable); do
-            file_count=$file_count + 1
+            file_count=$((file_count + 1))
             echo "-- [$file_count]:  Checking: $i"
 
             flag=$(od -An -t x1 -j 4 -N 1 $i | xargs)
