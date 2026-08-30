@@ -293,8 +293,8 @@ jobs:
       - name: Set Build Parameters
         shell: pwsh
         run: |
-          $build_output_folder    = Join-Path "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}"
-          $build_artifacts_folder = Join-Path "${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}"
+          $build_output_folder    = Join-Path "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}" "${{ matrix.target }}" "${{ env.BUILD_CONFIG }}"
+          $build_artifacts_folder = Join-Path "${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}" "${{ matrix.target }}" "${{ env.BUILD_CONFIG }}"
 
           echo "BUILD_OUTPUT_FOLDER=$build_output_folder" >> $env:GITHUB_ENV
           echo "BUILD_ARTIFACTS_FOLDER=$build_artifacts_folder" >> $env:GITHUB_ENV
