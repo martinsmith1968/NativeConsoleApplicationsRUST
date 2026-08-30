@@ -227,6 +227,12 @@ jobs:
       - name: Setup Rust Target
         run: rustup target add ${{ matrix.target }}
 
+      - name: Install Linux 32-bit toolchain support
+        if: ${{ matrix.platform == 'linux' && matrix.arch == 'x86' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib libc6-dev-i386
+
       - name: Set Cargo TOML Version Values
         shell: pwsh
         run: |
@@ -274,13 +280,13 @@ jobs:
           echo "BUILD_ARTIFACTS_FOLDER=$build_artifacts_folder" >> $env:GITHUB_ENV
 
       - name: Build
-        run: cargo build --all-targets --future-incompat-report --profile ${{ env.BUILD_CONFIG }} --verbose --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
+        run: cargo build --all-targets --future-incompat-report --profile ${{ env.BUILD_CONFIG }} --verbose --target ${{ matrix.target }} --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
 
       #- name: Check Build Output
       #  run: sigcheck uuidgen.exe (Requires SysInternals)
 
       - name: Run tests
-        run: cargo test --verbose --release
+        run: cargo test --verbose --release --target ${{ matrix.target }}
 
       - name: Debug Files - BUILD_OUTPUT_FOLDER
         shell: pwsh
@@ -305,9 +311,11 @@ jobs:
               continue
             }
 
-            Write-Host "Copying project to '${{ env.BASE_BUILD_COLLECT_FOLDER }}': $project"
             $project = $project.Trim()
-            Copy-Item (Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ env.BUILD_CONFIG }}" "$($project)$($executable_extension)") "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
+            $project_output_path = Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ matrix.target }}" "${{ env.BUILD_CONFIG }}" "$($project)$($executable_extension)"
+
+            Write-Host "Copying project to '${{ env.BASE_BUILD_COLLECT_FOLDER }}': $project_output_path"
+            Copy-Item $project_output_path "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
           }
 
       - name: Debug Files - BASE_BUILD_OUTPUT_FOLDER
