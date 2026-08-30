@@ -324,13 +324,15 @@ jobs:
         run: |
           # https://superuser.com/questions/791506/how-to-determine-if-a-linux-binary-file-is-32-bit-or-64-bit
 
+          pwd
+
           filePath='${{ env.BUILD_OUTPUT_FOLDER }}/${{ env.BUILD_CONFIG }}'
           echo "Checking architecture for '$filePath'"
 
-          found=false
+          file_count=0
           for i in $(find $filePath -maxdepth 1 -type f -executable); do
-            found=true
-            echo "-- Checking: $i"
+            file_count=$file_count + 1
+            echo "-- [$file_count]:  Checking: $i"
 
             flag=$(od -An -t x1 -j 4 -N 1 $i | xargs)
             echo "   Found architecture flag: $flag"
@@ -342,7 +344,7 @@ jobs:
             echo "   Architecture matches for '$i'. Expected: ${{ matrix.arch_flag }}, Actual: $flag"
           done
 
-          if [[ ! $found ]]; then
+          if (( $file_count == 0 )); then
             echo "No executable files found in '$filePath'"
             exit 1
           fi
@@ -352,6 +354,8 @@ jobs:
         shell: pwsh
         run: |
           # https://superuser.com/questions/358434/how-to-check-if-a-binary-is-32-or-64-bit-on-windows
+
+          Get-Location
 
           $filePath = (Join-Path '${{ env.BUILD_OUTPUT_FOLDER }}' '${{ env.BUILD_CONFIG }}')
           Write-Host "Checking architecture for '$filePath'"
@@ -375,9 +379,11 @@ jobs:
               $result
           }
 
+          $file_count = 0;
           foreach ($file in Get-ChildItem -Path $filePath -File -Filter *.exe)
           {
-            Write-Host "-- Checking: $($file.FullName)"
+            ++$file_count
+            Write-Host "-- [$file_count]: Checking: $($file.FullName)"
             $actual_arch_flag = Get-ArchitectureFlag -FilePath $file.FullName
             $expected_arch_flag = "${{ matrix.arch_flag }}"
 
@@ -387,6 +393,11 @@ jobs:
             }
             
             Write-Host "   Architecture matches for '$($file.FullName)'. Expected: 0x$('{0:X}' -f $expected_arch_flag), Actual: 0x$('{0:X}' -f $actual_arch_flag)" -ForegroundColor Green
+          }
+
+          if ($file_count -eq 0) {
+            Write-Host "No executable files found in '$filePath'" -ForegroundColor Red
+            exit 1
           }
 
       - name: Copy relevant files to output folder
