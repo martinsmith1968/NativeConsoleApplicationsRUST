@@ -338,6 +338,8 @@ jobs:
               echo "   Architecture mismatch for '$i'. Expected: ${{ matrix.arch_flag }}, Actual: $flag"
               exit 1
             fi
+
+            echo "   Architecture matches for '$i'. Expected: ${{ matrix.arch_flag }}, Actual: $flag"
           done
 
           if [[ ! $found ]]; then
@@ -383,6 +385,8 @@ jobs:
               Write-Host "   Architecture mismatch for '$($file.FullName)'. Expected: 0x$('{0:X}' -f $expected_arch_flag), Actual: 0x$('{0:X}' -f $actual_arch_flag)" -ForegroundColor Red
               exit 1
             }
+            
+            Write-Host "   Architecture matches for '$($file.FullName)'. Expected: 0x$('{0:X}' -f $expected_arch_flag), Actual: 0x$('{0:X}' -f $actual_arch_flag)" -ForegroundColor Green
           }
 
       - name: Copy relevant files to output folder
