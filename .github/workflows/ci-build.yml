@@ -362,8 +362,10 @@ jobs:
 
 
           function PadToMultipleOf {
-              param($value),
-              param($multiple)
+              param(
+                [string]$value, 
+                [int32]$multiple
+              )
 
               $remainder = $value % $multiple
               if ($remainder -eq 0) {
@@ -374,7 +376,9 @@ jobs:
           }
 
           function Get-ArchitectureFlag {
-              param($FilePath)
+              param(
+                [string]$FilePath
+              )
 
               [int32]$MACHINE_OFFSET = 4
               [int32]$PE_POINTER_OFFSET = 60
