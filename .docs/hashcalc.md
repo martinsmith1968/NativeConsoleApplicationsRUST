@@ -73,8 +73,8 @@ Options:
   -f, --file <FILE>            Path to file to hash
   -w, --write                  Write output to file instead of stdout (requires --file)
   -a, --algorithm <ALGORITHM>  Hash algorithm to use: sha1, md5, sha256, sha512, base64 [default: sha256]
-  -h, --help                   Print help [aliases: -?]
-  -V, --version                Print version [aliases: -!]
+  -h, --help                   Print help [alias: -?]
+  -V, --version                Print version [alias: -!]
 
 Examples:
   hashcalc --text "Hello World"
