@@ -76,7 +76,7 @@ function Start-AppAndCaptureOutput {
     }
 
     $proc = [System.Diagnostics.Process]::Start($psi)
-    $stdout = $proc.StandardOutput.ReadToEnd()
+    $stdout = $proc.StandardOutput.ReadToEnd().TrimEnd()
     $proc.WaitForExit()
 
     return $stdout
