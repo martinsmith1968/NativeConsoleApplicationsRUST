@@ -41,3 +41,43 @@ function Search-AppByName {
     }
     return $null
 }
+
+#---------------------------------------------------------------------------------------------------
+
+function Start-AppAndCaptureOutput {
+    [OutputType([string])]
+    param(
+        [alias("exe")]
+        [string]$executable_name,
+
+        [alias("params")]
+        [string[]]$parameters             = @( ),
+
+        [alias("shell")]
+        [bool]$use_shell_execute          = $false,
+
+        [alias("env")]
+        [hashtable]$environment_variables = @{ }
+    )
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName               = $executable_name
+    if ($parameters -ne $null) {
+        $parameters | ForEach-Object { $psi.ArgumentList.Add($_) }
+    }
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError  = $true
+    $psi.UseShellExecute        = $use_shell_execute
+    $psi.CreateNoWindow         = $true
+    if ($environment_variables -ne $null) {
+        foreach ($h in $environment_variables.GetEnumerator()) {
+            $psi.EnvironmentVariables[$h.Name] = $h.Value
+        }
+    }
+
+    $proc = [System.Diagnostics.Process]::Start($psi)
+    $stdout = $proc.StandardOutput.ReadToEnd()
+    $proc.WaitForExit()
+
+    return $stdout
+}

@@ -19,8 +19,8 @@ Options:
   -a, --text-alignment <TEXT_ALIGNMENT>                Set Text Alignment [default: Left] [possible values: Left, Right, Center]
   -m, --min-total-length <MIN_TOTAL_LENGTH>            Set Minimum Total line length [default: 0]
   -M, --max-total-length <MAX_TOTAL_LENGTH>            Set Maximum Total line length [default: 0]
-  -h, --help                                           Print help [aliases: -?]
-  -V, --version                                        Print version [aliases: -!]
+  -h, --help                                           Print help [alias: -?]
+  -V, --version                                        Print version [alias: -!]
 
 Examples:
   bannertext "Hello World"

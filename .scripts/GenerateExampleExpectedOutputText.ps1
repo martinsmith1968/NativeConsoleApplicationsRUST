@@ -33,7 +33,7 @@ function Set-ExpectedOutput {
     $psi.RedirectStandardError  = $true
     $psi.UseShellExecute        = $false
     $psi.CreateNoWindow         = $true
-    $psi.EnvironmentVariables["COLUMNS"] = "500"
+    $psi.EnvironmentVariables["COLUMNS"] = "1000"
     $proc = [System.Diagnostics.Process]::Start($psi)
     $stdout = $proc.StandardOutput.ReadToEnd()
     $proc.WaitForExit()

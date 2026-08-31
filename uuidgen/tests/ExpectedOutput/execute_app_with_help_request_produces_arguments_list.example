@@ -12,8 +12,8 @@ Options:
   -u, --uppercase                          Covert the GUID to Upper case values (GUID only)
   -o, --output-template <OUTPUT_TEMPLATE>  The template to use when writing the output [default: {uuid}]
   -6, --guid-v6-seed <GUID_V6_SEED>        The seed to use when generating a v6 Guid (6 values) [default: 1,2,3,4,5,6]
-  -h, --help                               Print help [aliases: -?]
-  -V, --version                            Print version [aliases: -!]
+  -h, --help                               Print help [alias: -?]
+  -V, --version                            Print version [alias: -!]
 
 NOTE:
 output-template supports: {uuid}, {sequence} dynamic values

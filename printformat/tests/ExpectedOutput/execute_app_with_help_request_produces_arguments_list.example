@@ -9,8 +9,8 @@ Arguments:
 
 Options:
   -t, --format-type <FORMAT_TYPE>  Format type to use for the format string [default: Rust] [possible values: Rust, CSharp, C]
-  -h, --help                       Print help [aliases: -?]
-  -V, --version                    Print version [aliases: -!]
+  -h, --help                       Print help [alias: -?]
+  -V, --version                    Print version [alias: -!]
 
 Examples:
   printformat "Hello, {}!" "World"

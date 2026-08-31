@@ -21,12 +21,12 @@ Options:
   -h, --help
           Print help
           
-          [aliases: -?]
+          [alias: -?]
 
   -V, --version
           Print version
           
-          [aliases: -!]
+          [alias: -!]
 
 Examples:
   hashcalc --text "Hello World"
