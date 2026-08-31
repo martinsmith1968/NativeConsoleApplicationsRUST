@@ -1,21 +1,21 @@
 [package]
-name        = "printformat"
-authors     = [ "Martin Smith" ]
-version     = "0.1.0-dev"
-edition     = "2024"
+name = "printformat"
+authors = ["Martin Smith"]
+version = "0.1.0-dev"
+edition = "2024"
 description = "Format and print text using a format string and arguments"
-readme      = "../README.md"
-license     = "MIT OR Apache-2.0"
-keywords    = [ "format", "print", "text" ]
-categories  = [ "command-line-utilities" ]
-repository  = "http://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
+readme = "../README.md"
+license = "MIT OR Apache-2.0"
+keywords = ["format", "print", "text"]
+categories = ["command-line-utilities"]
+repository = "http://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
 
 [package.metadata.winresource]
 LegalCopyright = "Copyright © 2025-2026 Martin Smith"
 
 [dependencies]
-clap = { version = "4.6.1", features = ["derive", "wrap_help"] }
-sprintf = "0.4"
+clap = { version = "4.6.6", features = ["derive", "wrap_help"] }
+sprintf = "0.4.3"
 strfmt = "0.2.5"
 
 [build-dependencies]
