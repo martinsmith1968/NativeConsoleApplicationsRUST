@@ -7,7 +7,8 @@ function Set-ExpectedOutput {
         [string]$app_full_path,
         [string]$arguments,
         [string]$output_filename,
-        [string]$expected_output_path = $null
+        [string]$expected_output_path = $null,
+        [bool]$show_output = $true
     )
 
     $app_name = [System.IO.Path]::GetFileNameWithoutExtension($app_name)
@@ -44,6 +45,11 @@ function Set-ExpectedOutput {
     $text = $text -replace $current_app_version, "%APP_VERSION%"
     $text = $text -replace "-${current_year}", '-%CURRENT_YEAR%'
     Set-Content -Path (Join-Path -Path $expected_output_path -ChildPath $example_filename) -Value $text -Encoding UTF8 -NoNewline
+
+    if ($show_output) {
+        Write-Host "  $($app_name) - Output : $($example_filename)" -ForegroundColor Gray
+        Write-Host "  $($text)" -ForegroundColor DarkGray
+    }
 }
 
 function Clear-ExpectedOutput {
@@ -55,7 +61,7 @@ function Clear-ExpectedOutput {
 
     $expected_output_path = [System.IO.Path]::GetFullPath((Join-Path -Path $PSScriptRoot -ChildPath ".." $app_name "tests" "Expectedoutput"))
 
-    if ( Test-Path -Path $expected_output_path) {
+    if (Test-Path -Path $expected_output_path) {
         Remove-Item -Path $expected_output_path -Include *.example -Recurse -Force
     }
 }
