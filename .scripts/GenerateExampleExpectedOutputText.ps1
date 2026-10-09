@@ -1,7 +1,9 @@
 . $PSScriptRoot\Include-Scripts.ps1
 
 #---------------------------------------------------------------------------------------------------
+$ErrorActionPreference = "Stop"
 
+#---------------------------------------------------------------------------------------------------
 function Set-ExpectedOutput {
     param (
         [string]$app_full_path,
@@ -11,7 +13,7 @@ function Set-ExpectedOutput {
         [bool]$show_output = $true
     )
 
-    $app_name = [System.IO.Path]::GetFileNameWithoutExtension($app_name)
+    $app_name = [System.IO.Path]::GetFileNameWithoutExtension($app_full_path)
 
     if ( [string]::IsNullOrEmpty($expected_output_path) ) {
         $expected_output_path = [System.IO.Path]::GetFullPath((Join-Path -Path $PSScriptRoot -ChildPath ".." $app_name "tests" "Expectedoutput"))
@@ -20,9 +22,12 @@ function Set-ExpectedOutput {
         New-Item -Path $expected_output_path -ItemType Directory -Force | Out-Null
     }
 
+    $sep = [System.IO.Path]::DirectorySeparatorChar
+
     $parameters = $arguments.Split("|")
 
     $example_filename = "$($output_filename).example"
+    $example_full_path = Join-Path -Path $expected_output_path -ChildPath $example_filename
 
     Write-Host "  $($app_name) - Generating : $($example_filename)"
     # Use ProcessStartInfo with redirected stdout so the binary has no Win32 console,
@@ -38,13 +43,14 @@ function Set-ExpectedOutput {
     $proc = [System.Diagnostics.Process]::Start($psi)
     $stdout = $proc.StandardOutput.ReadToEnd()
     $proc.WaitForExit()
-    Set-Content -Path (Join-Path -Path $expected_output_path -ChildPath $example_filename) -Value $stdout -Encoding UTF8 -NoNewline
 
     Write-Host "  $($app_name) - Adjusting : $($example_filename)"
-    $text = (Get-Content -Path (Join-Path -Path $expected_output_path -ChildPath $example_filename) -Raw)
-    $text = $text -replace $current_app_version, "%APP_VERSION%"
+    # Placeholders are expanded by the tests (load_expected_output)
+    $text = $stdout
+    $text = $text -replace [regex]::Escape($current_app_version), "%APP_VERSION%"
     $text = $text -replace "-${current_year}", '-%CURRENT_YEAR%'
-    Set-Content -Path (Join-Path -Path $expected_output_path -ChildPath $example_filename) -Value $text -Encoding UTF8 -NoNewline
+    $text = $text -replace "$([regex]::Escape($Env:USERPROFILE))$([regex]::Escape($sep))", "UserProfileDir$($sep)"
+    [System.IO.File]::WriteAllText($example_full_path, $text, (New-Object System.Text.UTF8Encoding($false)))
 
     if ($show_output) {
         Write-Host "  $($app_name) - Output : $($example_filename)" -ForegroundColor Gray
@@ -52,6 +58,7 @@ function Set-ExpectedOutput {
     }
 }
 
+#---------------------------------------------------------------------------------------------------
 function Clear-ExpectedOutput {
     param (
         [string]$app_full_name
@@ -61,8 +68,9 @@ function Clear-ExpectedOutput {
 
     $expected_output_path = [System.IO.Path]::GetFullPath((Join-Path -Path $PSScriptRoot -ChildPath ".." $app_name "tests" "Expectedoutput"))
 
-    if (Test-Path -Path $expected_output_path) {
-        Remove-Item -Path $expected_output_path -Include *.example -Recurse -Force
+    if (Test-Path -Path $expected_output_path -PathType Container) {
+        Write-Host "  $($app_name) - Clearing : $($expected_output_path)"
+        Get-ChildItem -Path $expected_output_path -Filter *.example -File | Remove-Item -Force
     }
 }
 
@@ -72,13 +80,11 @@ $app_output_path     = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot -C
 $temp_base_path      = [System.IO.Path]::GetTempPath()
 $run_id              = [System.Guid]::NewGuid().ToString("N")
 $temp_run_path       = Join-Path -Path $temp_base_path -ChildPath $run_id
-$current_app_version = "0.1.0-dev"
 $current_year        = (Get-Date).Year
 
 Write-Host "App Output Path : $($app_output_path)"
 Write-Host "Temp Path       : $($temp_base_path)"
 Write-Host "Run Path        : $($temp_run_path)"
-Write-Host "App Version     : $($current_app_version)"
 
 $env:COLUMNS = "500"
 
@@ -96,9 +102,11 @@ Write-Host "$($apps.Count) Apps found" -ForegroundColor Green
 #---------------------------------------------------------------------------------------------------
 
 # Generate For : bannertext
-$app_name = "bannertext.exe"
+$app_name = "bannertext"
 $app = Search-AppByName -apps $apps -app_name $app_name
 if ( $null -ne $app ) {
+    $current_app_version = Get-AppVersion -app_full_path $app.FullName
+
     Clear-ExpectedOutput -app_full_name $app.FullName
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-?"                             -output_filename "execute_app_with_help_request_produces_arguments_list"
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "--help"                         -output_filename "execute_app_with_full_help_request_produces_arguments_list"
@@ -110,9 +118,11 @@ if ( $null -ne $app ) {
 
 
 # Generate For : hashcalc
-$app_name = "hashcalc.exe"
+$app_name = "hashcalc"
 $app = Search-AppByName -apps $apps -app_name $app_name
 if ( $null -ne $app ) {
+    $current_app_version = Get-AppVersion -app_full_path $app.FullName
+
     Clear-ExpectedOutput -app_full_name $app.FullName
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-?"                         -output_filename "execute_app_with_help_request_produces_arguments_list"
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "--help"                     -output_filename "execute_app_with_full_help_request_produces_arguments_list"
@@ -126,9 +136,11 @@ if ( $null -ne $app ) {
 
 
 # Generate For : uuidgen
-$app_name = "uuidgen.exe"
+$app_name = "uuidgen"
 $app = Search-AppByName -apps $apps -app_name $app_name
 if ( $null -ne $app ) {
+    $current_app_version = Get-AppVersion -app_full_path $app.FullName
+
     Clear-ExpectedOutput -app_full_name $app.FullName
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-?"                     -output_filename "execute_app_with_help_request_produces_arguments_list"
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "--help"                 -output_filename "execute_app_with_full_help_request_produces_arguments_list"
@@ -151,9 +163,11 @@ if ( $null -ne $app ) {
 }
 
 # Generate For : printformat
-$app_name = "printformat.exe"
+$app_name = "printformat"
 $app = Search-AppByName -apps $apps -app_name $app_name
 if ( $null -ne $app ) {
+    $current_app_version = Get-AppVersion -app_full_path $app.FullName
+
     Clear-ExpectedOutput -app_full_name $app.FullName
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "-?"                     -output_filename "execute_app_with_help_request_produces_arguments_list"
     Set-ExpectedOutput -app_full_path $app.FullName -arguments "--help"                 -output_filename "execute_app_with_full_help_request_produces_arguments_list"
