@@ -465,7 +465,7 @@ jobs:
         run: Get-ChildItem "${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}" -recurse
 
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: ${{ matrix.platform }}.${{ matrix.arch }}
           path: ${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}/*.zip
@@ -509,7 +509,7 @@ jobs:
         shell: bash
 
       - name: Upload coverage report artifact
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: coverage-report
           path: lcov.info
