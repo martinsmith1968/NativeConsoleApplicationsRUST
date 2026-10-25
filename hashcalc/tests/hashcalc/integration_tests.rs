@@ -284,8 +284,8 @@ fn test_cli_write_without_file_fails() {
         .arg("--write")
         .assert()
         .failure()
-        .code(1)
-        .stderr(predicate::str::contains("--write requires --file"));
+        .code(2)
+        .stderr(predicate::str::contains("--file"));
 }
 
 #[test]
@@ -296,8 +296,8 @@ fn test_cli_write_with_text_fails() {
         .arg("--write")
         .assert()
         .failure()
-        .code(1)
-        .stderr(predicate::str::contains("--write requires --file"));
+        .code(2)
+        .stderr(predicate::str::contains("--file"));
 }
 
 // ===== Error Handling Tests =====
@@ -307,8 +307,8 @@ fn test_cli_no_args_error() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     cmd.assert()
         .failure()
-        .code(1)
-        .stderr(predicate::str::contains("provide either text or --file"));
+        .code(2)
+        .stderr(predicate::str::contains("--text"));
 }
 
 #[test]
@@ -324,10 +324,8 @@ fn test_cli_both_text_and_file_error() {
         .arg(&file_path)
         .assert()
         .failure()
-        .code(1)
-        .stderr(predicate::str::contains(
-            "specify either text or --file, not both",
-        ));
+        .code(2)
+        .stderr(predicate::str::contains("cannot be used with"));
 }
 
 #[test]
@@ -339,21 +337,23 @@ fn test_cli_invalid_algorithm() {
         .arg("invalid_algo")
         .assert()
         .failure()
-        .code(1)
-        .stderr(predicate::str::contains("Unknown algorithm"));
+        .code(2)
+        .stderr(predicate::str::contains("possible values"));
 }
 
 #[test]
-fn test_cli_algorithm_case_sensitive() {
+fn test_cli_algorithm_case_insensitive() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     cmd.arg("--text")
         .arg("hello")
         .arg("--algorithm")
         .arg("SHA256")
         .assert()
-        .failure()
-        .code(1)
-        .stderr(predicate::str::contains("Unknown algorithm"));
+        .success()
+        .stdout(predicate::str::contains(
+            "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+        ))
+        .stdout(predicate::str::contains("[sha256]"));
 }
 
 // ===== Algorithm Short Option Tests =====
@@ -439,6 +439,33 @@ fn test_cli_version_exit_code() {
 }
 
 #[test]
+fn test_cli_writes_to_closed_pipe_without_panicking() {
+    use std::process::{Command as StdCommand, Stdio};
+
+    let mut child = StdCommand::new(env!("CARGO_BIN_EXE_hashcalc"))
+        .args(["--text", "hello"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("failed to start hashcalc");
+
+    // Close the read end of the pipe before the child can write.
+    drop(child.stdout.take());
+
+    let output = child
+        .wait_with_output()
+        .expect("failed to wait for hashcalc");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "expected success on a closed pipe, got {:?}: {}",
+        output.status,
+        stderr
+    );
+    assert!(!stderr.contains("panicked"), "stderr was: {}", stderr);
+}
+
+#[test]
 fn test_cli_error_exit_code() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     cmd.arg("--text")
@@ -446,7 +473,7 @@ fn test_cli_error_exit_code() {
         .arg("--algorithm")
         .arg("invalid")
         .assert()
-        .code(1);
+        .code(2);
 }
 
 // ===== Large File Tests =====

@@ -1,7 +1,7 @@
 hashcalc v%APP_VERSION% - Generate a hash of text or file contents
 Copyright ┬® 2025-%CURRENT_YEAR% Martin Smith
 
-Usage: hashcalc [OPTIONS]
+Usage: hashcalc [OPTIONS] <--text <TEXT>|--file <FILE>>
 
 Options:
   -t, --text <TEXT>
@@ -14,9 +14,10 @@ Options:
           Write output to file instead of stdout (requires --file)
 
   -a, --algorithm <ALGORITHM>
-          Hash algorithm to use: sha1, md5, sha256, sha512, base64
+          Hash algorithm to use
           
           [default: sha256]
+          [possible values: sha1, md5, sha256, sha512, base64]
 
   -h, --help
           Print help

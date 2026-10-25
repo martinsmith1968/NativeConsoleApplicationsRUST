@@ -1,9 +1,11 @@
-use clap::Parser;
+use clap::{ArgGroup, Parser};
 use std::fs;
-use std::io;
+use std::io::{self, Write};
+use std::path::Path;
+use std::process::ExitCode;
 
 mod hashers;
-use hashers::hash_content;
+use hashers::{Algorithm, hash_content};
 
 /// Generate a hash of text or file contents
 #[derive(Parser, Debug)]
@@ -16,6 +18,7 @@ use hashers::hash_content;
     help_expected = true,
     disable_help_flag = true,
     disable_version_flag = true,
+    group = ArgGroup::new("input").required(true).args(["text", "file"]),
     after_help = "Examples:\n  hashcalc --text \"Hello World\"\n  hashcalc --text \"Hello World\" --algorithm md5\n  hashcalc --file myfile.txt\n  hashcalc --file myfile.txt --algorithm sha512\n  hashcalc --file myfile.txt --write"
 )]
 struct Args {
@@ -28,12 +31,18 @@ struct Args {
     file: Option<String>,
 
     /// Write output to file instead of stdout (requires --file)
-    #[arg(short = 'w', long)]
+    #[arg(short = 'w', long, conflicts_with = "text")]
     write: bool,
 
-    /// Hash algorithm to use: sha1, md5, sha256, sha512, base64
-    #[arg(short, long, default_value = "sha256")]
-    algorithm: String,
+    /// Hash algorithm to use
+    #[arg(
+        short,
+        long,
+        value_enum,
+        ignore_case = true,
+        default_value_t = Algorithm::Sha256
+    )]
+    algorithm: Algorithm,
 
     /// Print help
     #[arg(short = 'h', long, visible_short_alias = '?', action = clap::ArgAction::Help)]
@@ -53,86 +62,64 @@ fn read_file_contents(path: &str) -> Result<Vec<u8>, String> {
     })
 }
 
-fn main() {
+fn main() -> ExitCode {
     let args = Args::parse();
 
-    let content_bytes = match (&args.text, &args.file) {
-        (Some(text), None) => text.as_bytes().to_vec(),
-        (None, Some(file_path)) => match read_file_contents(file_path) {
-            Ok(bytes) => bytes,
-            Err(e) => {
-                eprintln!("Error: {}", e);
-                std::process::exit(1);
-            }
-        },
-        (Some(_), Some(_)) => {
-            eprintln!("Error: specify either text or --file, not both");
-            std::process::exit(1);
+    match run(&args) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("Error: {}", error);
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn run(args: &Args) -> io::Result<()> {
+    let (identifier, content_bytes) = match (&args.text, &args.file) {
+        (Some(text), _) => (text.as_str(), text.as_bytes().to_vec()),
+        (None, Some(file_path)) => {
+            let identifier = Path::new(file_path)
+                .file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or(file_path);
+            let bytes = read_file_contents(file_path).map_err(io::Error::other)?;
+            (identifier, bytes)
         }
         (None, None) => {
-            eprintln!("Error: provide either text or --file option");
-            std::process::exit(1);
+            return Err(io::Error::other("provide either --text or --file"));
         }
     };
 
-    match hash_content(&content_bytes, &args.algorithm) {
-        Ok(hash_output) => {
-            // Validate write flag usage
-            if args.write && args.file.is_none() {
-                eprintln!("Error: --write requires --file");
-                std::process::exit(1);
-            }
-            if args.write && args.text.is_some() {
-                eprintln!("Error: --write cannot be used with --text");
-                std::process::exit(1);
-            }
+    let hash_output = hash_content(&content_bytes, args.algorithm).map_err(io::Error::other)?;
+    let output_line = format!("{} [{}] : {}", identifier, args.algorithm, hash_output);
 
-            let identifier = match (&args.text, &args.file) {
-                (Some(text), None) => text.clone(),
-                (None, Some(file_path)) => std::path::Path::new(file_path)
-                    .file_name()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or(file_path)
-                    .to_string(),
-                _ => String::new(),
-            };
-
-            let output_line = format!(
-                "{} [{}] : {}",
-                identifier,
-                args.algorithm.to_lowercase(),
-                hash_output
-            );
-
-            if args.write {
-                // Construct output path in same directory with {filename}.{algorithm}
-                let input_path = std::path::Path::new(args.file.as_ref().unwrap());
-                let dir = input_path
-                    .parent()
-                    .unwrap_or_else(|| std::path::Path::new("."));
-                let file_name = input_path
-                    .file_name()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("output");
-                let alg = args.algorithm.to_lowercase();
-                let out_file_name = format!("{}.{}", file_name, alg);
-                let out_path = dir.join(out_file_name);
-
-                if let Err(e) = fs::write(&out_path, output_line.as_bytes()) {
-                    eprintln!("Error writing to file '{}': {}", out_path.display(), e);
-                    std::process::exit(1);
-                }
-                // Success: exit quietly
-                return;
-            }
-
-            println!("{}", output_line);
-        }
-        Err(e) => {
-            eprintln!("Error: {}", e);
-            std::process::exit(1);
-        }
+    if args.write {
+        let input_path = args
+            .file
+            .as_deref()
+            .ok_or_else(|| io::Error::other("--write requires --file"))?;
+        write_output_file(Path::new(input_path), args.algorithm, &output_line)?;
+        // Success: exit quietly
+        return Ok(());
     }
+
+    let stdout = io::stdout();
+    let mut handle = stdout.lock();
+    writeln!(handle, "{}", output_line)
+}
+
+fn write_output_file(input_path: &Path, algorithm: Algorithm, output_line: &str) -> io::Result<()> {
+    // Construct output path in same directory with {filename}.{algorithm}
+    let dir = input_path.parent().unwrap_or_else(|| Path::new("."));
+    let file_name = input_path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("output");
+    let out_path = dir.join(format!("{}.{}", file_name, algorithm));
+
+    fs::write(&out_path, output_line)
+        .map_err(|e| io::Error::other(format!("failed to write '{}': {}", out_path.display(), e)))
 }
 
 #[cfg(test)]

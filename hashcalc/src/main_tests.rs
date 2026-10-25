@@ -31,7 +31,7 @@ fn cleanup_temp_file(path: &PathBuf) {
 fn test_hash_content_simple_string() {
     let text = "hello world";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, "sha256").unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
 
     // Known SHA256 hash of "hello world"
     assert_eq!(
@@ -45,7 +45,7 @@ fn test_hash_content_simple_string() {
 fn test_hash_content_empty_string() {
     let text = "";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, "sha256").unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
 
     // Known SHA256 hash of empty string
     assert_eq!(
@@ -58,7 +58,7 @@ fn test_hash_content_empty_string() {
 fn test_hash_content_hello() {
     let text = "hello";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, "sha256").unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
 
     // SHA256 of "hello"
     assert_eq!(
@@ -72,8 +72,8 @@ fn test_hash_content_consistent() {
     let text = "consistency test";
     let bytes = text.as_bytes().to_vec();
 
-    let hex1 = hash_content(&bytes, "sha256").unwrap();
-    let hex2 = hash_content(&bytes, "sha256").unwrap();
+    let hex1 = hash_content(&bytes, Algorithm::Sha256).unwrap();
+    let hex2 = hash_content(&bytes, Algorithm::Sha256).unwrap();
 
     assert_eq!(hex1, hex2);
 }
@@ -81,7 +81,7 @@ fn test_hash_content_consistent() {
 #[test]
 fn test_hash_content_binary_data() {
     let binary_data = vec![0u8, 1, 2, 3, 255, 254, 253, 252];
-    let hex = hash_content(&binary_data, "sha256").unwrap();
+    let hex = hash_content(&binary_data, Algorithm::Sha256).unwrap();
 
     assert_eq!(hex.len(), 64);
     assert!(hex.chars().all(|c| c.is_ascii_hexdigit()));
@@ -90,7 +90,7 @@ fn test_hash_content_binary_data() {
 #[test]
 fn test_hash_content_large_data() {
     let large_data = vec![42u8; 1024 * 1024];
-    let hex = hash_content(&large_data, "sha256").unwrap();
+    let hex = hash_content(&large_data, Algorithm::Sha256).unwrap();
 
     assert_eq!(hex.len(), 64);
 }
@@ -99,7 +99,7 @@ fn test_hash_content_large_data() {
 fn test_hash_content_sha1() {
     let text = "hello";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, "sha1").unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha1).unwrap();
 
     // Known SHA1 hash of "hello"
     assert_eq!(hex, "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d");
@@ -110,7 +110,7 @@ fn test_hash_content_sha1() {
 fn test_hash_content_md5() {
     let text = "hello";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, "md5").unwrap();
+    let hex = hash_content(&bytes, Algorithm::Md5).unwrap();
 
     // Known MD5 hash of "hello"
     assert_eq!(hex, "5d41402abc4b2a76b9719d911017c592");
@@ -121,7 +121,7 @@ fn test_hash_content_md5() {
 fn test_hash_content_sha512() {
     let text = "hello";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, "sha512").unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha512).unwrap();
 
     assert_eq!(hex.len(), 128);
     assert!(hex.chars().all(|c| c.is_ascii_hexdigit()));
@@ -131,20 +131,43 @@ fn test_hash_content_sha512() {
 fn test_hash_content_base64() {
     let text = "hello";
     let bytes = text.as_bytes().to_vec();
-    let encoded = hash_content(&bytes, "base64").unwrap();
+    let encoded = hash_content(&bytes, Algorithm::Base64).unwrap();
 
     // Base64 of "hello"
     assert_eq!(encoded, "aGVsbG8=");
 }
 
 #[test]
-fn test_hash_content_invalid_algorithm() {
-    let text = "hello";
-    let bytes = text.as_bytes().to_vec();
-    let result = hash_content(&bytes, "invalid");
+fn test_algorithm_names_are_lowercase() {
+    assert_eq!(Algorithm::Sha1.to_string(), "sha1");
+    assert_eq!(Algorithm::Md5.to_string(), "md5");
+    assert_eq!(Algorithm::Sha256.to_string(), "sha256");
+    assert_eq!(Algorithm::Sha512.to_string(), "sha512");
+    assert_eq!(Algorithm::Base64.to_string(), "base64");
+}
 
+#[test]
+fn test_cli_algorithm_accepts_any_case() {
+    let args = Args::try_parse_from(["hashcalc", "--text", "hello", "--algorithm", "SHA256"])
+        .expect("SHA256 should be accepted");
+    assert_eq!(args.algorithm, Algorithm::Sha256);
+}
+
+#[test]
+fn test_cli_requires_text_or_file() {
+    assert!(Args::try_parse_from(["hashcalc"]).is_err());
+}
+
+#[test]
+fn test_cli_rejects_text_and_file_together() {
+    let result = Args::try_parse_from(["hashcalc", "--text", "hello", "--file", "somefile.txt"]);
     assert!(result.is_err());
-    assert!(result.unwrap_err().contains("Unknown algorithm"));
+}
+
+#[test]
+fn test_cli_write_conflicts_with_text() {
+    let result = Args::try_parse_from(["hashcalc", "--text", "hello", "--write"]);
+    assert!(result.is_err());
 }
 
 // ===== Unit Tests for read_file_contents function =====
@@ -306,7 +329,7 @@ fn test_cli_algorithm_invalid() {
 
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("Unknown algorithm"));
+    assert!(stderr.contains("possible values"), "stderr was: {}", stderr);
 }
 
 #[test]
@@ -380,8 +403,9 @@ fn test_cli_write_without_file_errors() {
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("--write requires --file")
-            || stderr.contains("--write cannot be used with --text")
+        stderr.contains("cannot be used with"),
+        "stderr was: {}",
+        stderr
     );
 }
 
@@ -397,8 +421,9 @@ fn test_cli_write_with_text_errors() {
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("--write cannot be used with --text")
-            || stderr.contains("--write requires --file")
+        stderr.contains("cannot be used with"),
+        "stderr was: {}",
+        stderr
     );
     cleanup_temp_file(&path);
 }
@@ -443,7 +468,11 @@ fn test_cli_file_and_text_mutual_exclusivity_error() {
 
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("specify either text or --file, not both"));
+    assert!(
+        stderr.contains("cannot be used with"),
+        "stderr was: {}",
+        stderr
+    );
     cleanup_temp_file(&path);
 }
 
@@ -456,7 +485,7 @@ fn test_cli_no_args_error() {
 
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("provide either text or --file option"));
+    assert!(stderr.contains("--text"), "stderr was: {}", stderr);
 }
 
 #[test]
@@ -521,7 +550,7 @@ fn test_cli_exit_code_mutual_exclusivity_error() {
         .output()
         .expect("Failed to run hashcalc");
 
-    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(output.status.code(), Some(2));
 }
 
 #[test]
@@ -531,7 +560,7 @@ fn test_cli_exit_code_no_args_error() {
         .output()
         .expect("Failed to run hashcalc");
 
-    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(output.status.code(), Some(2));
 }
 
 #[test]
@@ -686,7 +715,7 @@ fn test_cli_text_different_inputs_different_hashes() {
 fn test_hash_content_very_long_string() {
     let long_string = "a".repeat(10000);
     let bytes = long_string.as_bytes().to_vec();
-    let hex = hash_content(&bytes, "sha256").unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
 
     assert_eq!(hex.len(), 64);
     assert!(hex.chars().all(|c| c.is_ascii_hexdigit()));
@@ -696,7 +725,7 @@ fn test_hash_content_very_long_string() {
 fn test_hash_content_unicode_string() {
     let text = "Hello 世界 🌍";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, "sha256").unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
 
     assert_eq!(hex.len(), 64);
     assert!(hex.chars().all(|c| c.is_ascii_hexdigit()));
@@ -706,7 +735,7 @@ fn test_hash_content_unicode_string() {
 fn test_hash_content_newlines_and_tabs() {
     let text = "line1\nline2\tcolumn2";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, "sha256").unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
 
     assert_eq!(hex.len(), 64);
 }
@@ -715,7 +744,7 @@ fn test_hash_content_newlines_and_tabs() {
 fn test_hash_content_base64_padding() {
     let text = "a"; // Results in base64 with padding
     let bytes = text.as_bytes().to_vec();
-    let encoded = hash_content(&bytes, "base64").unwrap();
+    let encoded = hash_content(&bytes, Algorithm::Base64).unwrap();
 
     assert_eq!(encoded, "YQ==");
 }
@@ -724,7 +753,7 @@ fn test_hash_content_base64_padding() {
 fn test_hash_content_base64_no_padding() {
     let text = "abc"; // Results in base64 without padding
     let bytes = text.as_bytes().to_vec();
-    let encoded = hash_content(&bytes, "base64").unwrap();
+    let encoded = hash_content(&bytes, Algorithm::Base64).unwrap();
 
     assert_eq!(encoded, "YWJj");
 }
@@ -732,7 +761,7 @@ fn test_hash_content_base64_no_padding() {
 #[test]
 fn test_hash_content_base64_with_special_bytes() {
     let data = vec![0u8, 1, 2, 3, 255, 254];
-    let encoded = hash_content(&data, "base64").unwrap();
+    let encoded = hash_content(&data, Algorithm::Base64).unwrap();
 
     // Base64 encoding should be valid
     assert!(!encoded.is_empty());
@@ -743,8 +772,8 @@ fn test_hash_content_sha1_consistency() {
     let text = "sha1_test";
     let bytes = text.as_bytes().to_vec();
 
-    let hex1 = hash_content(&bytes, "sha1").unwrap();
-    let hex2 = hash_content(&bytes, "sha1").unwrap();
+    let hex1 = hash_content(&bytes, Algorithm::Sha1).unwrap();
+    let hex2 = hash_content(&bytes, Algorithm::Sha1).unwrap();
 
     assert_eq!(hex1, hex2);
     assert_eq!(hex1.len(), 40);
@@ -755,8 +784,8 @@ fn test_hash_content_md5_consistency() {
     let text = "md5_test";
     let bytes = text.as_bytes().to_vec();
 
-    let hex1 = hash_content(&bytes, "md5").unwrap();
-    let hex2 = hash_content(&bytes, "md5").unwrap();
+    let hex1 = hash_content(&bytes, Algorithm::Md5).unwrap();
+    let hex2 = hash_content(&bytes, Algorithm::Md5).unwrap();
 
     assert_eq!(hex1, hex2);
     assert_eq!(hex1.len(), 32);
@@ -769,7 +798,7 @@ fn test_hash_content_sha256_different_lengths() {
 
     for text in test_cases {
         let bytes = text.as_bytes().to_vec();
-        let hex = hash_content(&bytes, "sha256").unwrap();
+        let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
         hashes.push(hex);
     }
 
@@ -970,7 +999,7 @@ fn test_cli_text_single_character() {
 }
 
 #[test]
-fn test_cli_algorithm_case_sensitive() {
+fn test_cli_algorithm_case_insensitive() {
     let output = Command::new("cargo")
         .args(&[
             "run", "--bin", "hashcalc", "--", "-t", "test", "-a", "SHA256",
@@ -978,8 +1007,10 @@ fn test_cli_algorithm_case_sensitive() {
         .output()
         .expect("Failed to run hashcalc");
 
-    // Should fail because algorithm is case-sensitive
-    assert!(!output.status.success());
+    // Algorithm names are matched case-insensitively
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("[sha256]"), "stdout was: {}", stdout);
 }
 
 #[test]
@@ -1002,7 +1033,7 @@ fn test_cli_invalid_algorithm_with_file() {
 
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("Unknown algorithm"));
+    assert!(stderr.contains("possible values"), "stderr was: {}", stderr);
     cleanup_temp_file(&path);
 }
 
@@ -1123,9 +1154,9 @@ fn test_cli_text_and_file_both_missing_error() {
         .expect("Failed to run hashcalc");
 
     assert!(!output.status.success());
-    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("provide either text or --file option"));
+    assert!(stderr.contains("--text"), "stderr was: {}", stderr);
 }
 
 #[test]
@@ -1149,6 +1180,10 @@ fn test_cli_text_priority_over_file() {
 
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("specify either text or --file, not both"));
+    assert!(
+        stderr.contains("cannot be used with"),
+        "stderr was: {}",
+        stderr
+    );
     cleanup_temp_file(&path);
 }
