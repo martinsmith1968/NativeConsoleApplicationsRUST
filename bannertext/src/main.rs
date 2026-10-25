@@ -1,4 +1,15 @@
 use clap::Parser;
+use std::io::{self, Write};
+use std::process::ExitCode;
+
+/// The upper bound for the number of header or footer lines
+const MAX_LINE_COUNT: u32 = 100;
+
+/// The upper bound for prefix/suffix character counts and gap sizes
+const MAX_AFFIX_SIZE: u32 = 1_000;
+
+/// The upper bound for the banner width
+const MAX_TOTAL_LENGTH: u32 = 10_000;
 
 fn parse_single_char(s: &str) -> Result<char, String> {
     let mut chars = s.chars();
@@ -39,7 +50,12 @@ struct Args {
     header_line_char: char,
 
     /// The number of header lines to print
-    #[arg(short = 'n', long, default_value_t = 1)]
+    #[arg(
+        short = 'n',
+        long,
+        default_value_t = 1,
+        value_parser = clap::value_parser!(u32).range(0..=MAX_LINE_COUNT as i64)
+    )]
     header_line_count: u32,
 
     /// The character to use for footer lines
@@ -47,7 +63,12 @@ struct Args {
     footer_line_char: char,
 
     /// The number of footer lines to print
-    #[arg(short = 'N', long, default_value_t = 1)]
+    #[arg(
+        short = 'N',
+        long,
+        default_value_t = 1,
+        value_parser = clap::value_parser!(u32).range(0..=MAX_LINE_COUNT as i64)
+    )]
     footer_line_count: u32,
 
     /// The character to use for text line prefix/suffix
@@ -55,19 +76,39 @@ struct Args {
     text_line_char: char,
 
     /// Set Title Prefix Count
-    #[arg(short = 'p', long, default_value_t = 2)]
+    #[arg(
+        short = 'p',
+        long,
+        default_value_t = 2,
+        value_parser = clap::value_parser!(u32).range(0..=MAX_AFFIX_SIZE as i64)
+    )]
     title_prefix_count: u32,
 
     /// Set Title Suffix Count
-    #[arg(short = 's', long, default_value_t = 2)]
+    #[arg(
+        short = 's',
+        long,
+        default_value_t = 2,
+        value_parser = clap::value_parser!(u32).range(0..=MAX_AFFIX_SIZE as i64)
+    )]
     title_suffix_count: u32,
 
     /// Set Title Prefix Gap Size
-    #[arg(short = 'P', long, default_value_t = 2)]
+    #[arg(
+        short = 'P',
+        long,
+        default_value_t = 2,
+        value_parser = clap::value_parser!(u32).range(0..=MAX_AFFIX_SIZE as i64)
+    )]
     title_prefix_gap_size: u32,
 
     /// Set Title Suffix Gap Size
-    #[arg(short = 'S', long, default_value_t = 2)]
+    #[arg(
+        short = 'S',
+        long,
+        default_value_t = 2,
+        value_parser = clap::value_parser!(u32).range(0..=MAX_AFFIX_SIZE as i64)
+    )]
     title_suffix_gap_size: u32,
 
     /// Set Text Alignment
@@ -75,11 +116,21 @@ struct Args {
     text_alignment: TextAlignment,
 
     /// Set Minimum Total line length
-    #[arg(short = 'm', long, default_value_t = 0)]
+    #[arg(
+        short = 'm',
+        long,
+        default_value_t = 0,
+        value_parser = clap::value_parser!(u32).range(0..=MAX_TOTAL_LENGTH as i64)
+    )]
     min_total_length: u32,
 
     /// Set Maximum Total line length
-    #[arg(short = 'M', long, default_value_t = 0)]
+    #[arg(
+        short = 'M',
+        long,
+        default_value_t = 0,
+        value_parser = clap::value_parser!(u32).range(0..=MAX_TOTAL_LENGTH as i64)
+    )]
     max_total_length: u32,
 
     /// Print help
@@ -119,11 +170,14 @@ pub fn generate_banner(
         .take(title_suffix_count as usize)
         .collect();
 
-    let prefix_total = (title_prefix_count + title_prefix_gap_size) as usize;
-    let suffix_total = (title_suffix_count + title_suffix_gap_size) as usize;
+    // Use usize arithmetic with saturation so the sums cannot overflow
+    let prefix_total = (title_prefix_count as usize).saturating_add(title_prefix_gap_size as usize);
+    let suffix_total = (title_suffix_count as usize).saturating_add(title_suffix_gap_size as usize);
 
     let max_text_len = texts.iter().map(|t| t.chars().count()).max().unwrap_or(0);
-    let natural_length = prefix_total + max_text_len + suffix_total;
+    let natural_length = prefix_total
+        .saturating_add(max_text_len)
+        .saturating_add(suffix_total);
 
     let mut total_length = natural_length;
     if min_total_length > 0 {
@@ -133,11 +187,8 @@ pub fn generate_banner(
         total_length = total_length.min(max_total_length as usize);
     }
 
-    let text_area_width = if total_length > prefix_total + suffix_total {
-        total_length - prefix_total - suffix_total
-    } else {
-        0
-    };
+    let affix_total = prefix_total.saturating_add(suffix_total);
+    let text_area_width = total_length.saturating_sub(affix_total);
 
     let header_line: String = std::iter::repeat(header_line_char)
         .take(total_length)
@@ -172,8 +223,33 @@ pub fn generate_banner(
     lines.join("\n")
 }
 
-fn main() {
+/// Validate relationships between arguments that clap cannot express on its own.
+fn validate_args(args: &Args) -> Result<(), String> {
+    if args.max_total_length > 0 && args.min_total_length > args.max_total_length {
+        return Err(format!(
+            "--min-total-length ({}) must not be greater than --max-total-length ({})",
+            args.min_total_length, args.max_total_length
+        ));
+    }
+
+    Ok(())
+}
+
+fn main() -> ExitCode {
     let args = Args::parse();
+
+    match run(&args) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("Error: {}", error);
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn run(args: &Args) -> io::Result<()> {
+    validate_args(args).map_err(io::Error::other)?;
 
     let text_refs: Vec<&str> = args.message_text.iter().map(String::as_str).collect();
     let banner = generate_banner(
@@ -192,7 +268,9 @@ fn main() {
         args.max_total_length,
     );
 
-    println!("{}", banner);
+    let stdout = io::stdout();
+    let mut handle = stdout.lock();
+    writeln!(handle, "{}", banner)
 }
 
 #[cfg(test)]

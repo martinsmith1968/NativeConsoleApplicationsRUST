@@ -552,6 +552,33 @@ fn test_cli_no_args_exit_code() {
     cmd.assert().failure();
 }
 
+#[test]
+fn test_cli_writes_to_closed_pipe_without_panicking() {
+    use std::process::{Command as StdCommand, Stdio};
+
+    let mut child = StdCommand::new(env!("CARGO_BIN_EXE_bannertext"))
+        .arg("Hello World")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("failed to start bannertext");
+
+    // Close the read end of the pipe before the child can write.
+    drop(child.stdout.take());
+
+    let output = child
+        .wait_with_output()
+        .expect("failed to wait for bannertext");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "expected success on a closed pipe, got {:?}: {}",
+        output.status,
+        stderr
+    );
+    assert!(!stderr.contains("panicked"), "stderr was: {}", stderr);
+}
+
 // ===== Multi-Text (Multiple Positional Args) Tests =====
 
 #[test]
@@ -638,4 +665,42 @@ fn test_cli_single_arg_still_produces_three_lines() {
         3,
         "Single-arg banner should still produce 3 lines"
     );
+}
+
+// ===== Argument Validation Tests =====
+
+#[test]
+fn test_cli_min_greater_than_max_fails() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    cmd.arg("Hello")
+        .arg("--min-total-length")
+        .arg("80")
+        .arg("--max-total-length")
+        .arg("40")
+        .assert()
+        .failure()
+        .code(1)
+        .stderr(predicate::str::contains("--min-total-length"));
+}
+
+#[test]
+fn test_cli_excessive_header_line_count_fails() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    cmd.arg("Hello")
+        .arg("--header-line-count")
+        .arg("4000000000")
+        .assert()
+        .failure()
+        .code(2);
+}
+
+#[test]
+fn test_cli_excessive_total_length_fails() {
+    let mut cmd = Command::cargo_bin("bannertext").unwrap();
+    cmd.arg("Hello")
+        .arg("--min-total-length")
+        .arg("4000000000")
+        .assert()
+        .failure()
+        .code(2);
 }

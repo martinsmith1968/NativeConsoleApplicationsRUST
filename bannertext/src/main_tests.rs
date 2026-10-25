@@ -712,3 +712,83 @@ fn test_single_text_slice_matches_original_behaviour() {
     assert_eq!(lines[1], "**  Hello World  **");
     assert_eq!(lines[2], "*******************");
 }
+
+// ===== Argument Validation Tests =====
+
+fn parse_args(args: &[&str]) -> Result<Args, clap::Error> {
+    let mut full = vec!["bannertext"];
+    full.extend_from_slice(args);
+    Args::try_parse_from(full)
+}
+
+#[test]
+fn test_cli_rejects_excessive_header_line_count() {
+    assert!(parse_args(&["text", "-n", "4000000000"]).is_err());
+}
+
+#[test]
+fn test_cli_rejects_excessive_footer_line_count() {
+    assert!(parse_args(&["text", "-N", "4000000000"]).is_err());
+}
+
+#[test]
+fn test_cli_rejects_excessive_affix_counts() {
+    assert!(parse_args(&["text", "-p", "4000000000"]).is_err());
+    assert!(parse_args(&["text", "-s", "4000000000"]).is_err());
+    assert!(parse_args(&["text", "-P", "4000000000"]).is_err());
+    assert!(parse_args(&["text", "-S", "4000000000"]).is_err());
+}
+
+#[test]
+fn test_cli_accepts_maximum_header_line_count() {
+    let args = parse_args(&["text", "-n", &MAX_LINE_COUNT.to_string()]).unwrap();
+    assert_eq!(args.header_line_count, MAX_LINE_COUNT);
+}
+
+#[test]
+fn test_cli_rejects_excessive_total_length() {
+    assert!(parse_args(&["text", "-m", "4000000000"]).is_err());
+    assert!(parse_args(&["text", "-M", "4000000000"]).is_err());
+}
+
+#[test]
+fn test_cli_rejects_min_greater_than_max() {
+    let args = parse_args(&["text", "-m", "80", "-M", "40"]).unwrap();
+    let error = validate_args(&args).unwrap_err();
+    assert!(error.contains("--min-total-length"));
+    assert!(error.contains("--max-total-length"));
+}
+
+#[test]
+fn test_cli_accepts_min_equal_to_max() {
+    let args = parse_args(&["text", "-m", "40", "-M", "40"]).unwrap();
+    assert!(validate_args(&args).is_ok());
+}
+
+#[test]
+fn test_cli_accepts_max_without_min() {
+    let args = parse_args(&["text", "-M", "40"]).unwrap();
+    assert!(validate_args(&args).is_ok());
+}
+
+#[test]
+fn test_max_affix_sizes_produce_expected_width() {
+    let result = generate_banner(
+        &["X"],
+        '*',
+        0,
+        '*',
+        1,
+        '*',
+        MAX_AFFIX_SIZE,
+        MAX_AFFIX_SIZE,
+        MAX_AFFIX_SIZE,
+        MAX_AFFIX_SIZE,
+        TextAlignment::Left,
+        0,
+        0,
+    );
+    let line = result.lines().next().unwrap();
+    let expected = (MAX_AFFIX_SIZE * 4) as usize + 1;
+    assert_eq!(line.chars().count(), expected);
+}
