@@ -1,6 +1,8 @@
 use clap::{Parser, ValueEnum};
 use sprintf::{Printf as SprintfPrintf, vsprintf};
 use std::collections::HashMap;
+use std::io::{self, Write};
+use std::process::ExitCode;
 use strfmt::strfmt;
 
 #[derive(ValueEnum, Clone, Debug, Default)]
@@ -59,8 +61,20 @@ struct Args {
     version: Option<bool>,
 }
 
-fn main() {
+fn main() -> ExitCode {
     let args = Args::parse();
+
+    match run(&args) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("Error: {}", error);
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn run(args: &Args) -> io::Result<()> {
     let result = match args.format_type {
         FormatType::CSharp => translate_csharp_format(&args.format_string)
             .and_then(|translated| apply_indexed_format(&translated, &args.arguments)),
@@ -69,11 +83,12 @@ fn main() {
     };
 
     match result {
-        Ok(output) => println!("{}", output),
-        Err(error) => {
-            eprintln!("Error: {}", error);
-            std::process::exit(1);
+        Ok(output) => {
+            let stdout = io::stdout();
+            let mut handle = stdout.lock();
+            writeln!(handle, "{}", output)
         }
+        Err(error) => Err(io::Error::other(error)),
     }
 }
 

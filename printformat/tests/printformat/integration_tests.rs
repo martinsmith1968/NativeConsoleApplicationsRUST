@@ -160,6 +160,33 @@ fn test_cli_error_exit_code() {
     cmd.arg("Hello, {}!").assert().code(1);
 }
 
+#[test]
+fn test_cli_writes_to_closed_pipe_without_panicking() {
+    use std::process::{Command as StdCommand, Stdio};
+
+    let mut child = StdCommand::new(env!("CARGO_BIN_EXE_printformat"))
+        .arg("Hello World")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("failed to start printformat");
+
+    // Close the read end of the pipe before the child can write.
+    drop(child.stdout.take());
+
+    let output = child
+        .wait_with_output()
+        .expect("failed to wait for printformat");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "expected success on a closed pipe, got {:?}: {}",
+        output.status,
+        stderr
+    );
+    assert!(!stderr.contains("panicked"), "stderr was: {}", stderr);
+}
+
 // ===== Alignment and Padding Tests =====
 
 #[test]
