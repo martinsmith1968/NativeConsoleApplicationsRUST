@@ -31,7 +31,7 @@ fn cleanup_temp_file(path: &PathBuf) {
 fn test_hash_content_simple_string() {
     let text = "hello world";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha256);
 
     // Known SHA256 hash of "hello world"
     assert_eq!(
@@ -45,7 +45,7 @@ fn test_hash_content_simple_string() {
 fn test_hash_content_empty_string() {
     let text = "";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha256);
 
     // Known SHA256 hash of empty string
     assert_eq!(
@@ -58,7 +58,7 @@ fn test_hash_content_empty_string() {
 fn test_hash_content_hello() {
     let text = "hello";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha256);
 
     // SHA256 of "hello"
     assert_eq!(
@@ -72,8 +72,8 @@ fn test_hash_content_consistent() {
     let text = "consistency test";
     let bytes = text.as_bytes().to_vec();
 
-    let hex1 = hash_content(&bytes, Algorithm::Sha256).unwrap();
-    let hex2 = hash_content(&bytes, Algorithm::Sha256).unwrap();
+    let hex1 = hash_content(&bytes, Algorithm::Sha256);
+    let hex2 = hash_content(&bytes, Algorithm::Sha256);
 
     assert_eq!(hex1, hex2);
 }
@@ -81,7 +81,7 @@ fn test_hash_content_consistent() {
 #[test]
 fn test_hash_content_binary_data() {
     let binary_data = vec![0u8, 1, 2, 3, 255, 254, 253, 252];
-    let hex = hash_content(&binary_data, Algorithm::Sha256).unwrap();
+    let hex = hash_content(&binary_data, Algorithm::Sha256);
 
     assert_eq!(hex.len(), 64);
     assert!(hex.chars().all(|c| c.is_ascii_hexdigit()));
@@ -90,7 +90,7 @@ fn test_hash_content_binary_data() {
 #[test]
 fn test_hash_content_large_data() {
     let large_data = vec![42u8; 1024 * 1024];
-    let hex = hash_content(&large_data, Algorithm::Sha256).unwrap();
+    let hex = hash_content(&large_data, Algorithm::Sha256);
 
     assert_eq!(hex.len(), 64);
 }
@@ -99,7 +99,7 @@ fn test_hash_content_large_data() {
 fn test_hash_content_sha1() {
     let text = "hello";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, Algorithm::Sha1).unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha1);
 
     // Known SHA1 hash of "hello"
     assert_eq!(hex, "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d");
@@ -110,7 +110,7 @@ fn test_hash_content_sha1() {
 fn test_hash_content_md5() {
     let text = "hello";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, Algorithm::Md5).unwrap();
+    let hex = hash_content(&bytes, Algorithm::Md5);
 
     // Known MD5 hash of "hello"
     assert_eq!(hex, "5d41402abc4b2a76b9719d911017c592");
@@ -121,7 +121,7 @@ fn test_hash_content_md5() {
 fn test_hash_content_sha512() {
     let text = "hello";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, Algorithm::Sha512).unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha512);
 
     assert_eq!(hex.len(), 128);
     assert!(hex.chars().all(|c| c.is_ascii_hexdigit()));
@@ -131,7 +131,7 @@ fn test_hash_content_sha512() {
 fn test_hash_content_base64() {
     let text = "hello";
     let bytes = text.as_bytes().to_vec();
-    let encoded = hash_content(&bytes, Algorithm::Base64).unwrap();
+    let encoded = hash_content(&bytes, Algorithm::Base64);
 
     // Base64 of "hello"
     assert_eq!(encoded, "aGVsbG8=");
@@ -170,45 +170,46 @@ fn test_cli_write_conflicts_with_text() {
     assert!(result.is_err());
 }
 
-// ===== Unit Tests for read_file_contents function =====
+// ===== Unit Tests for hash_file function =====
 
 #[test]
-fn test_read_file_simple() {
+fn test_hash_file_simple() {
     let path = create_temp_file("test_read.txt", b"hello world");
-    let result = read_file_contents(path.to_str().unwrap());
+    let result = hash_file(path.to_str().unwrap(), Algorithm::Sha256);
 
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), b"hello world".to_vec());
+    assert_eq!(
+        result.unwrap(),
+        hash_content(b"hello world", Algorithm::Sha256)
+    );
     cleanup_temp_file(&path);
 }
 
 #[test]
-fn test_read_file_empty() {
+fn test_hash_file_empty() {
     let path = create_temp_file("test_empty.txt", b"");
-    let result = read_file_contents(path.to_str().unwrap());
+    let result = hash_file(path.to_str().unwrap(), Algorithm::Sha256);
 
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), Vec::<u8>::new());
+    assert_eq!(result.unwrap(), hash_content(b"", Algorithm::Sha256));
     cleanup_temp_file(&path);
 }
 
 #[test]
-fn test_read_file_not_found() {
-    let result = read_file_contents("nonexistent_file_12345.txt");
+fn test_hash_file_not_found() {
+    let error = hash_file("nonexistent_file_12345.txt", Algorithm::Sha256).unwrap_err();
 
-    assert!(result.is_err());
-    let error = result.unwrap_err();
-    assert!(error.contains("File not found"));
+    assert!(error.to_string().contains("File not found"));
 }
 
 #[test]
-fn test_read_file_binary() {
+fn test_hash_file_binary() {
     let binary_data = vec![0u8, 255, 127, 64];
     let path = create_temp_file("test_binary.bin", &binary_data);
-    let result = read_file_contents(path.to_str().unwrap());
+    let result = hash_file(path.to_str().unwrap(), Algorithm::Sha256);
 
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), binary_data);
+    assert_eq!(
+        result.unwrap(),
+        hash_content(&binary_data, Algorithm::Sha256)
+    );
     cleanup_temp_file(&path);
 }
 
@@ -715,7 +716,7 @@ fn test_cli_text_different_inputs_different_hashes() {
 fn test_hash_content_very_long_string() {
     let long_string = "a".repeat(10000);
     let bytes = long_string.as_bytes().to_vec();
-    let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha256);
 
     assert_eq!(hex.len(), 64);
     assert!(hex.chars().all(|c| c.is_ascii_hexdigit()));
@@ -725,7 +726,7 @@ fn test_hash_content_very_long_string() {
 fn test_hash_content_unicode_string() {
     let text = "Hello 世界 🌍";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha256);
 
     assert_eq!(hex.len(), 64);
     assert!(hex.chars().all(|c| c.is_ascii_hexdigit()));
@@ -735,7 +736,7 @@ fn test_hash_content_unicode_string() {
 fn test_hash_content_newlines_and_tabs() {
     let text = "line1\nline2\tcolumn2";
     let bytes = text.as_bytes().to_vec();
-    let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
+    let hex = hash_content(&bytes, Algorithm::Sha256);
 
     assert_eq!(hex.len(), 64);
 }
@@ -744,7 +745,7 @@ fn test_hash_content_newlines_and_tabs() {
 fn test_hash_content_base64_padding() {
     let text = "a"; // Results in base64 with padding
     let bytes = text.as_bytes().to_vec();
-    let encoded = hash_content(&bytes, Algorithm::Base64).unwrap();
+    let encoded = hash_content(&bytes, Algorithm::Base64);
 
     assert_eq!(encoded, "YQ==");
 }
@@ -753,7 +754,7 @@ fn test_hash_content_base64_padding() {
 fn test_hash_content_base64_no_padding() {
     let text = "abc"; // Results in base64 without padding
     let bytes = text.as_bytes().to_vec();
-    let encoded = hash_content(&bytes, Algorithm::Base64).unwrap();
+    let encoded = hash_content(&bytes, Algorithm::Base64);
 
     assert_eq!(encoded, "YWJj");
 }
@@ -761,7 +762,7 @@ fn test_hash_content_base64_no_padding() {
 #[test]
 fn test_hash_content_base64_with_special_bytes() {
     let data = vec![0u8, 1, 2, 3, 255, 254];
-    let encoded = hash_content(&data, Algorithm::Base64).unwrap();
+    let encoded = hash_content(&data, Algorithm::Base64);
 
     // Base64 encoding should be valid
     assert!(!encoded.is_empty());
@@ -772,8 +773,8 @@ fn test_hash_content_sha1_consistency() {
     let text = "sha1_test";
     let bytes = text.as_bytes().to_vec();
 
-    let hex1 = hash_content(&bytes, Algorithm::Sha1).unwrap();
-    let hex2 = hash_content(&bytes, Algorithm::Sha1).unwrap();
+    let hex1 = hash_content(&bytes, Algorithm::Sha1);
+    let hex2 = hash_content(&bytes, Algorithm::Sha1);
 
     assert_eq!(hex1, hex2);
     assert_eq!(hex1.len(), 40);
@@ -784,8 +785,8 @@ fn test_hash_content_md5_consistency() {
     let text = "md5_test";
     let bytes = text.as_bytes().to_vec();
 
-    let hex1 = hash_content(&bytes, Algorithm::Md5).unwrap();
-    let hex2 = hash_content(&bytes, Algorithm::Md5).unwrap();
+    let hex1 = hash_content(&bytes, Algorithm::Md5);
+    let hex2 = hash_content(&bytes, Algorithm::Md5);
 
     assert_eq!(hex1, hex2);
     assert_eq!(hex1.len(), 32);
@@ -798,7 +799,7 @@ fn test_hash_content_sha256_different_lengths() {
 
     for text in test_cases {
         let bytes = text.as_bytes().to_vec();
-        let hex = hash_content(&bytes, Algorithm::Sha256).unwrap();
+        let hex = hash_content(&bytes, Algorithm::Sha256);
         hashes.push(hex);
     }
 
@@ -811,24 +812,52 @@ fn test_hash_content_sha256_different_lengths() {
 }
 
 #[test]
-fn test_read_file_with_newlines() {
-    let path = create_temp_file("file_newlines.txt", b"line1\nline2\nline3\n");
-    let result = read_file_contents(path.to_str().unwrap());
+fn test_hash_file_with_newlines() {
+    let content = b"line1\nline2\nline3\n";
+    let path = create_temp_file("file_newlines.txt", content);
+    let result = hash_file(path.to_str().unwrap(), Algorithm::Sha256);
 
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), b"line1\nline2\nline3\n".to_vec());
+    assert_eq!(result.unwrap(), hash_content(content, Algorithm::Sha256));
     cleanup_temp_file(&path);
 }
 
 #[test]
-fn test_read_file_large() {
-    let large_content = vec![65u8; 1024 * 100]; // 100KB
+fn test_hash_file_large() {
+    let large_content = vec![65u8; 1024 * 100]; // 100KB, larger than one read buffer
     let path = create_temp_file("file_large.bin", &large_content);
-    let result = read_file_contents(path.to_str().unwrap());
+    let result = hash_file(path.to_str().unwrap(), Algorithm::Sha256);
 
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap().len(), 1024 * 100);
+    assert_eq!(
+        result.unwrap(),
+        hash_content(&large_content, Algorithm::Sha256)
+    );
     cleanup_temp_file(&path);
+}
+
+#[test]
+fn test_streamed_file_matches_in_memory_for_all_algorithms() {
+    let sizes = [0usize, 1, 2, 3, 1023, 65_535, 65_536, 65_537, 100_000];
+
+    for size in sizes {
+        let content: Vec<u8> = (0..size).map(|index| (index % 251) as u8).collect();
+        let path = create_temp_file(&format!("stream_{}.bin", size), &content);
+
+        for algorithm in [
+            Algorithm::Sha1,
+            Algorithm::Md5,
+            Algorithm::Sha256,
+            Algorithm::Sha512,
+            Algorithm::Base64,
+        ] {
+            assert_eq!(
+                hash_file(path.to_str().unwrap(), algorithm).unwrap(),
+                hash_content(&content, algorithm),
+                "size {size}, algorithm {algorithm}"
+            );
+        }
+
+        cleanup_temp_file(&path);
+    }
 }
 
 #[test]

@@ -2,66 +2,66 @@ use super::*;
 
 #[test]
 fn test_base64_known_vector_hello() {
-    assert_eq!(hash(b"hello").unwrap(), "aGVsbG8=");
+    assert_eq!(hash(b"hello"), "aGVsbG8=");
 }
 
 #[test]
 fn test_base64_known_vector_empty() {
-    assert_eq!(hash(b"").unwrap(), "");
+    assert_eq!(hash(b""), "");
 }
 
 #[test]
 fn test_base64_known_vector_f() {
-    assert_eq!(hash(b"f").unwrap(), "Zg==");
+    assert_eq!(hash(b"f"), "Zg==");
 }
 
 #[test]
 fn test_base64_known_vector_fo() {
-    assert_eq!(hash(b"fo").unwrap(), "Zm8=");
+    assert_eq!(hash(b"fo"), "Zm8=");
 }
 
 #[test]
 fn test_base64_known_vector_foo() {
-    assert_eq!(hash(b"foo").unwrap(), "Zm9v");
+    assert_eq!(hash(b"foo"), "Zm9v");
 }
 
 #[test]
 fn test_base64_known_vector_foob() {
-    assert_eq!(hash(b"foob").unwrap(), "Zm9vYg==");
+    assert_eq!(hash(b"foob"), "Zm9vYg==");
 }
 
 #[test]
 fn test_base64_known_vector_fooba() {
-    assert_eq!(hash(b"fooba").unwrap(), "Zm9vYmE=");
+    assert_eq!(hash(b"fooba"), "Zm9vYmE=");
 }
 
 #[test]
 fn test_base64_known_vector_foobar() {
-    assert_eq!(hash(b"foobar").unwrap(), "Zm9vYmFy");
+    assert_eq!(hash(b"foobar"), "Zm9vYmFy");
 }
 
 #[test]
 fn test_base64_binary_data() {
     let data = vec![0x00, 0x01, 0x02];
-    assert_eq!(hash(&data).unwrap(), "AAEC");
+    assert_eq!(hash(&data), "AAEC");
 }
 
 #[test]
 fn test_base64_all_zeros() {
     let data = vec![0x00, 0x00, 0x00];
-    assert_eq!(hash(&data).unwrap(), "AAAA");
+    assert_eq!(hash(&data), "AAAA");
 }
 
 #[test]
 fn test_base64_all_ones() {
     let data = vec![0xFF, 0xFF, 0xFF];
-    assert_eq!(hash(&data).unwrap(), "////");
+    assert_eq!(hash(&data), "////");
 }
 
 #[test]
 fn test_base64_unicode() {
-    let result = hash("hello世界".as_bytes()).unwrap();
-    assert!(result.len() > 0);
+    let result = hash("hello世界".as_bytes());
+    assert!(!result.is_empty());
     assert!(
         result
             .chars()

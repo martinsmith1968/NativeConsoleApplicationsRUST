@@ -1,5 +1,5 @@
 use clap::{ArgGroup, Parser};
-use std::fs;
+use std::fs::{self, File};
 use std::io::{self, Write};
 use std::path::Path;
 use std::process::ExitCode;
@@ -53,13 +53,23 @@ struct Args {
     version: Option<bool>,
 }
 
-fn read_file_contents(path: &str) -> Result<Vec<u8>, String> {
-    fs::read(path).map_err(|e| match e.kind() {
+/// Turn a file I/O error into a message that names the file and keeps the error kind.
+fn describe_file_error(path: &str, error: io::Error) -> io::Error {
+    let message = match error.kind() {
         io::ErrorKind::NotFound => format!("File not found: {}", path),
         io::ErrorKind::PermissionDenied => format!("Permission denied: {}", path),
         io::ErrorKind::InvalidData => format!("Invalid file data: {}", path),
-        _ => format!("Failed to read file '{}': {}", path, e),
-    })
+        _ => format!("Failed to read file '{}': {}", path, error),
+    };
+    io::Error::new(error.kind(), message)
+}
+
+/// Stream a file through the selected algorithm instead of reading it into memory.
+fn hash_file(path: &str, algorithm: Algorithm) -> io::Result<String> {
+    let mut file = File::open(path).map_err(|error| describe_file_error(path, error))?;
+    algorithm
+        .hash_reader(&mut file)
+        .map_err(|error| describe_file_error(path, error))
 }
 
 fn main() -> ExitCode {
@@ -76,22 +86,20 @@ fn main() -> ExitCode {
 }
 
 fn run(args: &Args) -> io::Result<()> {
-    let (identifier, content_bytes) = match (&args.text, &args.file) {
-        (Some(text), _) => (text.as_str(), text.as_bytes().to_vec()),
+    let (identifier, hash_output) = match (&args.text, &args.file) {
+        (Some(text), _) => (text.as_str(), hash_content(text.as_bytes(), args.algorithm)),
         (None, Some(file_path)) => {
             let identifier = Path::new(file_path)
                 .file_name()
                 .and_then(|s| s.to_str())
                 .unwrap_or(file_path);
-            let bytes = read_file_contents(file_path).map_err(io::Error::other)?;
-            (identifier, bytes)
+            (identifier, hash_file(file_path, args.algorithm)?)
         }
         (None, None) => {
             return Err(io::Error::other("provide either --text or --file"));
         }
     };
 
-    let hash_output = hash_content(&content_bytes, args.algorithm).map_err(io::Error::other)?;
     let output_line = format!("{} [{}] : {}", identifier, args.algorithm, hash_output);
 
     if args.write {
