@@ -6,7 +6,7 @@ use super::*;
 fn test_v4_uuid_generation_basic() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -28,7 +28,7 @@ fn test_v4_uuid_generation_basic() {
 fn test_v4_uuid_hyphenated_format() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -51,7 +51,7 @@ fn test_v4_uuid_hyphenated_format() {
 fn test_v4_uuid_non_hyphenated_format() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -75,7 +75,7 @@ fn test_v4_uuid_non_hyphenated_format() {
 fn test_v4_uuid_uppercase() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -99,7 +99,7 @@ fn test_v4_uuid_uppercase() {
 fn test_v4_uuid_lowercase() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -123,13 +123,13 @@ fn test_v4_uuid_lowercase() {
 fn test_v4_uuid_uniqueness() {
     let options1 = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid1 = generate_guid(options1);
     let options2 = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
     let uuid2 = generate_guid(options2);
 
@@ -141,7 +141,7 @@ fn test_v4_uuid_uniqueness() {
 fn test_v4_uuid_uppercase_non_hyphenated() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -169,7 +169,7 @@ fn test_v4_uuid_uppercase_non_hyphenated() {
 fn test_v6_uuid_generation_basic() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V6,
-        v6_seed: "1,2,3,4,5,6".to_string(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -196,7 +196,7 @@ fn test_v6_uuid_with_custom_seed_applies_correctly() {
     // Generate V6 UUID with specific seed
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V6,
-        v6_seed: "10,20,30,40,50,60".to_string(),
+        v6_seed: [10, 20, 30, 40, 50, 60],
     };
 
     let uuid = generate_guid(options);
@@ -219,7 +219,7 @@ fn test_v6_uuid_with_custom_seed_applies_correctly() {
 fn test_v6_uuid_with_default_seed() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V6,
-        v6_seed: "1,2,3,4,5,6".to_string(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -235,86 +235,43 @@ fn test_v6_uuid_with_default_seed() {
 }
 
 #[test]
-fn test_v6_uuid_with_empty_seed_uses_default_node() {
-    let options = GuidGenerateOptions {
-        guid_version: GuidVersionType::V6,
-        v6_seed: String::new(),
-    };
-
-    let uuid = generate_guid(options);
-    let node_bytes = uuid.as_bytes();
-
-    // When seed is empty, should use default node [1; 6]
-    assert_eq!(node_bytes[10], 1);
-    assert_eq!(node_bytes[11], 1);
-    assert_eq!(node_bytes[12], 1);
-    assert_eq!(node_bytes[13], 1);
-    assert_eq!(node_bytes[14], 1);
-    assert_eq!(node_bytes[15], 1);
+fn test_parse_v6_seed_accepts_six_values() {
+    assert_eq!(parse_v6_seed("1,2,3,4,5,6"), Ok([1, 2, 3, 4, 5, 6]));
 }
 
 #[test]
-fn test_v6_uuid_with_partial_seed_uses_default() {
-    let options = GuidGenerateOptions {
-        guid_version: GuidVersionType::V6,
-        v6_seed: "10,20,30".to_string(), // Only 3 values instead of 6
-    };
-
-    let uuid = generate_guid(options);
-    let node_bytes = uuid.as_bytes();
-
-    // When seed has fewer than 6 values, should use default node
-    assert_eq!(node_bytes[10], 1);
-    assert_eq!(node_bytes[11], 1);
-    assert_eq!(node_bytes[12], 1);
-    assert_eq!(node_bytes[13], 1);
-    assert_eq!(node_bytes[14], 1);
-    assert_eq!(node_bytes[15], 1);
+fn test_parse_v6_seed_empty_is_rejected() {
+    assert!(parse_v6_seed("").is_err());
 }
 
 #[test]
-fn test_v6_uuid_with_invalid_seed_uses_default() {
-    let options = GuidGenerateOptions {
-        guid_version: GuidVersionType::V6,
-        v6_seed: "abc,def,ghi,jkl,mno,pqr".to_string(), // Invalid values
-    };
-
-    let uuid = generate_guid(options);
-    let node_bytes = uuid.as_bytes();
-
-    // When seed contains invalid values, should use default node
-    assert_eq!(node_bytes[10], 1);
-    assert_eq!(node_bytes[11], 1);
-    assert_eq!(node_bytes[12], 1);
-    assert_eq!(node_bytes[13], 1);
-    assert_eq!(node_bytes[14], 1);
-    assert_eq!(node_bytes[15], 1);
+fn test_parse_v6_seed_partial_is_rejected() {
+    // Only 3 values instead of 6
+    assert!(parse_v6_seed("10,20,30").is_err());
 }
 
 #[test]
-fn test_v6_uuid_with_mixed_valid_invalid_seed_uses_default() {
-    let options = GuidGenerateOptions {
-        guid_version: GuidVersionType::V6,
-        v6_seed: "10,20,abc,40,50,60".to_string(), // Mix of valid and invalid
-    };
+fn test_parse_v6_seed_invalid_values_are_rejected() {
+    assert!(parse_v6_seed("abc,def,ghi,jkl,mno,pqr").is_err());
+}
 
-    let uuid = generate_guid(options);
-    let node_bytes = uuid.as_bytes();
+#[test]
+fn test_parse_v6_seed_mixed_valid_invalid_is_rejected() {
+    assert!(parse_v6_seed("10,20,abc,40,50,60").is_err());
+}
 
-    // When seed has any invalid values, should use default node
-    assert_eq!(node_bytes[10], 1);
-    assert_eq!(node_bytes[11], 1);
-    assert_eq!(node_bytes[12], 1);
-    assert_eq!(node_bytes[13], 1);
-    assert_eq!(node_bytes[14], 1);
-    assert_eq!(node_bytes[15], 1);
+#[test]
+fn test_cli_rejects_invalid_v6_seed() {
+    let result = Args::try_parse_from(["uuidgen", "--guid-v6-seed", "abc,def,ghi,jkl,mno,pqr"]);
+    assert!(result.is_err());
 }
 
 #[test]
 fn test_v6_uuid_seed_with_whitespace() {
+    let seed = parse_v6_seed(" 100 , 110 , 120 , 130 , 140 , 150 ").unwrap();
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V6,
-        v6_seed: " 100 , 110 , 120 , 130 , 140 , 150 ".to_string(),
+        v6_seed: seed,
     };
 
     let uuid = generate_guid(options);
@@ -335,7 +292,7 @@ fn test_v6_uuid_seed_with_whitespace() {
 fn test_v7_uuid_generation_basic() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V7,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -361,7 +318,7 @@ fn test_v7_uuid_generation_basic() {
 fn test_v7_uuid_version_field() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V7,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -535,7 +492,7 @@ fn test_multiple_uuid_generation_count_small() {
     for _ in 0..5 {
         options_list.push(GuidGenerateOptions {
             guid_version: GuidVersionType::V4,
-            v6_seed: String::new(),
+            v6_seed: [1, 2, 3, 4, 5, 6],
         });
     }
 
@@ -561,7 +518,7 @@ fn test_multiple_uuid_generation_count_large() {
     for _ in 0..100 {
         options_list.push(GuidGenerateOptions {
             guid_version: GuidVersionType::V4,
-            v6_seed: String::new(),
+            v6_seed: [1, 2, 3, 4, 5, 6],
         });
     }
 
@@ -581,7 +538,7 @@ fn test_multiple_uuid_generation_count_thousand() {
     for _ in 0..1000 {
         options_list.push(GuidGenerateOptions {
             guid_version: GuidVersionType::V4,
-            v6_seed: String::new(),
+            v6_seed: [1, 2, 3, 4, 5, 6],
         });
     }
 
@@ -600,7 +557,7 @@ fn test_multiple_uuid_generation_count_thousand() {
 fn test_format_combination_uppercase_hyphenated() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -626,7 +583,7 @@ fn test_format_combination_uppercase_hyphenated() {
 fn test_format_combination_lowercase_non_hyphenated() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -652,7 +609,7 @@ fn test_format_combination_lowercase_non_hyphenated() {
 fn test_format_combination_uppercase_non_hyphenated() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -678,7 +635,7 @@ fn test_format_combination_uppercase_non_hyphenated() {
 fn test_format_combination_lowercase_hyphenated() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -708,13 +665,13 @@ fn test_guid_generate_options_no_unnecessary_clones() {
     // doesn't trigger unnecessary cloning in the generate_guid function
     let options1 = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: "1,2,3,4,5,6".to_string(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid1 = generate_guid(options1);
     let options2 = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: "1,2,3,4,5,6".to_string(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
     let uuid2 = generate_guid(options2);
 
@@ -730,7 +687,7 @@ fn test_guid_version_matching_logic() {
     // Test V4 path
     let v4_options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
     let v4_uuid = generate_guid(v4_options);
     assert_eq!(v4_uuid.get_version_num(), 4);
@@ -738,7 +695,7 @@ fn test_guid_version_matching_logic() {
     // Test V6 path
     let v6_options = GuidGenerateOptions {
         guid_version: GuidVersionType::V6,
-        v6_seed: "1,2,3,4,5,6".to_string(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
     let v6_uuid = generate_guid(v6_options);
     assert_eq!(v6_uuid.get_version_num(), 6);
@@ -746,7 +703,7 @@ fn test_guid_version_matching_logic() {
     // Test V7 path
     let v7_options = GuidGenerateOptions {
         guid_version: GuidVersionType::V7,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
     let v7_uuid = generate_guid(v7_options);
     assert_eq!(v7_uuid.get_version_num(), 7);
@@ -769,7 +726,7 @@ fn test_format_output_accepts_str_references() {
 fn test_format_guid_accepts_str_references() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
-        v6_seed: String::new(),
+        v6_seed: [1, 2, 3, 4, 5, 6],
     };
 
     let uuid = generate_guid(options);
@@ -797,7 +754,7 @@ fn test_end_to_end_v4_simple() {
         non_hyphenated: false,
         uppercase: false,
         output_template: "{uuid}".to_string(),
-        guid_v6_seed: "1,2,3,4,5,6".to_string(),
+        guid_v6_seed: [1, 2, 3, 4, 5, 6],
         help: None,
         version: None,
     };
@@ -824,7 +781,7 @@ fn test_end_to_end_v6_with_seed() {
         non_hyphenated: false,
         uppercase: false,
         output_template: "{uuid}".to_string(),
-        guid_v6_seed: "100,101,102,103,104,105".to_string(),
+        guid_v6_seed: [100, 101, 102, 103, 104, 105],
         help: None,
         version: None,
     };
@@ -846,7 +803,7 @@ fn test_end_to_end_nanoid_generation() {
         non_hyphenated: false,
         uppercase: false,
         output_template: "{uuid}".to_string(),
-        guid_v6_seed: String::new(),
+        guid_v6_seed: [1, 2, 3, 4, 5, 6],
         help: None,
         version: None,
     };
@@ -872,7 +829,7 @@ fn test_end_to_end_template_with_sequence() {
         non_hyphenated: false,
         uppercase: false,
         output_template: "ID-{sequence}-{uuid}".to_string(),
-        guid_v6_seed: String::new(),
+        guid_v6_seed: [1, 2, 3, 4, 5, 6],
         help: None,
         version: None,
     };
@@ -888,103 +845,28 @@ fn test_end_to_end_template_with_sequence() {
 // ===== Additional Edge Cases =====
 
 #[test]
-fn test_v6_uuid_seed_with_overflow_values() {
-    // Values > 255 should wrap or be truncated by u8 parsing
-    let options = GuidGenerateOptions {
-        guid_version: GuidVersionType::V6,
-        v6_seed: "256,300,1000,500,400,350".to_string(),
-    };
-
-    let uuid = generate_guid(options);
-    let node_bytes = uuid.as_bytes();
-
-    // All values will fail to parse as u8, so default node [1; 6] is used
-    assert_eq!(node_bytes[10], 1);
-    assert_eq!(node_bytes[11], 1);
-    assert_eq!(node_bytes[12], 1);
-    assert_eq!(node_bytes[13], 1);
-    assert_eq!(node_bytes[14], 1);
-    assert_eq!(node_bytes[15], 1);
+fn test_parse_v6_seed_rejects_values_above_255() {
+    assert!(parse_v6_seed("256,300,1000,500,400,350").is_err());
 }
 
 #[test]
-fn test_v6_uuid_seed_with_extra_commas_prefix() {
-    let options = GuidGenerateOptions {
-        guid_version: GuidVersionType::V6,
-        v6_seed: ",,,10,20,30,40,50,60".to_string(),
-    };
-
-    let uuid = generate_guid(options);
-    let node_bytes = uuid.as_bytes();
-
-    // Leading commas create empty strings that fail parse
-    // We get 3 empty (fail) + 6 valid = 9 total, but seed_values has 6 valid
-    // So the seed IS applied!
-    assert_eq!(node_bytes[10], 10);
-    assert_eq!(node_bytes[11], 20);
-    assert_eq!(node_bytes[12], 30);
-    assert_eq!(node_bytes[13], 40);
-    assert_eq!(node_bytes[14], 50);
-    assert_eq!(node_bytes[15], 60);
+fn test_parse_v6_seed_rejects_leading_commas() {
+    assert!(parse_v6_seed(",,,10,20,30,40,50,60").is_err());
 }
 
 #[test]
-fn test_v6_uuid_seed_with_extra_commas_suffix() {
-    let options = GuidGenerateOptions {
-        guid_version: GuidVersionType::V6,
-        v6_seed: "10,20,30,40,50,60,,,".to_string(),
-    };
-
-    let uuid = generate_guid(options);
-    let node_bytes = uuid.as_bytes();
-
-    // Trailing empty strings will be added to seed_values as parse failures
-    // But we have 6 valid values first, so they should be used
-    assert_eq!(node_bytes[10], 10);
-    assert_eq!(node_bytes[11], 20);
-    assert_eq!(node_bytes[12], 30);
-    assert_eq!(node_bytes[13], 40);
-    assert_eq!(node_bytes[14], 50);
-    assert_eq!(node_bytes[15], 60);
+fn test_parse_v6_seed_rejects_trailing_commas() {
+    assert!(parse_v6_seed("10,20,30,40,50,60,,,").is_err());
 }
 
 #[test]
-fn test_v6_uuid_seed_with_embedded_commas() {
-    let options = GuidGenerateOptions {
-        guid_version: GuidVersionType::V6,
-        v6_seed: "10,,20,,30,,40,,50,,60".to_string(),
-    };
-
-    let uuid = generate_guid(options);
-    let node_bytes = uuid.as_bytes();
-
-    // Embedded empty strings fail parse, so we get 6 valid + 5 invalid = 11 total
-    // Since we have exactly 6 valid values, they should be used
-    assert_eq!(node_bytes[10], 10);
-    assert_eq!(node_bytes[11], 20);
-    assert_eq!(node_bytes[12], 30);
-    assert_eq!(node_bytes[13], 40);
-    assert_eq!(node_bytes[14], 50);
-    assert_eq!(node_bytes[15], 60);
+fn test_parse_v6_seed_rejects_embedded_commas() {
+    assert!(parse_v6_seed("10,,20,,30,,40,,50,,60").is_err());
 }
 
 #[test]
-fn test_v6_uuid_seed_with_more_than_six_values() {
-    let options = GuidGenerateOptions {
-        guid_version: GuidVersionType::V6,
-        v6_seed: "10,20,30,40,50,60,70,80,90".to_string(),
-    };
-
-    let uuid = generate_guid(options);
-    let node_bytes = uuid.as_bytes();
-
-    // Should use default node because seed_values.len() != 6 (it's 9)
-    assert_eq!(node_bytes[10], 1);
-    assert_eq!(node_bytes[11], 1);
-    assert_eq!(node_bytes[12], 1);
-    assert_eq!(node_bytes[13], 1);
-    assert_eq!(node_bytes[14], 1);
-    assert_eq!(node_bytes[15], 1);
+fn test_parse_v6_seed_rejects_more_than_six_values() {
+    assert!(parse_v6_seed("10,20,30,40,50,60,70,80,90").is_err());
 }
 
 #[test]
@@ -1007,7 +889,7 @@ fn test_end_to_end_full_pipeline_uppercase_non_hyphenated_template() {
         non_hyphenated: true,
         uppercase: true,
         output_template: "PREFIX-{uuid}-SUFFIX".to_string(),
-        guid_v6_seed: String::new(),
+        guid_v6_seed: [1, 2, 3, 4, 5, 6],
         help: None,
         version: None,
     };
@@ -1031,21 +913,21 @@ fn test_end_to_end_full_pipeline_uppercase_non_hyphenated_template() {
 }
 
 #[test]
-fn test_v6_uuid_seed_negative_values() {
+fn test_parse_v6_seed_rejects_negative_values() {
     // Negative values should fail parsing as u8
-    let options = GuidGenerateOptions {
-        guid_version: GuidVersionType::V6,
-        v6_seed: "-1,-2,-3,-4,-5,-6".to_string(),
-    };
+    assert!(parse_v6_seed("-1,-2,-3,-4,-5,-6").is_err());
+}
 
-    let uuid = generate_guid(options);
-    let node_bytes = uuid.as_bytes();
+#[test]
+fn test_validate_output_template_accepts_placeholders() {
+    assert!(validate_output_template("{uuid}").is_ok());
+    assert!(validate_output_template("{sequence}: {uuid}").is_ok());
+    assert!(validate_output_template("").is_ok());
+    assert!(validate_output_template("plain text").is_ok());
+}
 
-    // All negative values fail to parse, default node used
-    assert_eq!(node_bytes[10], 1);
-    assert_eq!(node_bytes[11], 1);
-    assert_eq!(node_bytes[12], 1);
-    assert_eq!(node_bytes[13], 1);
-    assert_eq!(node_bytes[14], 1);
-    assert_eq!(node_bytes[15], 1);
+#[test]
+fn test_validate_output_template_rejects_unknown_placeholder() {
+    assert!(validate_output_template("{invalid}").is_err());
+    assert!(validate_output_template("UUID: {uuid").is_err());
 }

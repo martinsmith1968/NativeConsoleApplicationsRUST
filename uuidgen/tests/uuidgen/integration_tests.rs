@@ -100,17 +100,15 @@ fn test_cli_v6_with_custom_seed() {
 }
 
 #[test]
-fn test_cli_v6_with_invalid_seed_shows_warning() {
+fn test_cli_v6_with_invalid_seed_is_rejected() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
     cmd.arg("--guid-version")
         .arg("v6")
         .arg("--guid-v6-seed")
         .arg("abc,def,ghi,jkl,mno,pqr")
         .assert()
-        .success()
-        .stderr(predicate::str::contains(
-            "Warning: unable to use seed values",
-        ));
+        .failure()
+        .stderr(predicate::str::contains("is not a valid byte value"));
 }
 
 // ===== UUID V7 CLI Tests =====
@@ -232,13 +230,14 @@ fn test_cli_template_with_both_placeholders() {
 }
 
 #[test]
-fn test_cli_template_invalid_placeholder_shows_error() {
+fn test_cli_template_invalid_placeholder_shows_error_once() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
     cmd.arg("--output-template")
         .arg("{invalid}")
         .assert()
-        .success()
-        .stderr(predicate::str::contains("Error: Invalid output template"));
+        .failure()
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::contains("Error: Invalid output template").count(1));
 }
 
 // ===== Short Option Tests =====
@@ -349,4 +348,31 @@ fn test_cli_version_exit_code() {
 fn test_cli_invalid_arg_exit_code() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
     cmd.arg("--invalid-option").assert().failure();
+}
+
+#[test]
+fn test_cli_writes_to_closed_pipe_without_panicking() {
+    use std::process::{Command as StdCommand, Stdio};
+
+    let mut child = StdCommand::new(env!("CARGO_BIN_EXE_uuidgen"))
+        .args(["--count", "100000"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("failed to start uuidgen");
+
+    // Close the read end of the pipe before the child can write everything.
+    drop(child.stdout.take());
+
+    let output = child
+        .wait_with_output()
+        .expect("failed to wait for uuidgen");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        output.status.success(),
+        "expected success on a closed pipe, got {:?}: {}",
+        output.status,
+        stderr
+    );
+    assert!(!stderr.contains("panicked"), "stderr was: {}", stderr);
 }
