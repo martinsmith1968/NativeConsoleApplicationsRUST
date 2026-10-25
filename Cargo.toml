@@ -3,6 +3,7 @@ members  = [
     "bannertext",
     "hashcalc",
     "printformat",
+    "test-support",
     "uuidgen",
 ]
 resolver = "2"

@@ -27,6 +27,7 @@ version  = "1.23.1"
 features = [ "v4", "v6", "v7" ]
 
 [dev-dependencies]
-assert_cmd = "2.2.2"
-predicates = "3.1.4"
-regex = "1.12.3"
+assert_cmd   = "2.2.2"
+predicates   = "3.1.4"
+regex        = "1.12.3"
+test-support = { path = "../test-support" }

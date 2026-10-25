@@ -1,0 +1,6 @@
+[package]
+name        = "test-support"
+version     = "0.1.0"
+edition     = "2024"
+description = "Shared helpers for the expected-output integration tests"
+publish     = false
