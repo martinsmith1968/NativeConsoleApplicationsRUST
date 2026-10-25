@@ -24,7 +24,7 @@ build-print = "1.0.1"
 
 [dependencies.uuid]
 version  = "1.23.1"
-features = [ "v4", "v5", "v6", "v7" ]
+features = [ "v4", "v6", "v7" ]
 
 [dev-dependencies]
 assert_cmd = "2.2.2"
