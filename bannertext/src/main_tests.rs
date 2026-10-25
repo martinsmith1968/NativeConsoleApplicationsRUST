@@ -1,21 +1,7 @@
 use super::*;
 
 fn default_banner(texts: &[&str]) -> String {
-    generate_banner(
-        texts,
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
-    )
+    generate_banner(texts, &BannerOptions::default())
 }
 
 // ===== Default Banner Tests =====
@@ -52,18 +38,10 @@ fn test_text_line_correct_format() {
 fn test_min_total_length_expansion() {
     let result = generate_banner(
         &["Hello World"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        80,
-        0,
+        &BannerOptions {
+            min_total_length: 80,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     assert_eq!(lines[0].len(), 80);
@@ -79,18 +57,10 @@ fn test_min_total_length_no_effect_when_smaller() {
     // min=5 is smaller than natural 19, so no change
     let result = generate_banner(
         &["Hello World"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        5,
-        0,
+        &BannerOptions {
+            min_total_length: 5,
+            ..Default::default()
+        },
     );
     let first_line = result.lines().next().unwrap();
     assert_eq!(first_line.len(), 19);
@@ -102,18 +72,11 @@ fn test_min_total_length_no_effect_when_smaller() {
 fn test_center_alignment() {
     let result = generate_banner(
         &["Hello World"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Center,
-        80,
-        0,
+        &BannerOptions {
+            text_alignment: TextAlignment::Center,
+            min_total_length: 80,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     let text_line = lines[1];
@@ -132,18 +95,11 @@ fn test_center_alignment() {
 fn test_right_alignment() {
     let result = generate_banner(
         &["Hello World"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Right,
-        80,
-        0,
+        &BannerOptions {
+            text_alignment: TextAlignment::Right,
+            min_total_length: 80,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     let text_line = lines[1];
@@ -156,18 +112,10 @@ fn test_right_alignment() {
 fn test_left_alignment_default() {
     let result = generate_banner(
         &["Hello World"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        80,
-        0,
+        &BannerOptions {
+            min_total_length: 80,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     let text_line = lines[1];
@@ -181,18 +129,10 @@ fn test_left_alignment_default() {
 fn test_custom_header_char() {
     let result = generate_banner(
         &["Test"],
-        '#',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            header_line_char: '#',
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     assert!(lines[0].chars().all(|c| c == '#'));
@@ -203,18 +143,10 @@ fn test_custom_header_char() {
 fn test_custom_footer_char() {
     let result = generate_banner(
         &["Test"],
-        '*',
-        1,
-        '-',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            footer_line_char: '-',
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     assert!(lines[0].chars().all(|c| c == '*'));
@@ -225,18 +157,10 @@ fn test_custom_footer_char() {
 fn test_custom_text_line_char() {
     let result = generate_banner(
         &["Test"],
-        '*',
-        1,
-        '*',
-        1,
-        '=',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            text_line_char: '=',
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     assert!(lines[1].starts_with("==  "));
@@ -249,18 +173,13 @@ fn test_custom_text_line_char() {
 fn test_different_prefix_suffix_counts() {
     let result = generate_banner(
         &["Hi"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        3,
-        3,
-        1,
-        1,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            title_prefix_count: 3,
+            title_suffix_count: 3,
+            title_prefix_gap_size: 1,
+            title_suffix_gap_size: 1,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     // natural = 3+1+2+1+3 = 10
@@ -273,18 +192,11 @@ fn test_different_prefix_suffix_counts() {
 fn test_zero_prefix_count() {
     let result = generate_banner(
         &["Hi"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        0,
-        0,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            title_prefix_count: 0,
+            title_suffix_count: 0,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     // natural = 0+2+2+2+0 = 6
@@ -298,18 +210,11 @@ fn test_zero_prefix_count() {
 fn test_different_gap_sizes() {
     let result = generate_banner(
         &["Hi"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        4,
-        4,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            title_prefix_gap_size: 4,
+            title_suffix_gap_size: 4,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     // natural = 2+4+2+4+2 = 14
@@ -322,18 +227,11 @@ fn test_different_gap_sizes() {
 fn test_zero_gap_sizes() {
     let result = generate_banner(
         &["Hi"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        0,
-        0,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            title_prefix_gap_size: 0,
+            title_suffix_gap_size: 0,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     // natural = 2+0+2+0+2 = 6
@@ -347,18 +245,10 @@ fn test_zero_gap_sizes() {
 fn test_max_total_length_truncation() {
     let result = generate_banner(
         &["Hello World"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        15,
+        &BannerOptions {
+            max_total_length: 15,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     // max=15, prefix_total=4, suffix_total=4, text_area=7
@@ -372,18 +262,10 @@ fn test_max_total_length_truncation() {
 fn test_max_length_smaller_than_natural() {
     let result = generate_banner(
         &["Hello World"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        10,
+        &BannerOptions {
+            max_total_length: 10,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     // max=10, prefix_total=4, suffix_total=4, text_area=2
@@ -395,21 +277,7 @@ fn test_max_length_smaller_than_natural() {
 
 #[test]
 fn test_empty_text() {
-    let result = generate_banner(
-        &[""],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
-    );
+    let result = generate_banner(&[""], &BannerOptions::default());
     let lines: Vec<&str> = result.lines().collect();
     // natural = 2+2+0+2+2 = 8
     assert_eq!(lines[0].len(), 8);
@@ -422,18 +290,10 @@ fn test_empty_text() {
 fn test_multiple_header_lines() {
     let result = generate_banner(
         &["Hi"],
-        '*',
-        3,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            header_line_count: 3,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     assert_eq!(lines.len(), 5); // 3 header + 1 text + 1 footer
@@ -448,18 +308,10 @@ fn test_multiple_header_lines() {
 fn test_multiple_footer_lines() {
     let result = generate_banner(
         &["Hi"],
-        '*',
-        1,
-        '*',
-        3,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            footer_line_count: 3,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     assert_eq!(lines.len(), 5); // 1 header + 1 text + 3 footer
@@ -476,18 +328,10 @@ fn test_multiple_footer_lines() {
 fn test_zero_header_lines() {
     let result = generate_banner(
         &["Hi"],
-        '*',
-        0,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            header_line_count: 0,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     assert_eq!(lines.len(), 2); // 0 header + 1 text + 1 footer
@@ -499,18 +343,10 @@ fn test_zero_header_lines() {
 fn test_zero_footer_lines() {
     let result = generate_banner(
         &["Hi"],
-        '*',
-        1,
-        '*',
-        0,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            footer_line_count: 0,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     assert_eq!(lines.len(), 2); // 1 header + 1 text + 0 footer
@@ -522,18 +358,11 @@ fn test_zero_footer_lines() {
 fn test_zero_header_and_footer_lines() {
     let result = generate_banner(
         &["Hi"],
-        '*',
-        0,
-        '*',
-        0,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            header_line_count: 0,
+            footer_line_count: 0,
+            ..Default::default()
+        },
     );
     let lines: Vec<&str> = result.lines().collect();
     assert_eq!(lines.len(), 1);
@@ -545,21 +374,7 @@ fn test_zero_header_and_footer_lines() {
 #[test]
 fn test_multi_text_two_equal_length() {
     // "Hello" and "World" are both 5 chars → natural = prefix(4) + 5 + suffix(4) = 13
-    let result = generate_banner(
-        &["Hello", "World"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
-    );
+    let result = generate_banner(&["Hello", "World"], &BannerOptions::default());
     let lines: Vec<&str> = result.lines().collect();
     assert_eq!(lines.len(), 4); // 1 header + 2 text + 1 footer
     assert_eq!(lines[0].len(), 13);
@@ -571,21 +386,7 @@ fn test_multi_text_two_equal_length() {
 #[test]
 fn test_multi_text_second_longer() {
     // "Hi" (2) and "Hello" (5) → width driven by "Hello", natural = 13
-    let result = generate_banner(
-        &["Hi", "Hello"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
-    );
+    let result = generate_banner(&["Hi", "Hello"], &BannerOptions::default());
     let lines: Vec<&str> = result.lines().collect();
     assert_eq!(lines.len(), 4);
     assert_eq!(lines[0].len(), 13);
@@ -601,21 +402,7 @@ fn test_multi_text_second_longer() {
 #[test]
 fn test_multi_text_first_longer() {
     // "Hello" (5) and "Hi" (2) → width driven by "Hello", natural = 13
-    let result = generate_banner(
-        &["Hello", "Hi"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
-    );
+    let result = generate_banner(&["Hello", "Hi"], &BannerOptions::default());
     let lines: Vec<&str> = result.lines().collect();
     assert_eq!(lines.len(), 4);
     assert_eq!(lines[0].len(), 13);
@@ -631,21 +418,7 @@ fn test_multi_text_first_longer() {
 #[test]
 fn test_multi_text_three_texts() {
     // "A" (1), "BB" (2), "CCC" (3) → width driven by "CCC", natural = 4+3+4 = 11
-    let result = generate_banner(
-        &["A", "BB", "CCC"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
-    );
+    let result = generate_banner(&["A", "BB", "CCC"], &BannerOptions::default());
     let lines: Vec<&str> = result.lines().collect();
     assert_eq!(lines.len(), 5); // 1 header + 3 text + 1 footer
     assert_eq!(lines[0].len(), 11);
@@ -664,21 +437,7 @@ fn test_multi_text_three_texts() {
 #[test]
 fn test_multi_text_with_empty_entry() {
     // "Hello" (5) and "" (0) → width driven by "Hello", natural = 13
-    let result = generate_banner(
-        &["Hello", ""],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
-    );
+    let result = generate_banner(&["Hello", ""], &BannerOptions::default());
     let lines: Vec<&str> = result.lines().collect();
     assert_eq!(lines.len(), 4);
     assert_eq!(lines[0].len(), 13);
@@ -691,21 +450,7 @@ fn test_multi_text_with_empty_entry() {
 #[test]
 fn test_single_text_slice_matches_original_behaviour() {
     // Regression: single-element slice should produce same output as before
-    let result = generate_banner(
-        &["Hello World"],
-        '*',
-        1,
-        '*',
-        1,
-        '*',
-        2,
-        2,
-        2,
-        2,
-        TextAlignment::Left,
-        0,
-        0,
-    );
+    let result = generate_banner(&["Hello World"], &BannerOptions::default());
     let lines: Vec<&str> = result.lines().collect();
     assert_eq!(lines.len(), 3);
     assert_eq!(lines[0], "*******************");
@@ -772,21 +517,63 @@ fn test_cli_accepts_max_without_min() {
 }
 
 #[test]
+fn test_text_alignment_defaults_to_left() {
+    assert_eq!(TextAlignment::default(), TextAlignment::Left);
+    assert_eq!(TextAlignment::default().to_string(), "Left");
+    assert_eq!(TextAlignment::Right.to_string(), "Right");
+
+    let args = parse_args(&["text"]).unwrap();
+    assert_eq!(args.text_alignment, TextAlignment::Left);
+}
+
+#[test]
+fn test_banner_options_default_matches_cli_defaults() {
+    let args = parse_args(&["text"]).unwrap();
+
+    assert_eq!(BannerOptions::from_args(&args), BannerOptions::default());
+}
+
+#[test]
+fn test_banner_options_from_args_copies_every_field() {
+    let args = parse_args(&[
+        "text", "-H", "#", "-n", "3", "-F", "=", "-N", "4", "-L", "+", "-p", "5", "-s", "6", "-P",
+        "7", "-S", "8", "-a", "Right", "-m", "20", "-M", "40",
+    ])
+    .unwrap();
+
+    let options = BannerOptions::from_args(&args);
+
+    assert_eq!(
+        options,
+        BannerOptions {
+            header_line_char: '#',
+            header_line_count: 3,
+            footer_line_char: '=',
+            footer_line_count: 4,
+            text_line_char: '+',
+            title_prefix_count: 5,
+            title_suffix_count: 6,
+            title_prefix_gap_size: 7,
+            title_suffix_gap_size: 8,
+            text_alignment: TextAlignment::Right,
+            min_total_length: 20,
+            max_total_length: 40,
+        }
+    );
+}
+
+#[test]
 fn test_max_affix_sizes_produce_expected_width() {
     let result = generate_banner(
         &["X"],
-        '*',
-        0,
-        '*',
-        1,
-        '*',
-        MAX_AFFIX_SIZE,
-        MAX_AFFIX_SIZE,
-        MAX_AFFIX_SIZE,
-        MAX_AFFIX_SIZE,
-        TextAlignment::Left,
-        0,
-        0,
+        &BannerOptions {
+            header_line_count: 0,
+            title_prefix_count: MAX_AFFIX_SIZE,
+            title_suffix_count: MAX_AFFIX_SIZE,
+            title_prefix_gap_size: MAX_AFFIX_SIZE,
+            title_suffix_gap_size: MAX_AFFIX_SIZE,
+            ..Default::default()
+        },
     );
     let line = result.lines().next().unwrap();
     let expected = (MAX_AFFIX_SIZE * 4) as usize + 1;

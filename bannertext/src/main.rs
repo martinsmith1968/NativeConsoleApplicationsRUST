@@ -19,12 +19,24 @@ fn parse_single_char(s: &str) -> Result<char, String> {
     }
 }
 
-#[derive(clap::ValueEnum, Clone, Debug, PartialEq, Copy)]
+#[derive(clap::ValueEnum, Clone, Debug, PartialEq, Eq, Copy, Default)]
 #[clap(rename_all = "PascalCase")]
 pub enum TextAlignment {
+    #[default]
     Left,
     Right,
     Center,
+}
+
+impl std::fmt::Display for TextAlignment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            TextAlignment::Left => "Left",
+            TextAlignment::Right => "Right",
+            TextAlignment::Center => "Center",
+        };
+        f.write_str(name)
+    }
 }
 
 /// Display a Text Banner in the console
@@ -112,7 +124,7 @@ struct Args {
     title_suffix_gap_size: u32,
 
     /// Set Text Alignment
-    #[arg(short = 'a', long, default_value = "Left")]
+    #[arg(short = 'a', long, default_value_t = TextAlignment::Left)]
     text_alignment: TextAlignment,
 
     /// Set Minimum Total line length
@@ -142,37 +154,78 @@ struct Args {
     version: Option<bool>,
 }
 
-pub fn generate_banner(
-    texts: &[&str],
-    header_line_char: char,
-    header_line_count: u32,
-    footer_line_char: char,
-    footer_line_count: u32,
-    text_line_char: char,
-    title_prefix_count: u32,
-    title_suffix_count: u32,
-    title_prefix_gap_size: u32,
-    title_suffix_gap_size: u32,
-    text_alignment: TextAlignment,
-    min_total_length: u32,
-    max_total_length: u32,
-) -> String {
-    let prefix_chars: String = std::iter::repeat(text_line_char)
-        .take(title_prefix_count as usize)
-        .collect();
-    let prefix_gap: String = std::iter::repeat(' ')
-        .take(title_prefix_gap_size as usize)
-        .collect();
-    let suffix_gap: String = std::iter::repeat(' ')
-        .take(title_suffix_gap_size as usize)
-        .collect();
-    let suffix_chars: String = std::iter::repeat(text_line_char)
-        .take(title_suffix_count as usize)
-        .collect();
+/// Every setting that controls the generated banner.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BannerOptions {
+    pub header_line_char: char,
+    pub header_line_count: u32,
+    pub footer_line_char: char,
+    pub footer_line_count: u32,
+    pub text_line_char: char,
+    pub title_prefix_count: u32,
+    pub title_suffix_count: u32,
+    pub title_prefix_gap_size: u32,
+    pub title_suffix_gap_size: u32,
+    pub text_alignment: TextAlignment,
+    pub min_total_length: u32,
+    pub max_total_length: u32,
+}
+
+impl Default for BannerOptions {
+    fn default() -> Self {
+        Self {
+            header_line_char: '*',
+            header_line_count: 1,
+            footer_line_char: '*',
+            footer_line_count: 1,
+            text_line_char: '*',
+            title_prefix_count: 2,
+            title_suffix_count: 2,
+            title_prefix_gap_size: 2,
+            title_suffix_gap_size: 2,
+            text_alignment: TextAlignment::Left,
+            min_total_length: 0,
+            max_total_length: 0,
+        }
+    }
+}
+
+impl BannerOptions {
+    fn from_args(args: &Args) -> Self {
+        Self {
+            header_line_char: args.header_line_char,
+            header_line_count: args.header_line_count,
+            footer_line_char: args.footer_line_char,
+            footer_line_count: args.footer_line_count,
+            text_line_char: args.text_line_char,
+            title_prefix_count: args.title_prefix_count,
+            title_suffix_count: args.title_suffix_count,
+            title_prefix_gap_size: args.title_prefix_gap_size,
+            title_suffix_gap_size: args.title_suffix_gap_size,
+            text_alignment: args.text_alignment,
+            min_total_length: args.min_total_length,
+            max_total_length: args.max_total_length,
+        }
+    }
+}
+
+pub fn generate_banner(texts: &[&str], options: &BannerOptions) -> String {
+    let prefix_chars = options
+        .text_line_char
+        .to_string()
+        .repeat(options.title_prefix_count as usize);
+    let prefix_gap = " ".repeat(options.title_prefix_gap_size as usize);
+    let suffix_gap = " ".repeat(options.title_suffix_gap_size as usize);
+    let suffix_chars = options
+        .text_line_char
+        .to_string()
+        .repeat(options.title_suffix_count as usize);
 
     // Use usize arithmetic with saturation so the sums cannot overflow
-    let prefix_total = (title_prefix_count as usize).saturating_add(title_prefix_gap_size as usize);
-    let suffix_total = (title_suffix_count as usize).saturating_add(title_suffix_gap_size as usize);
+    let prefix_total = (options.title_prefix_count as usize)
+        .saturating_add(options.title_prefix_gap_size as usize);
+    let suffix_total = (options.title_suffix_count as usize)
+        .saturating_add(options.title_suffix_gap_size as usize);
 
     let max_text_len = texts.iter().map(|t| t.chars().count()).max().unwrap_or(0);
     let natural_length = prefix_total
@@ -180,32 +233,28 @@ pub fn generate_banner(
         .saturating_add(suffix_total);
 
     let mut total_length = natural_length;
-    if min_total_length > 0 {
-        total_length = total_length.max(min_total_length as usize);
+    if options.min_total_length > 0 {
+        total_length = total_length.max(options.min_total_length as usize);
     }
-    if max_total_length > 0 {
-        total_length = total_length.min(max_total_length as usize);
+    if options.max_total_length > 0 {
+        total_length = total_length.min(options.max_total_length as usize);
     }
 
     let affix_total = prefix_total.saturating_add(suffix_total);
     let text_area_width = total_length.saturating_sub(affix_total);
 
-    let header_line: String = std::iter::repeat(header_line_char)
-        .take(total_length)
-        .collect();
-    let footer_line: String = std::iter::repeat(footer_line_char)
-        .take(total_length)
-        .collect();
+    let header_line = options.header_line_char.to_string().repeat(total_length);
+    let footer_line = options.footer_line_char.to_string().repeat(total_length);
 
     let mut lines: Vec<String> = Vec::new();
 
-    for _ in 0..header_line_count {
+    for _ in 0..options.header_line_count {
         lines.push(header_line.clone());
     }
 
     for text in texts {
         let display_text: String = text.chars().take(text_area_width).collect();
-        let formatted_text = match text_alignment {
+        let formatted_text = match options.text_alignment {
             TextAlignment::Left => format!("{:<width$}", display_text, width = text_area_width),
             TextAlignment::Right => format!("{:>width$}", display_text, width = text_area_width),
             TextAlignment::Center => format!("{:^width$}", display_text, width = text_area_width),
@@ -216,7 +265,7 @@ pub fn generate_banner(
         ));
     }
 
-    for _ in 0..footer_line_count {
+    for _ in 0..options.footer_line_count {
         lines.push(footer_line.clone());
     }
 
@@ -252,21 +301,7 @@ fn run(args: &Args) -> io::Result<()> {
     validate_args(args).map_err(io::Error::other)?;
 
     let text_refs: Vec<&str> = args.message_text.iter().map(String::as_str).collect();
-    let banner = generate_banner(
-        &text_refs,
-        args.header_line_char,
-        args.header_line_count,
-        args.footer_line_char,
-        args.footer_line_count,
-        args.text_line_char,
-        args.title_prefix_count,
-        args.title_suffix_count,
-        args.title_prefix_gap_size,
-        args.title_suffix_gap_size,
-        args.text_alignment,
-        args.min_total_length,
-        args.max_total_length,
-    );
+    let banner = generate_banner(&text_refs, &BannerOptions::from_args(args));
 
     let stdout = io::stdout();
     let mut handle = stdout.lock();
