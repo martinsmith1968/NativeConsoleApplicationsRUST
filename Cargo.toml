@@ -1,6 +1,7 @@
 [workspace]
 members  = [
     "bannertext",
+    "build-support",
     "hashcalc",
     "printformat",
     "test-support",

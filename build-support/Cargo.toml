@@ -1,0 +1,13 @@
+[package]
+name        = "build-support"
+version     = "0.1.0"
+edition     = "2024"
+description = "Shared build script logic for the console applications"
+publish     = false
+
+[dependencies]
+build-print = "1.0.1"
+chrono      = "0.4"
+
+[target.'cfg(windows)'.dependencies]
+winresource = "0.1.31"

@@ -19,8 +19,7 @@ sprintf = "0.4"
 strfmt = "0.2.5"
 
 [build-dependencies]
-winresource = "0.1.31"
-build-print = "1.0.1"
+build-support = { path = "../build-support" }
 
 [dev-dependencies]
 assert_cmd   = "2.2.2"
