@@ -33,7 +33,7 @@ Tick each item as it is completed.
 
 ## Repository and documentation
 
-- [ ] Make the project name consistent (`PROJECT_NAME` in the workflow, the repository name, the README title)
+- [x] Make the project name consistent (`PROJECT_NAME` in the workflow, the repository name, the README title)
 - [ ] Fix README typos: "framworks", "sonsumption", "bulids", "currenly"
 - [ ] Rewrite the garbled README overview ("...as the complemented and are consumed by...")
 - [ ] Remove README references to PauseN and per-user file storage

@@ -5,7 +5,7 @@ env:
   PRIMARY_BRANCH_NAME: main
   APP_MAJOR_VERSION: 1
   APP_MINOR_VERSION: 8
-  PROJECT_NAME: NativeWindowsConsoleApplicationsRUST
+  PROJECT_NAME: NativeConsoleApplicationsRUST
   BUILD_CONFIG: release
   BRANCH_PREFIX_RELEASE_CANDIDATE: rc/
   CARGO_TERM_COLOR: always

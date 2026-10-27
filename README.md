@@ -1,4 +1,4 @@
-# Native Windows Console Applications in RUST
+# Native Console Applications in RUST
 
 A set of native, self-contained console apps for Windows and Linux in Rust.
 Both 64 and 32-bit versions are available for each platform.
