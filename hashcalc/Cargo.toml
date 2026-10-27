@@ -1,31 +1,31 @@
 [package]
-name        = "hashcalc"
-authors     = [ "Martin Smith" ]
-version     = "0.1.0-dev"
-edition     = "2024"
-description = "Generate a hash of text or file contents"
-readme      = "../README.md"
-license     = "MIT OR Apache-2.0"
-keywords    = [ "hash", "sha", "md5" ]
-categories  = [ "command-line-utilities" ]
-repository  = "http://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
+name                 = "hashcalc"
+authors.workspace    = true
+version.workspace    = true
+edition.workspace    = true
+description          = "Generate a hash of text or file contents"
+readme.workspace     = true
+license.workspace    = true
+keywords             = [ "hash", "sha", "md5" ]
+categories.workspace = true
+repository.workspace = true
 
 [package.metadata.winresource]
 LegalCopyright = "Copyright © 2025-2026 Martin Smith"
 
 [dependencies]
-clap   = { version = "4.6.1", features = ["derive", "wrap_help"] }
-sha2   = "0.11.0"
-sha1   = "0.11.0"
-md5    = "0.8.0"
-hex    = "0.4.3"
-base64 = "0.22"
+clap.workspace = true
+sha2           = "0.11.0"
+sha1           = "0.11.0"
+md5            = "0.8.0"
+hex            = "0.4.3"
+base64         = "0.22"
 
 [build-dependencies]
-build-support = { path = "../build-support" }
+build-support.workspace = true
 
 [dev-dependencies]
-tempfile     = "3.27.0"
-assert_cmd   = "2.2.2"
-predicates   = "3.1.4"
-test-support = { path = "../test-support" }
+tempfile               = "3.27.0"
+assert_cmd.workspace   = true
+predicates.workspace   = true
+test-support.workspace = true

@@ -8,3 +8,26 @@ members  = [
     "uuidgen",
 ]
 resolver = "2"
+
+[workspace.package]
+# version is stamped by the CI build ("Set Cargo TOML Version Values")
+version    = "0.1.0-dev"
+authors    = [ "Martin Smith" ]
+edition    = "2024"
+license    = "MIT"
+readme     = "README.md"
+categories = [ "command-line-utilities" ]
+repository = "https://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
+
+[workspace.dependencies]
+# Shared by the applications
+clap   = { version = "4.6.1", features = ["derive", "wrap_help"] }
+strfmt = "0.2.5"
+
+# Shared test dependencies
+assert_cmd = "2.2.2"
+predicates = "3.1.4"
+
+# Workspace crates
+build-support = { path = "build-support" }
+test-support  = { path = "test-support" }

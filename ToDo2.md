@@ -13,11 +13,11 @@ Tick each item as it is completed.
 
 ## Cargo and workspace (priority 3)
 
-- [ ] Add `[workspace.package]` and hoist the shared package metadata
-- [ ] Add `[workspace.dependencies]` and hoist shared versions (`clap`, `assert_cmd`, `predicates`, `winresource`, `build-print`, …)
-- [ ] Change `repository` from `http://` to `https://` in all four manifests
-- [ ] Resolve the license: add the Apache-2.0 text, or declare `MIT` only
-- [ ] Fix `readme = "../README.md"` so it no longer points outside each crate (breaks `cargo package`/`publish`)
+- [x] Add `[workspace.package]` and hoist the shared package metadata (including a single workspace `version`, stamped by CI)
+- [x] Add `[workspace.dependencies]` and hoist shared versions (`clap`, `assert_cmd`, `predicates`, `winresource`, `build-print`, …)
+- [x] Change `repository` from `http://` to `https://` in all four manifests
+- [x] Resolve the license: add the Apache-2.0 text, or declare `MIT` only — declared `MIT`
+- [x] Fix `readme = "../README.md"` so it no longer points outside each crate — now `readme.workspace = true`; current Cargo copies the root README into the package, so packaging was not actually broken
 - [ ] Add `[profile.release]` tuning (`lto`, `strip`, `panic = "abort"`, `codegen-units`)
 - [ ] Add `rust-version` (MSRV; `edition = "2024"` requires Rust 1.85)
 - [ ] Add `[workspace.lints]`

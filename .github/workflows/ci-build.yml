@@ -256,39 +256,41 @@ jobs:
       - name: Set Cargo TOML Version Values
         shell: pwsh
         run: |
-          foreach ($project in "${{ needs.setup.outputs.binary_names }}".Split(',')) {
-            $project = $project.Trim()
+          $file_path = "Cargo.toml"
+          $new_version = "${{ needs.setup.outputs.executable_build_version }}"
 
-            Write-Host
-            Write-Host "--------------------------------------------------------------------------------"
-            Write-Host "Setting version for project '$project' to '${{ needs.setup.outputs.executable_build_version }}'"
+          Write-Host "Setting workspace version in '$file_path' to '$new_version'"
 
-            $file_path = Join-Path $project "Cargo.toml"
-            $lines = Get-Content $file_path
+          $lines = Get-Content $file_path
 
-            $section = ""
-            for ($i = 0; $i -lt $lines.Length; $i++) {
-              $line = $lines[$i].Trim()
+          $section = ""
+          $found = $false
+          for ($i = 0; $i -lt $lines.Length; $i++) {
+            $line = $lines[$i].Trim()
 
-              if ($line -match '^\s*\[.*\]\s*$') {
-                $section = $line.Trim('[', ']')
-              }
-
-              if ($section -eq "package" -and $line -match '^\s*version\s*=\s*".*"\s*$') {
-                Write-Host "Found version line: $($i): '$line'"
-                $new_line = "version = `"${{ needs.setup.outputs.executable_build_version }}`""
-                $lines[$i] = $new_line
-                Write-Host "  Set version line: $($i): '$new_line'"
-                break
-              }
+            if ($line -match '^\s*\[.*\]\s*$') {
+              $section = $line.Trim('[', ']')
             }
 
-            Set-Content -Path $file_path -Value $lines
-
-            Write-Host
-            Write-Host "$file_path :"
-            Get-Content $file_path
+            if ($section -eq "workspace.package" -and $line -match '^\s*version\s*=\s*".*"\s*$') {
+              Write-Host "Found version line: $($i): '$line'"
+              $lines[$i] = "version    = `"$new_version`""
+              Write-Host "  Set version line: $($i): '$($lines[$i])'"
+              $found = $true
+              break
+            }
           }
+
+          if (-not $found) {
+            Write-Error "No version found in [workspace.package] of $file_path"
+            exit 1
+          }
+
+          Set-Content -Path $file_path -Value $lines
+
+          Write-Host
+          Write-Host "$file_path :"
+          Get-Content $file_path
 
       - name: Set Build Parameters
         shell: pwsh
