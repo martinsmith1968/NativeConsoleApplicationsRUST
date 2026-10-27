@@ -26,7 +26,7 @@ Tick each item as it is completed.
 
 - [x] Add a `cargo clippy --all-targets -- -D warnings` step (clippy is installed but never run)
 - [x] Add a `cargo audit` or `cargo deny` step
-- [ ] Add `Swatinem/rust-cache` (or equivalent)
+- [x] Add `Swatinem/rust-cache` (or equivalent) — already enabled by `setup-rust-toolchain`; build output dir now cached and reused by the tests
 - [x] Replace `permissions: write-all` on the tag and release jobs with `contents: write`
 - [ ] Split the 592-line monolithic workflow (consider reusable workflows)
 - [x] Add the `cargo` ecosystem to Dependabot

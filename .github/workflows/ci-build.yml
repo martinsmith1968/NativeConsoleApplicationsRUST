@@ -215,6 +215,10 @@ jobs:
           components:
             rustfmt
             clippy
+          # Cache the default target dir (clippy) and the build output dir (build and tests)
+          cache-workspaces: |
+            . -> target
+            . -> ${{ env.BASE_BUILD_OUTPUT_FOLDER }}/${{ matrix.platform }}/${{ matrix.arch }}/${{ matrix.target }}
 
       - name: Show Rust Version
         run: rustc --version
@@ -318,7 +322,7 @@ jobs:
           }
 
       - name: Run tests
-        run: cargo test --verbose --release --target ${{ matrix.target }}
+        run: cargo test --verbose --profile ${{ env.BUILD_CONFIG }} --target ${{ matrix.target }} --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
 
       - name: Debug Files - BUILD_OUTPUT_FOLDER
         shell: pwsh
