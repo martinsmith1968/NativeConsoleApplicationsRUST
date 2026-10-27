@@ -25,11 +25,11 @@ Tick each item as it is completed.
 ## CI and repository (priority 4)
 
 - [x] Add a `cargo clippy --all-targets -- -D warnings` step (clippy is installed but never run)
-- [ ] Add a `cargo audit` or `cargo deny` step
+- [x] Add a `cargo audit` or `cargo deny` step
 - [ ] Add `Swatinem/rust-cache` (or equivalent)
-- [ ] Replace `permissions: write-all` on the tag and release jobs with `contents: write`
+- [x] Replace `permissions: write-all` on the tag and release jobs with `contents: write`
 - [ ] Split the 592-line monolithic workflow (consider reusable workflows)
-- [ ] Add the `cargo` ecosystem to Dependabot
+- [x] Add the `cargo` ecosystem to Dependabot
 
 ## Repository and documentation
 

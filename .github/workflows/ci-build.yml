@@ -522,16 +522,40 @@ jobs:
 
 
   ##########################################################
+  ## Dependency Audit
+  audit:
+    name: Dependency Audit
+
+    # Checks Cargo.lock against the RustSec advisory database
+    runs-on: ubuntu-latest
+
+    # Only needs setup; runs in parallel with the build job
+    needs: setup
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@cargo-audit
+
+      - name: Audit dependencies
+        run: cargo audit
+
+
+  ##########################################################
   ## Tag in git
   tag:
     name: Tag in GitHub
-    permissions: write-all
+    permissions:
+      contents: write
     if: needs.setup.outputs.should_tag == 'true'
 
     needs:
       - setup
       - build
       - coverage
+      - audit
 
     runs-on: ubuntu-latest
 
@@ -550,13 +574,16 @@ jobs:
   ## Generate a GitHub Release
   release:
     name: Create GitHub Release
-    permissions: write-all
+    permissions:
+      contents: write
+      pull-requests: read
     if: needs.setup.outputs.should_release == 'true'
 
     needs:
       - setup
       - build
       - coverage
+      - audit
 
     runs-on: ubuntu-latest
 
