@@ -3,7 +3,7 @@
 A set of native, self-contained console apps for Windows and Linux in Rust.
 Both 64 and 32-bit versions are available for each platform.
 
-> NOTE: Uses Jetbrains RustRover
+> NOTE: Uses JetBrains RustRover
 
 ## Overview
 
@@ -11,11 +11,11 @@ This started out as a set of tools for me to have installed on every Windows PC 
 complemented and are consumed by,
 a set of scripts I also have for automating many repetitive tasks and providing a common command line experience.
 
-They were originally in NET Framework 2.0 as that was a common runtime I always had available.
+They were originally in .NET Framework 2.0 as that was a common runtime I always had available.
 
 They have now morphed into a set of tools that provide a useful baseline for developing in a new language with something
 tangible to build towards
-in order to learn the language concepts, tooling and framworks.
+in order to learn the language concepts, tooling and frameworks.
 
 These include :
 
@@ -26,10 +26,10 @@ These include :
 - Command Line Parsing, with individual Command support
     - _I_ rolled my own (rather crude one) for the C++ version as there are features I required which other libraries
       did not provide.
-      This is not something I would likely repeat for porting to a different language_.
+      This is not something I would likely repeat for porting to a different language.
 - Modules
     - Separating common code to be consumed across different executable outputs, and (optionally) packaging for wider
-      sonsumption.
+      consumption.
 - Lite Framework
     - Generally this is not an idea I'm in favour of ('Organisations' having their own Framework layer on top of the
       language) but for this it made
@@ -38,7 +38,7 @@ These include :
       so trying to revisit at a point in future will likely be tough.
 - Compiling to a single self-contained executable
 - Unit Testing
-- Automated bulids and release publishing (currenly via GitHub actions)
+- Automated builds and release publishing (currently via GitHub actions)
 - Classes (if relevant) and/or logic encapsulation / code organisation
 - Console input reading (`PauseN`)
 - Local file storage (per User)

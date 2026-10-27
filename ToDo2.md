@@ -34,7 +34,7 @@ Tick each item as it is completed.
 ## Repository and documentation
 
 - [x] Make the project name consistent (`PROJECT_NAME` in the workflow, the repository name, the README title)
-- [ ] Fix README typos: "framworks", "sonsumption", "bulids", "currenly"
+- [x] Fix README typos: "framworks", "sonsumption", "bulids", "currenly"
 - [ ] Rewrite the garbled README overview ("...as the complemented and are consumed by...")
 - [ ] Remove README references to PauseN and per-user file storage
 - [ ] Decide whether `.squad/` (118 files) and `.copilot/` (33 files) belong in this repository
