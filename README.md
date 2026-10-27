@@ -7,9 +7,9 @@ Both 64 and 32-bit versions are available for each platform.
 
 ## Overview
 
-This started out as a set of tools for me to have installed on every Windows PC I used (Home / Work / etc), as the
-complemented and are consumed by,
-a set of scripts I also have for automating many repetitive tasks and providing a common command line experience.
+This started out as a set of tools for me to have installed on every Windows PC I used (Home / Work / etc), as they
+complement, and are consumed by, a set of scripts I also have for automating many repetitive tasks and providing a
+common command line experience.
 
 They were originally in .NET Framework 2.0 as that was a common runtime I always had available.
 
@@ -40,8 +40,6 @@ These include :
 - Unit Testing
 - Automated builds and release publishing (currently via GitHub actions)
 - Classes (if relevant) and/or logic encapsulation / code organisation
-- Console input reading (`PauseN`)
-- Local file storage (per User)
 
 ## Applications
 
