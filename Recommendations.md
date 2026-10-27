@@ -242,3 +242,65 @@ or tested for this analysis.
 ### output and exit codes
 - `println!` panics on a closed pipe (for example `uuidgen -c 1000000 | head`).
 - `process::exit(1)` is used in `hashcalc` and `printformat`. Return `ExitCode` from `main` instead.
+
+---
+
+# Outstanding items (reviewed 2026-10-26)
+
+Status of the original analysis against the current `task/ai-recommendations` branch (based on `origin/main` at `96d0c9c`). Completed work is listed first so the outstanding list can be read on its own.
+
+## Completed
+
+### Correctness and robustness (priority 1)
+- `hashcalc`: `--algorithm` is a case-insensitive `ValueEnum`; a required `ArgGroup` covers `--text`/`--file`; `--write` conflicts with `--text`; validation happens before any file is read.
+- `hashcalc`: files stream through the digest or encoder in 64 KiB chunks; the `base64` crate replaces the hand-rolled encoder; hashers return `String`; `args.file.as_ref().unwrap()` is gone (replaced by a match).
+- `bannertext`: input bounds (`MAX_LINE_COUNT`, `MAX_AFFIX_SIZE`, `MAX_TOTAL_LENGTH`), `min_total_length > max_total_length` is rejected, arithmetic saturates, `generate_banner` takes a `BannerOptions` struct, and `--text-alignment` uses `default_value_t`.
+- `uuidgen`: the v6 seed is parsed once through a clap `value_parser` returning `[u8; 6]`; the output template is validated once; the unused `v5` feature is removed; `nanoid_length` uses `default_value_t`; the enums no longer derive `Parser`.
+- Broken pipes are handled and `ExitCode` is returned from `main` in all four applications.
+
+### Build scripts and shared test helpers (priority 2)
+- The four byte-identical `build.rs` files are replaced by a shared `build-support` crate; `BUILD_YEAR` comes from `chrono` and the tests read the same value via `env!("BUILD_YEAR")`.
+- `winresource` is declared as a `cfg(windows)` dependency; resource failures report a useful message instead of `unwrap`; `cargo:rerun-if-changed=build.rs` is emitted.
+- A shared `test-support` crate holds the expected-output helpers. The byte-wise copyright workaround is gone and the eight mojibake `.example` files now contain a proper `©`.
+
+## Still outstanding
+
+### printformat structure and gaps (original analysis item 4)
+- The `{}` scanning loop is still repeated in `preprocess_format`, `count_required_args` and `translate_csharp_format`. Extract one tokenizer.
+- `printformat/src/main.rs` is still a single 534-line file. Split it into modules the way `hashcalc` splits its hashers.
+- C# `X` (hex), `N` (thousands separator) and `C` (currency) are still rejected in `translate_csharp_specifier` (lines 359-361).
+- `impl Display for FormatType` still duplicates what `ValueEnum` already provides (lines 19-24).
+- `%c` still silently uses only the first character of the argument (lines 522-527).
+
+### Cargo and workspace (priority 3)
+- No `[workspace.package]` or `[workspace.dependencies]`. Package metadata and dependency versions are still repeated in all four manifests (`clap`, `assert_cmd`, `predicates`, `winresource`, `build-print`, and so on).
+- `repository = "http://github.com/martinsmith1968/NativeConsoleApplicationsRUST"` in all four manifests; it should be `https://`.
+- License is ambiguous: the manifests declare `MIT OR Apache-2.0`, but the single `LICENSE` file contains the MIT text only. Either add the Apache-2.0 text or declare `MIT`.
+- `readme = "../README.md"` points outside each crate, which breaks `cargo package` and `cargo publish`.
+- No `[profile.release]` tuning (`lto`, `strip`, `panic = "abort"`, `codegen-units`).
+- No `rust-version` (MSRV), although `edition = "2024"` already requires Rust 1.85.
+- No `[workspace.lints]`.
+
+### CI and repository (priority 4)
+- No `cargo clippy` step. clippy is installed as a component (workflow lines 217 and 495) but never run.
+- No `cargo audit` or `cargo deny` step.
+- No `Swatinem/rust-cache` (or equivalent) cache.
+- `permissions: write-all` is still used on the tag and release jobs (lines 523 and 548); `contents: write` is enough.
+- The workflow is still monolithic (592 lines, with a large inline setup job) and has not been split into reusable workflows.
+- Dependabot still covers GitHub Actions only; there is no `cargo` ecosystem entry.
+
+### Repository and documentation
+- The project name is inconsistent: `PROJECT_NAME` in the workflow is `NativeWindowsConsoleApplicationsRUST`, the repository is `NativeConsoleApplicationsRUST`, and the README says "Native Windows Console Applications".
+- The README still has typos and unfinished text: "framworks", "sonsumption", "bulids", "currenly", the garbled overview ("...as the complemented and are consumed by..."), and references to PauseN and per-user file storage that do not exist in these four tools.
+- `.squad/` (118 files) and `.copilot/` (33 files) hold about 150 tooling files, more than the source. Decide whether they belong in this repository.
+- The scripts remain PowerShell-only, with `.cmd` wrappers.
+
+### Shared code and tests (priorities 5 and 6)
+- Clap boilerplate is still duplicated across the four applications (custom `-h/-?` and `-V/-!`, `about`/`long_about`, `help_expected`, `after_help`). This is the remaining shared-code extraction after `build.rs` and the test helpers.
+- There is no application `lib.rs`. The logic still lives in `main.rs` behind `#[cfg(test)] mod main_tests` (`hashcalc` 1218 lines, `uuidgen` 933, `bannertext` 581, `printformat` 523).
+- Test layout is still inconsistent: `src/main_tests.rs`, in-source `#[path]` modules for the hashers, and integration tests behind `tests/<app>.rs` stubs.
+- The 42 expected-output `.example` files still use `%APP_VERSION%` and `%CURRENT_YEAR%` placeholders. `test-support` removed the duplication, but insta snapshots were not adopted.
+- There are no property-based tests. `proptest` would suit the banner width invariant and the format parsers.
+
+### Minor leftovers
+- `base64` is still described as a hash: `hash_content` and `hash_reader` also cover the encoding path, and the output line still says `[base64]` alongside the digests. Consider naming the abstraction `convert`/`transform` or keeping the encoding path separate.
