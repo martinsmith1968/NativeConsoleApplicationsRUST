@@ -37,9 +37,9 @@ Tick each item as it is completed.
 - [x] Fix README typos: "framworks", "sonsumption", "bulids", "currenly"
 - [x] Rewrite the garbled README overview ("...as the complemented and are consumed by...")
 - [x] Remove README references to PauseN and per-user file storage
-- [ ] Decide whether `.squad/` (118 files) and `.copilot/` (33 files) belong in this repository
-- [ ] Decide whether to add non-PowerShell scripts (currently PowerShell-only with `.cmd` wrappers)
-- [ ] Check `.vscode/`: commit it or add it to `.gitignore` (in the original analysis, missing from the 2026-10-26 review)
+- [x] Decide whether `.squad/` (118 files) and `.copilot/` (33 files) belong in this repository
+- [x] Decide whether to add non-PowerShell scripts (currently PowerShell-only with `.cmd` wrappers) — decided: not needed
+- [x] Check `.vscode/`: commit it or add it to `.gitignore` (in the original analysis, missing from the 2026-10-26 review)
 
 ## Shared code and tests (priorities 5 and 6)
 
