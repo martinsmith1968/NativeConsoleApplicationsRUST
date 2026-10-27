@@ -231,6 +231,9 @@ jobs:
       - name: Rustfmt Check
         uses: actions-rust-lang/rustfmt@v1.1.2
 
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
       - name: Install 32-bit build dependencies (Linux)
         if: ${{ matrix.platform == 'linux' && matrix.arch == 'x86' }}
         run: |

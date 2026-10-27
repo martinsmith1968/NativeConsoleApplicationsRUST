@@ -355,7 +355,7 @@ fn execute_app_with_help_request_produces_arguments_list() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     let output = cmd.arg("-?").env("COLUMNS", "500").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(actual, expected, "Help output does not match expected");
 }
@@ -365,7 +365,7 @@ fn execute_app_with_full_help_request_produces_arguments_list() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     let output = cmd.arg("--help").env("COLUMNS", "500").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(actual, expected, "Help output does not match expected");
 }
@@ -375,7 +375,7 @@ fn execute_app_with_text_only_produces_expected_output() {
     let mut cmd = Command::cargo_bin("bannertext").unwrap();
     let output = cmd.arg("bob").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(actual, expected, "Text-only output does not match expected");
 }
@@ -390,7 +390,7 @@ fn execute_app_with_text_and_min_length_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -410,7 +410,7 @@ fn execute_app_with_multiple_text_lines_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -432,7 +432,7 @@ fn execute_app_with_multiple_text_lines_aligned_center_produces_expected_output(
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(
         actual, expected,

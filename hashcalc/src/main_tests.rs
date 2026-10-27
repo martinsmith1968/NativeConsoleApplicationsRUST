@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn extract_hash(output: &str) -> String {
-    output.trim().rsplitn(2, " : ").next().unwrap().to_string()
+    output.trim().rsplit(" : ").next().unwrap().to_string()
 }
 
 // Helper function to create temporary test files
@@ -218,7 +218,7 @@ fn test_hash_file_binary() {
 #[test]
 fn test_cli_text_mode_hello() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "hello"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "hello"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -230,7 +230,7 @@ fn test_cli_text_mode_hello() {
 #[test]
 fn test_cli_text_mode_empty_string() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", ""])
+        .args(["run", "--bin", "hashcalc", "--", "-t", ""])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -242,7 +242,7 @@ fn test_cli_text_mode_empty_string() {
 #[test]
 fn test_cli_text_mode_hello_world() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "hello world"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "hello world"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -254,7 +254,7 @@ fn test_cli_text_mode_hello_world() {
 #[test]
 fn test_cli_text_mode_special_chars() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "!@#$%^&*()"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "!@#$%^&*()"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -267,7 +267,7 @@ fn test_cli_text_mode_special_chars() {
 #[test]
 fn test_cli_algorithm_sha1() {
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run", "--bin", "hashcalc", "--", "-t", "hello", "-a", "sha1",
         ])
         .output()
@@ -281,7 +281,7 @@ fn test_cli_algorithm_sha1() {
 #[test]
 fn test_cli_algorithm_md5() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "hello", "-a", "md5"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "hello", "-a", "md5"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -293,7 +293,7 @@ fn test_cli_algorithm_md5() {
 #[test]
 fn test_cli_algorithm_sha512() {
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run", "--bin", "hashcalc", "--", "-t", "hello", "-a", "sha512",
         ])
         .output()
@@ -308,7 +308,7 @@ fn test_cli_algorithm_sha512() {
 #[test]
 fn test_cli_algorithm_base64() {
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run", "--bin", "hashcalc", "--", "-t", "hello", "-a", "base64",
         ])
         .output()
@@ -322,7 +322,7 @@ fn test_cli_algorithm_base64() {
 #[test]
 fn test_cli_algorithm_invalid() {
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run", "--bin", "hashcalc", "--", "-t", "hello", "-a", "invalid",
         ])
         .output()
@@ -338,7 +338,7 @@ fn test_cli_file_mode_simple() {
     let path = create_temp_file("cli_test.txt", b"hello");
 
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -362,7 +362,7 @@ fn test_cli_write_flag_writes_file() {
     let dir = std::fs::canonicalize(".").unwrap();
 
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -397,7 +397,7 @@ fn test_cli_write_flag_writes_file() {
 #[test]
 fn test_cli_write_without_file_errors() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-w", "-t", "hello"])
+        .args(["run", "--bin", "hashcalc", "--", "-w", "-t", "hello"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -415,7 +415,7 @@ fn test_cli_write_with_text_errors() {
     let path = create_temp_file("write_conflict.txt", b"hello");
 
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "hello", "-w"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "hello", "-w"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -434,7 +434,7 @@ fn test_cli_file_mode_short_option() {
     let path = create_temp_file("cli_short.txt", b"test");
 
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -454,7 +454,7 @@ fn test_cli_file_and_text_mutual_exclusivity_error() {
     let path = create_temp_file("conflict.txt", b"test");
 
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -480,7 +480,7 @@ fn test_cli_file_and_text_mutual_exclusivity_error() {
 #[test]
 fn test_cli_no_args_error() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--"])
+        .args(["run", "--bin", "hashcalc", "--"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -492,7 +492,7 @@ fn test_cli_no_args_error() {
 #[test]
 fn test_cli_file_not_found_error() {
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -511,7 +511,7 @@ fn test_cli_file_not_found_error() {
 #[test]
 fn test_cli_exit_code_success() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "test"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "test"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -521,7 +521,7 @@ fn test_cli_exit_code_success() {
 #[test]
 fn test_cli_exit_code_file_error() {
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -538,7 +538,7 @@ fn test_cli_exit_code_file_error() {
 #[test]
 fn test_cli_exit_code_mutual_exclusivity_error() {
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -557,7 +557,7 @@ fn test_cli_exit_code_mutual_exclusivity_error() {
 #[test]
 fn test_cli_exit_code_no_args_error() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--"])
+        .args(["run", "--bin", "hashcalc", "--"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -567,12 +567,12 @@ fn test_cli_exit_code_no_args_error() {
 #[test]
 fn test_cli_consistency_same_input() {
     let output1 = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "consistency"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "consistency"])
         .output()
         .expect("Failed to run hashcalc");
 
     let output2 = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "consistency"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "consistency"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -590,12 +590,12 @@ fn test_cli_file_and_text_equivalence() {
     let abs_path = std::fs::canonicalize(&path).unwrap();
 
     let text_output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "equivalence"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "equivalence"])
         .output()
         .expect("Failed to run hashcalc");
 
     let file_output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -617,7 +617,7 @@ fn test_cli_file_and_text_equivalence() {
 #[test]
 fn test_cli_output_format_single_line() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "format_test"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "format_test"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -632,7 +632,7 @@ fn test_cli_output_format_single_line() {
 #[test]
 fn test_cli_output_hex_lowercase() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "lowercase_test"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "lowercase_test"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -649,7 +649,7 @@ fn test_cli_file_mode_empty_file() {
     let path = create_temp_file("empty_cli.txt", b"");
 
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -672,7 +672,7 @@ fn test_cli_file_mode_binary_file() {
     let path = create_temp_file("binary_cli.bin", &binary_data);
 
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -693,12 +693,12 @@ fn test_cli_file_mode_binary_file() {
 #[test]
 fn test_cli_text_different_inputs_different_hashes() {
     let output1 = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "input1"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "input1"])
         .output()
         .expect("Failed to run hashcalc");
 
     let output2 = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "input2"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "input2"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -865,7 +865,7 @@ fn test_cli_file_mode_with_sha1() {
     let path = create_temp_file("sha1_file.txt", b"test");
 
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -890,7 +890,7 @@ fn test_cli_file_mode_with_md5() {
     let path = create_temp_file("md5_file.txt", b"test");
 
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -915,7 +915,7 @@ fn test_cli_file_mode_with_sha512() {
     let path = create_temp_file("sha512_file.txt", b"test");
 
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -940,7 +940,7 @@ fn test_cli_file_mode_with_base64() {
     let path = create_temp_file("base64_file.txt", b"hello");
 
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -962,7 +962,7 @@ fn test_cli_file_mode_with_base64() {
 #[test]
 fn test_cli_long_option_algorithm() {
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -984,7 +984,7 @@ fn test_cli_long_option_algorithm() {
 #[test]
 fn test_cli_text_with_spaces() {
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -1004,7 +1004,7 @@ fn test_cli_text_with_spaces() {
 #[test]
 fn test_cli_text_numeric_string() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "1234567890"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "1234567890"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -1017,7 +1017,7 @@ fn test_cli_text_numeric_string() {
 #[test]
 fn test_cli_text_single_character() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "x"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "x"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -1030,7 +1030,7 @@ fn test_cli_text_single_character() {
 #[test]
 fn test_cli_algorithm_case_insensitive() {
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run", "--bin", "hashcalc", "--", "-t", "test", "-a", "SHA256",
         ])
         .output()
@@ -1047,7 +1047,7 @@ fn test_cli_invalid_algorithm_with_file() {
     let path = create_temp_file("invalid_algo.txt", b"test");
 
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -1073,7 +1073,7 @@ fn test_cli_multiple_algorithms_on_same_text() {
 
     for algo in &["sha256", "sha1", "md5", "sha512"] {
         let output = Command::new("cargo")
-            .args(&["run", "--bin", "hashcalc", "--", "-t", text, "-a", algo])
+            .args(["run", "--bin", "hashcalc", "--", "-t", text, "-a", algo])
             .output()
             .expect("Failed to run hashcalc");
 
@@ -1093,12 +1093,12 @@ fn test_cli_multiple_algorithms_on_same_text() {
 #[test]
 fn test_cli_default_algorithm_is_sha256() {
     let output_default = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--", "-t", "test"])
+        .args(["run", "--bin", "hashcalc", "--", "-t", "test"])
         .output()
         .expect("Failed to run hashcalc");
 
     let output_explicit = Command::new("cargo")
-        .args(&[
+        .args([
             "run", "--bin", "hashcalc", "--", "-t", "test", "-a", "sha256",
         ])
         .output()
@@ -1115,7 +1115,7 @@ fn test_cli_default_algorithm_is_sha256() {
 #[test]
 fn test_cli_file_not_found_message() {
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -1137,7 +1137,7 @@ fn test_cli_file_preserves_content_for_multiple_algorithms() {
     let abs_path = std::fs::canonicalize(&path).unwrap();
 
     let output1 = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -1151,7 +1151,7 @@ fn test_cli_file_preserves_content_for_multiple_algorithms() {
         .expect("Failed to run hashcalc");
 
     let output2 = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",
@@ -1178,7 +1178,7 @@ fn test_cli_file_preserves_content_for_multiple_algorithms() {
 #[test]
 fn test_cli_text_and_file_both_missing_error() {
     let output = Command::new("cargo")
-        .args(&["run", "--bin", "hashcalc", "--"])
+        .args(["run", "--bin", "hashcalc", "--"])
         .output()
         .expect("Failed to run hashcalc");
 
@@ -1194,7 +1194,7 @@ fn test_cli_text_priority_over_file() {
     let path = create_temp_file("priority.txt", b"file_content");
 
     let output = Command::new("cargo")
-        .args(&[
+        .args([
             "run",
             "--bin",
             "hashcalc",

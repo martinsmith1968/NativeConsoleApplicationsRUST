@@ -188,7 +188,7 @@ fn test_v6_uuid_generation_basic() {
         .chars()
         .filter(|c| c.is_ascii_hexdigit())
         .collect();
-    assert!(hex_chars.len() > 0);
+    assert!(!hex_chars.is_empty());
 }
 
 #[test]
@@ -311,7 +311,7 @@ fn test_v7_uuid_generation_basic() {
         .chars()
         .filter(|c| c.is_ascii_hexdigit())
         .collect();
-    assert!(hex_chars.len() > 0);
+    assert!(!hex_chars.is_empty());
 }
 
 #[test]
@@ -496,10 +496,7 @@ fn test_multiple_uuid_generation_count_small() {
         });
     }
 
-    let uuids: Vec<_> = options_list
-        .iter()
-        .map(|opt| generate_guid(opt.clone()))
-        .collect();
+    let uuids: Vec<_> = options_list.iter().map(|opt| generate_guid(*opt)).collect();
 
     // Should generate 5 UUIDs
     assert_eq!(uuids.len(), 5);
@@ -522,10 +519,7 @@ fn test_multiple_uuid_generation_count_large() {
         });
     }
 
-    let uuids: Vec<_> = options_list
-        .iter()
-        .map(|opt| generate_guid(opt.clone()))
-        .collect();
+    let uuids: Vec<_> = options_list.iter().map(|opt| generate_guid(*opt)).collect();
 
     // Should generate 100 UUIDs
     assert_eq!(uuids.len(), 100);
@@ -542,10 +536,7 @@ fn test_multiple_uuid_generation_count_thousand() {
         });
     }
 
-    let uuids: Vec<_> = options_list
-        .iter()
-        .map(|opt| generate_guid(opt.clone()))
-        .collect();
+    let uuids: Vec<_> = options_list.iter().map(|opt| generate_guid(*opt)).collect();
 
     // Should generate 1000 UUIDs (validates u32 count support)
     assert_eq!(uuids.len(), 1000);

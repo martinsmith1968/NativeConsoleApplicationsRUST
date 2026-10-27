@@ -457,14 +457,8 @@ fn extract_c_specifiers(format_str: &str) -> Result<Vec<char>, String> {
                 }
 
                 // Length modifier (skip — type is determined by specifier)
-                loop {
-                    match chars.peek() {
-                        Some(&'h') | Some(&'l') | Some(&'j') | Some(&'z') | Some(&'t')
-                        | Some(&'L') => {
-                            chars.next();
-                        }
-                        _ => break,
-                    }
+                while let Some(&('h' | 'l' | 'j' | 'z' | 't' | 'L')) = chars.peek() {
+                    chars.next();
                 }
 
                 let spec = chars

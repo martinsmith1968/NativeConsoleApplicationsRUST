@@ -21,7 +21,7 @@ fn execute_app_with_help_request_produces_arguments_list() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     let output = cmd.arg("-?").env("COLUMNS", "500").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(actual, expected, "Help output does not match expected");
 }
@@ -31,7 +31,7 @@ fn execute_app_with_text_only_default_algorithm_produces_expected_output() {
     let mut cmd = Command::cargo_bin("hashcalc").unwrap();
     let output = cmd.arg("-t").arg("Hello World").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -50,7 +50,7 @@ fn execute_app_with_text_only_sha256_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -69,7 +69,7 @@ fn execute_app_with_text_only_sha512_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -88,7 +88,7 @@ fn execute_app_with_text_only_sha1_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -107,7 +107,7 @@ fn execute_app_with_text_only_md5_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(
         actual, expected,
@@ -126,7 +126,7 @@ fn execute_app_with_text_only_base64_produces_expected_output() {
         .output()
         .unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(
         actual, expected,

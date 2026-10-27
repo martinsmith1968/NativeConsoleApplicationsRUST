@@ -24,7 +24,7 @@ Tick each item as it is completed.
 
 ## CI and repository (priority 4)
 
-- [ ] Add a `cargo clippy --all-targets -- -D warnings` step (clippy is installed but never run)
+- [x] Add a `cargo clippy --all-targets -- -D warnings` step (clippy is installed but never run)
 - [ ] Add a `cargo audit` or `cargo deny` step
 - [ ] Add `Swatinem/rust-cache` (or equivalent)
 - [ ] Replace `permissions: write-all` on the tag and release jobs with `contents: write`

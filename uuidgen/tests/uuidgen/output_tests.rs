@@ -29,7 +29,7 @@ fn validate_guid_format(
     let output = output.trim();
     let pattern = if non_hyphenated {
         if uppercase {
-            format!(r"^[0-9A-F]{{32}}$",)
+            r"^[0-9A-F]{32}$".to_string()
         } else {
             r"^[0-9a-f]{32}$".to_string()
         }
@@ -113,7 +113,7 @@ fn execute_app_with_help_request_produces_arguments_list() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
     let output = cmd.arg("-?").env("COLUMNS", "500").output().unwrap();
     let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(&get_current_function_name!());
+    let expected = expected_output(get_current_function_name!());
 
     assert_eq!(actual, expected, "Help output does not match expected");
 }
