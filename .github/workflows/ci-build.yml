@@ -139,10 +139,23 @@ jobs:
 
           $toml_object = $contents | ConvertFrom-Toml
 
-          $projects = $toml_object.workspace.members
-          Write-Host "Found $($projects.Count) Project Names"
-          foreach ($project in $projects) {
-            Write-Host " - $project"
+          $members = $toml_object.workspace.members
+          Write-Host "Found $($members.Count) workspace members"
+
+          # Only members with a src/main.rs produce an executable (skips library crates such as build-support)
+          $projects = @()
+          foreach ($member in $members) {
+            if (Test-Path (Join-Path $member "src" "main.rs") -PathType Leaf) {
+              Write-Host " - $member (binary)"
+              $projects += $member
+            } else {
+              Write-Host " - $member (library, skipped)"
+            }
+          }
+
+          if ($projects.Count -eq 0) {
+            Write-Error "No binary projects found in the workspace"
+            exit 1
           }
 
           $binary_names = [string]::join(',', $projects)
