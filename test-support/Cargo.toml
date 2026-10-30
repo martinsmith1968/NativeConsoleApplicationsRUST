@@ -1,6 +1,10 @@
 [package]
-name              = "test-support"
-version.workspace = true
-edition.workspace = true
-description       = "Shared helpers for the expected-output integration tests"
-publish           = false
+name                   = "test-support"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+description            = "Shared helpers for the expected-output integration tests"
+publish                = false
+
+[lints]
+workspace = true

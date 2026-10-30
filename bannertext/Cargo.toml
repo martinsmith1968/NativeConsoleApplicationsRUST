@@ -1,14 +1,15 @@
 [package]
-name                 = "bannertext"
-authors.workspace    = true
-version.workspace    = true
-edition.workspace    = true
-description          = "Display a Text Banner in the console"
-readme.workspace     = true
-license.workspace    = true
-keywords             = [ "banner", "text" ]
-categories.workspace = true
-repository.workspace = true
+name                   = "bannertext"
+authors.workspace      = true
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+description            = "Display a Text Banner in the console"
+readme.workspace       = true
+license.workspace      = true
+keywords               = [ "banner", "text" ]
+categories.workspace   = true
+repository.workspace   = true
 
 [package.metadata.winresource]
 LegalCopyright = "Copyright © 2025-2026 Martin Smith"
@@ -23,3 +24,6 @@ build-support.workspace = true
 assert_cmd.workspace   = true
 predicates.workspace   = true
 test-support.workspace = true
+
+[lints]
+workspace = true

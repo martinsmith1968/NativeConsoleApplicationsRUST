@@ -1,9 +1,10 @@
 [package]
-name              = "build-support"
-version.workspace = true
-edition.workspace = true
-description       = "Shared build script logic for the console applications"
-publish           = false
+name                   = "build-support"
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+description            = "Shared build script logic for the console applications"
+publish                = false
 
 [dependencies]
 build-print = "1.0.1"
@@ -11,3 +12,6 @@ chrono      = "0.4"
 
 [target.'cfg(windows)'.dependencies]
 winresource = "0.1.31"
+
+[lints]
+workspace = true

@@ -11,13 +11,14 @@ resolver = "2"
 
 [workspace.package]
 # version is stamped by the CI build ("Set Cargo TOML Version Values")
-version    = "0.1.0-dev"
-authors    = [ "Martin Smith" ]
-edition    = "2024"
-license    = "MIT"
-readme     = "README.md"
-categories = [ "command-line-utilities" ]
-repository = "https://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
+version      = "0.1.0-dev"
+authors      = [ "Martin Smith" ]
+edition      = "2024"
+rust-version = "1.85"
+license      = "MIT"
+readme       = "README.md"
+categories   = [ "command-line-utilities" ]
+repository   = "https://github.com/martinsmith1968/NativeConsoleApplicationsRUST"
 
 [workspace.dependencies]
 # Shared by the applications
@@ -31,3 +32,17 @@ predicates = "3.1.4"
 # Workspace crates
 build-support = { path = "build-support" }
 test-support  = { path = "test-support" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+dbg_macro     = "warn"
+todo          = "warn"
+unimplemented = "warn"
+
+[profile.release]
+lto           = true
+codegen-units = 1
+strip         = true
+panic         = "abort"

@@ -18,9 +18,9 @@ Tick each item as it is completed.
 - [x] Change `repository` from `http://` to `https://` in all four manifests
 - [x] Resolve the license: add the Apache-2.0 text, or declare `MIT` only — declared `MIT`
 - [x] Fix `readme = "../README.md"` so it no longer points outside each crate — now `readme.workspace = true`; current Cargo copies the root README into the package, so packaging was not actually broken
-- [ ] Add `[profile.release]` tuning (`lto`, `strip`, `panic = "abort"`, `codegen-units`)
-- [ ] Add `rust-version` (MSRV; `edition = "2024"` requires Rust 1.85)
-- [ ] Add `[workspace.lints]`
+- [x] Add `[profile.release]` tuning (`lto`, `strip`, `panic = "abort"`, `codegen-units`)
+- [x] Add `rust-version` (MSRV; `edition = "2024"` requires Rust 1.85) — set to 1.85
+- [x] Add `[workspace.lints]`
 
 ## CI and repository (priority 4)
 
@@ -55,4 +55,6 @@ Tick each item as it is completed.
 
 ## Minor
 
-- [ ] Stop treating base64 as a hash: rename the `hash_content`/`hash_reader` abstraction (e.g. `convert`/`transform`) or keep the encoding path separate, and revisit the `[base64]` output line
+- [X] Stop treating base64 as a hash: rename the `hash_content`/`hash_reader` abstraction (e.g. `convert`/`transform`) or keep the encoding path separate, and revisit the `[base64]` output line
+  - Base64 is a hash, and is valid for this app
+

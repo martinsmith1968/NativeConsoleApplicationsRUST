@@ -1,14 +1,15 @@
 [package]
-name                 = "printformat"
-authors.workspace    = true
-version.workspace    = true
-edition.workspace    = true
-description          = "Format and print text using a format string and arguments"
-readme.workspace     = true
-license.workspace    = true
-keywords             = [ "format", "print", "text" ]
-categories.workspace = true
-repository.workspace = true
+name                   = "printformat"
+authors.workspace      = true
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+description            = "Format and print text using a format string and arguments"
+readme.workspace       = true
+license.workspace      = true
+keywords               = [ "format", "print", "text" ]
+categories.workspace   = true
+repository.workspace   = true
 
 [package.metadata.winresource]
 LegalCopyright = "Copyright © 2025-2026 Martin Smith"
@@ -25,3 +26,6 @@ build-support.workspace = true
 assert_cmd.workspace   = true
 predicates.workspace   = true
 test-support.workspace = true
+
+[lints]
+workspace = true

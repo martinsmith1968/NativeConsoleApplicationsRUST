@@ -1,14 +1,15 @@
 [package]
-name                 = "hashcalc"
-authors.workspace    = true
-version.workspace    = true
-edition.workspace    = true
-description          = "Generate a hash of text or file contents"
-readme.workspace     = true
-license.workspace    = true
-keywords             = [ "hash", "sha", "md5" ]
-categories.workspace = true
-repository.workspace = true
+name                   = "hashcalc"
+authors.workspace      = true
+version.workspace      = true
+edition.workspace      = true
+rust-version.workspace = true
+description            = "Generate a hash of text or file contents"
+readme.workspace       = true
+license.workspace      = true
+keywords               = [ "hash", "sha", "md5" ]
+categories.workspace   = true
+repository.workspace   = true
 
 [package.metadata.winresource]
 LegalCopyright = "Copyright © 2025-2026 Martin Smith"
@@ -29,3 +30,6 @@ tempfile               = "3.27.0"
 assert_cmd.workspace   = true
 predicates.workspace   = true
 test-support.workspace = true
+
+[lints]
+workspace = true
