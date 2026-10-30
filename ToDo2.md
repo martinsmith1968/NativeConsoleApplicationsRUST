@@ -5,8 +5,8 @@ Tick each item as it is completed.
 
 ## printformat structure and gaps
 
-- [ ] Extract one tokenizer for the `{}` scanning loop repeated in `preprocess_format`, `count_required_args` and `translate_csharp_format`
-- [ ] Split `printformat/src/main.rs` (534 lines) into modules, the way `hashcalc` splits its hashers
+- [X] Extract one tokenizer for the `{}` scanning loop repeated in `preprocess_format`, `count_required_args` and `translate_csharp_format`
+- [X] Split `printformat/src/main.rs` (534 lines) into modules, the way `hashcalc` splits its hashers
 - [ ] Support C# `X` (hex), `N` (thousands separator) and `C` (currency) in `translate_csharp_specifier`
 - [ ] Remove `impl Display for FormatType`, which duplicates what `ValueEnum` provides
 - [ ] Make `%c` reject (or warn about) arguments longer than one character instead of silently using the first
