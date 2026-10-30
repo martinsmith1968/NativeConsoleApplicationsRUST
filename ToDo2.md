@@ -57,4 +57,3 @@ Tick each item as it is completed.
 
 - [X] Stop treating base64 as a hash: rename the `hash_content`/`hash_reader` abstraction (e.g. `convert`/`transform`) or keep the encoding path separate, and revisit the `[base64]` output line
   - Base64 is a hash, and is valid for this app
-

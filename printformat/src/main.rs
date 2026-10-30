@@ -92,54 +92,95 @@ fn run(args: &Args) -> io::Result<()> {
     }
 }
 
+/// A piece of a `{}`-style format string.
+#[derive(Debug, PartialEq)]
+enum BraceToken {
+    /// An ordinary character outside any placeholder.
+    Literal(char),
+    /// An escaped `{{`.
+    EscapedOpen,
+    /// An escaped `}}`.
+    EscapedClose,
+    /// The text between `{` and `}` (without the braces).
+    Placeholder(String),
+}
+
+/// Splits a `{}`-style format string into tokens. Yields an error for an
+/// unclosed `{` or a single `}`, and stops after the first error.
+struct BraceTokens<'a> {
+    chars: std::iter::Peekable<std::str::Chars<'a>>,
+    failed: bool,
+}
+
+fn brace_tokens(format_str: &str) -> BraceTokens<'_> {
+    BraceTokens {
+        chars: format_str.chars().peekable(),
+        failed: false,
+    }
+}
+
+impl Iterator for BraceTokens<'_> {
+    type Item = Result<BraceToken, String>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.failed {
+            return None;
+        }
+
+        let token = match self.chars.next()? {
+            '{' if self.chars.peek() == Some(&'{') => {
+                self.chars.next();
+                Ok(BraceToken::EscapedOpen)
+            }
+            '{' => {
+                let mut content = String::new();
+                let mut closed = false;
+                for inner in self.chars.by_ref() {
+                    if inner == '}' {
+                        closed = true;
+                        break;
+                    }
+                    content.push(inner);
+                }
+                if closed {
+                    Ok(BraceToken::Placeholder(content))
+                } else {
+                    Err("unclosed `{` in format string".to_string())
+                }
+            }
+            '}' if self.chars.peek() == Some(&'}') => {
+                self.chars.next();
+                Ok(BraceToken::EscapedClose)
+            }
+            '}' => Err("single `}` in format string".to_string()),
+            ch => Ok(BraceToken::Literal(ch)),
+        };
+
+        self.failed = token.is_err();
+        Some(token)
+    }
+}
+
 fn preprocess_format(format_str: &str) -> Result<(String, usize), String> {
     let mut result = String::new();
-    let mut chars = format_str.chars().peekable();
     let mut auto_index = 0usize;
 
-    while let Some(ch) = chars.next() {
-        if ch == '{' {
-            match chars.peek() {
-                Some(&'{') => {
-                    chars.next();
-                    result.push_str("{{");
-                }
-                _ => {
-                    let mut content = String::new();
-                    let mut closed = false;
-                    for inner in chars.by_ref() {
-                        if inner == '}' {
-                            closed = true;
-                            break;
-                        }
-                        content.push(inner);
-                    }
-                    if !closed {
-                        return Err("unclosed `{` in format string".to_string());
-                    }
-                    if content.is_empty() {
-                        result.push_str(&format!("{{{}}}", auto_index));
-                        auto_index += 1;
-                    } else if content.starts_with(':') {
-                        result.push_str(&format!("{{{}{}}}", auto_index, content));
-                        auto_index += 1;
-                    } else {
-                        result.push_str(&format!("{{{}}}", content));
-                    }
+    for token in brace_tokens(format_str) {
+        match token? {
+            BraceToken::Literal(ch) => result.push(ch),
+            BraceToken::EscapedOpen => result.push_str("{{"),
+            BraceToken::EscapedClose => result.push_str("}}"),
+            BraceToken::Placeholder(content) => {
+                if content.is_empty() {
+                    result.push_str(&format!("{{{}}}", auto_index));
+                    auto_index += 1;
+                } else if content.starts_with(':') {
+                    result.push_str(&format!("{{{}{}}}", auto_index, content));
+                    auto_index += 1;
+                } else {
+                    result.push_str(&format!("{{{}}}", content));
                 }
             }
-        } else if ch == '}' {
-            match chars.peek() {
-                Some(&'}') => {
-                    chars.next();
-                    result.push_str("}}");
-                }
-                _ => {
-                    return Err("single `}` in format string".to_string());
-                }
-            }
-        } else {
-            result.push(ch);
         }
     }
     Ok((result, auto_index))
@@ -171,52 +212,22 @@ fn apply_indexed_format(format_str: &str, args: &[String]) -> Result<String, Str
 }
 
 fn count_required_args(format_str: &str) -> Result<usize, String> {
-    let mut chars = format_str.chars().peekable();
     let mut required_count = 0usize;
 
-    while let Some(ch) = chars.next() {
-        if ch == '{' {
-            match chars.peek() {
-                Some(&'{') => {
-                    chars.next();
-                }
-                _ => {
-                    let mut content = String::new();
-                    let mut closed = false;
-                    for inner in chars.by_ref() {
-                        if inner == '}' {
-                            closed = true;
-                            break;
-                        }
-                        content.push(inner);
-                    }
-                    if !closed {
-                        return Err("unclosed `{` in format string".to_string());
-                    }
-
-                    let placeholder = content
-                        .split([',', ':'])
-                        .next()
-                        .ok_or_else(|| "placeholder index missing in format string".to_string())?
-                        .trim();
-                    let index = placeholder.parse::<usize>().map_err(|_| {
-                        format!(
-                            "invalid placeholder index `{}` in format string",
-                            placeholder
-                        )
-                    })?;
-                    required_count = required_count.max(index + 1);
-                }
-            }
-        } else if ch == '}' {
-            match chars.peek() {
-                Some(&'}') => {
-                    chars.next();
-                }
-                _ => {
-                    return Err("single `}` in format string".to_string());
-                }
-            }
+    for token in brace_tokens(format_str) {
+        if let BraceToken::Placeholder(content) = token? {
+            let placeholder = content
+                .split([',', ':'])
+                .next()
+                .ok_or_else(|| "placeholder index missing in format string".to_string())?
+                .trim();
+            let index = placeholder.parse::<usize>().map_err(|_| {
+                format!(
+                    "invalid placeholder index `{}` in format string",
+                    placeholder
+                )
+            })?;
+            required_count = required_count.max(index + 1);
         }
     }
 
@@ -225,45 +236,17 @@ fn count_required_args(format_str: &str) -> Result<usize, String> {
 
 pub(crate) fn translate_csharp_format(format_str: &str) -> Result<String, String> {
     let mut result = String::new();
-    let mut chars = format_str.chars().peekable();
 
-    while let Some(ch) = chars.next() {
-        if ch == '{' {
-            match chars.peek() {
-                Some(&'{') => {
-                    chars.next();
-                    result.push_str("{{");
-                }
-                _ => {
-                    let mut content = String::new();
-                    let mut closed = false;
-                    for inner in chars.by_ref() {
-                        if inner == '}' {
-                            closed = true;
-                            break;
-                        }
-                        content.push(inner);
-                    }
-                    if !closed {
-                        return Err("unclosed `{` in format string".to_string());
-                    }
-                    result.push('{');
-                    result.push_str(&translate_csharp_placeholder(&content)?);
-                    result.push('}');
-                }
+    for token in brace_tokens(format_str) {
+        match token? {
+            BraceToken::Literal(ch) => result.push(ch),
+            BraceToken::EscapedOpen => result.push_str("{{"),
+            BraceToken::EscapedClose => result.push_str("}}"),
+            BraceToken::Placeholder(content) => {
+                result.push('{');
+                result.push_str(&translate_csharp_placeholder(&content)?);
+                result.push('}');
             }
-        } else if ch == '}' {
-            match chars.peek() {
-                Some(&'}') => {
-                    chars.next();
-                    result.push_str("}}");
-                }
-                _ => {
-                    return Err("single `}` in format string".to_string());
-                }
-            }
-        } else {
-            result.push(ch);
         }
     }
 
