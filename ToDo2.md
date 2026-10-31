@@ -8,7 +8,7 @@ Tick each item as it is completed.
 - [X] Extract one tokenizer for the `{}` scanning loop repeated in `preprocess_format`, `count_required_args` and `translate_csharp_format`
 - [X] Split `printformat/src/main.rs` (534 lines) into modules, the way `hashcalc` splits its hashers
 - [X] Support C# `X` (hex), `N` (thousands separator) and `C` (currency) in `translate_csharp_specifier` — C# placeholders are now rendered directly (also fixes F, E and G); `--currency` sets the `C` symbol (default £)
-- [ ] Remove `impl Display for FormatType`, which duplicates what `ValueEnum` provides
+- [X] Remove `impl Display for FormatType`, which duplicates what `ValueEnum` provides
 - [ ] Make `%c` reject (or warn about) arguments longer than one character instead of silently using the first
 - [ ] Accept negative numbers as arguments (e.g. `printformat -t CSharp "{0:C}" -1234.5`) without needing `--`; they are currently read as unknown options
 - [ ] Add a `--culture` option for C# formats (e.g. `en-GB`, `en-US`, `de-DE`, `fr-FR`): a built-in table of decimal separator, group separator, currency symbol and currency pattern (symbol before/after the number), default `en-GB`; `--currency` (and optional separator options) override individual values

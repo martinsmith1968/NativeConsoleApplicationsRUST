@@ -16,16 +16,6 @@ enum FormatType {
     C,
 }
 
-impl std::fmt::Display for FormatType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FormatType::Rust => write!(f, "Rust"),
-            FormatType::CSharp => write!(f, "CSharp"),
-            FormatType::C => write!(f, "C"),
-        }
-    }
-}
-
 /// Format and print text using a format string and arguments
 #[derive(Parser, Debug)]
 #[command(
