@@ -160,27 +160,12 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
-      - name: Install 32-bit build dependencies (Linux)
-        if: ${{ matrix.platform == 'linux' && matrix.arch == 'x86' }}
-        run: |
-          sudo dpkg --add-architecture i386
-          sudo apt-get update
-          sudo apt-get install -y gcc-multilib g++-multilib
-
-      - name: Install Visual C++ build tools (Windows 32-bit)
-        if: ${{ matrix.platform == 'windows' && matrix.arch == 'x86' }}
-        uses: ilammy/msvc-dev-cmd@v1
+      - name: Set up cross-compilation toolchain
+        uses: ./.github/actions/setup-cross-toolchain
         with:
-          arch: x86
-
-      - name: Setup Rust Target
-        run: rustup target add ${{ matrix.target }}
-
-      - name: Install Linux 32-bit toolchain support
-        if: ${{ matrix.platform == 'linux' && matrix.arch == 'x86' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-multilib libc6-dev-i386
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          target: ${{ matrix.target }}
 
       - name: Set Cargo TOML Version Values
         shell: pwsh
@@ -223,43 +208,21 @@ jobs:
           -Platform '${{ matrix.platform }}'
           -ExpectedFlag '${{ matrix.arch_flag }}'
 
-      - name: Copy relevant files to output folder
-        shell: pwsh
-        run: >-
-          ./.github/scripts/Copy-ReleaseFiles.ps1
-          -BinaryNames '${{ needs.setup.outputs.binary_names }}'
-          -SourceFolder (Join-Path '${{ env.BUILD_OUTPUT_FOLDER }}' '${{ matrix.target }}' '${{ env.BUILD_CONFIG }}')
-          -Platform '${{ matrix.platform }}'
-          -Destination '${{ env.BASE_BUILD_COLLECT_FOLDER }}'
-
       - name: Debug Files - BASE_BUILD_OUTPUT_FOLDER
         shell: pwsh
         run: Get-ChildItem "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" -recurse
 
-      - name: Debug Files - BASE_BUILD_COLLECT_FOLDER
-        shell: pwsh
-        run: Get-ChildItem "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -recurse
-
-      - name: Compress Artifacts
-        uses: OctopusDeploy/create-zip-package-action@v4.1.5
+      - name: Package binaries
+        uses: ./.github/actions/package-binaries
         with:
-          package_id: ${{ env.PROJECT_NAME }}.${{ matrix.platform }}.${{ matrix.arch }}
+          binary-names: ${{ needs.setup.outputs.binary_names }}
+          source-folder: ${{ env.BUILD_OUTPUT_FOLDER }}/${{ matrix.target }}/${{ env.BUILD_CONFIG }}
+          platform: ${{ matrix.platform }}
+          collect-folder: ${{ env.BASE_BUILD_COLLECT_FOLDER }}
+          artifacts-folder: ${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}
+          package-id: ${{ env.PROJECT_NAME }}.${{ matrix.platform }}.${{ matrix.arch }}
           version: v${{ needs.setup.outputs.executable_version }}
-          output_folder: ${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}
-          base_path: ${{ env.BASE_BUILD_COLLECT_FOLDER }}
-          files: |
-            *
-
-      - name: Debug Files - BUILD_ARTIFACTS_FOLDER
-        shell: pwsh
-        run: Get-ChildItem "${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}" -recurse
-
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v7.0.2
-        with:
-          name: ${{ matrix.platform }}.${{ matrix.arch }}
-          path: ${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}/*.zip
-          if-no-files-found: error
+          artifact-name: ${{ matrix.platform }}.${{ matrix.arch }}
 
 
   ##########################################################

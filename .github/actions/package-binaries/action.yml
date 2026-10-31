@@ -1,0 +1,61 @@
+name: Package binaries
+description: Copies the built executables and README into a folder, zips them and uploads the zip as a build artifact.
+
+inputs:
+  binary-names:
+    description: Comma-separated executable names (without extension)
+    required: true
+  source-folder:
+    description: Folder containing the built executables
+    required: true
+  platform:
+    description: windows or linux (decides the executable extension)
+    required: true
+  collect-folder:
+    description: Folder the files are gathered into before zipping
+    required: true
+  artifacts-folder:
+    description: Folder the zip is written to
+    required: true
+  package-id:
+    description: Zip package name, e.g. NativeConsoleApplicationsRUST.windows.x64
+    required: true
+  version:
+    description: Zip package version, e.g. v1.8.26304.2091-ci
+    required: true
+  artifact-name:
+    description: Name of the uploaded build artifact
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Copy release files
+      shell: pwsh
+      run: >-
+        ./.github/scripts/Copy-ReleaseFiles.ps1
+        -BinaryNames '${{ inputs.binary-names }}'
+        -SourceFolder '${{ inputs.source-folder }}'
+        -Platform '${{ inputs.platform }}'
+        -Destination '${{ inputs.collect-folder }}'
+
+    - name: Compress
+      uses: OctopusDeploy/create-zip-package-action@v4.1.5
+      with:
+        package_id: ${{ inputs.package-id }}
+        version: ${{ inputs.version }}
+        output_folder: ${{ inputs.artifacts-folder }}
+        base_path: ${{ inputs.collect-folder }}
+        files: |
+          *
+
+    - name: Show packaged files
+      shell: pwsh
+      run: Get-ChildItem '${{ inputs.collect-folder }}', '${{ inputs.artifacts-folder }}' -Recurse
+
+    - name: Upload
+      uses: actions/upload-artifact@v7.0.2
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.artifacts-folder }}/*.zip
+        if-no-files-found: error

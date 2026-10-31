@@ -6,7 +6,10 @@ updates:
 
   # Check for updates to GitHub Actions every week
   - package-ecosystem: "github-actions"
-    directory: "/"
+    # Workflows, plus the composite actions under .github/actions
+    directories:
+      - "/"
+      - "/.github/actions/*"
     schedule:
       interval: "weekly"
     commit-message:
