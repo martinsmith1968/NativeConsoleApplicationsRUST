@@ -345,18 +345,68 @@ fn test_cli_csharp_zero_padding() {
 }
 
 #[test]
-fn test_cli_csharp_unsupported_hex() {
+fn test_cli_csharp_hex() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
     cmd.arg("--format-type")
         .arg("CSharp")
-        .arg("{0:X}")
-        .arg("42")
+        .arg("{0:X4}")
+        .arg("255")
+        .assert()
+        .success()
+        .stdout("00FF\n");
+}
+
+#[test]
+fn test_cli_csharp_number_and_fixed_point() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    cmd.arg("--format-type")
+        .arg("CSharp")
+        .arg("{0:N2} | {1:F3}")
+        .arg("1234567.891")
+        .arg("3.14159")
+        .assert()
+        .success()
+        .stdout("1,234,567.89 | 3.142\n");
+}
+
+#[test]
+fn test_cli_csharp_currency_default_symbol() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    cmd.arg("--format-type")
+        .arg("CSharp")
+        .arg("{0:C}")
+        .arg("1234.5")
+        .assert()
+        .success()
+        .stdout("£1,234.50\n");
+}
+
+#[test]
+fn test_cli_csharp_currency_option() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    cmd.arg("--format-type")
+        .arg("CSharp")
+        .arg("--currency")
+        .arg("€")
+        .arg("--")
+        .arg("{0:C0}")
+        .arg("-1234.5")
+        .assert()
+        .success()
+        .stdout("-€1,235\n");
+}
+
+#[test]
+fn test_cli_csharp_non_numeric_argument_fails() {
+    let mut cmd = Command::cargo_bin("printformat").unwrap();
+    cmd.arg("--format-type")
+        .arg("CSharp")
+        .arg("{0:F2}")
+        .arg("abc")
         .assert()
         .failure()
         .code(1)
-        .stderr(predicate::str::contains(
-            "C# format specifier 'X' (hex) is not supported",
-        ));
+        .stderr(predicate::str::contains("not a valid number"));
 }
 
 // ===== C Format Tests =====

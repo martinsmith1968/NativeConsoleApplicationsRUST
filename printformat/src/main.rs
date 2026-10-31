@@ -37,12 +37,16 @@ impl std::fmt::Display for FormatType {
     help_expected = true,
     disable_help_flag = true,
     disable_version_flag = true,
-    after_help = "Examples:\n  printformat \"Hello, {}!\" \"World\"\n  printformat \"{} + {} = {}\" \"1\" \"2\" \"3\"\n  printformat \"{:>10}\" \"right\"\n  printformat \"{:<10}\" \"left\"\n  printformat \"{:*^20}\" \"center\"\n  printformat \"No placeholders\"\n  printformat --format-type CSharp \"{0} is {1} years old\" \"Alice\" \"30\"\n  printformat --format-type CSharp \"{0,-10} | {1,10}\" \"left\" \"right\"\n  printformat --format-type CSharp \"{0:D5}\" \"42\"\n  printformat --format-type C \"%s is %d years old\" \"Alice\" \"30\"\n  printformat --format-type C \"%10s | %-10s\" \"right\" \"left\"\n  printformat --format-type C \"%05d\" \"42\"\n  printformat --format-type C \"%.2f\" \"3.14159\"\n\nSee Also:\n https://docs.rs/strfmt/latest/strfmt/\n https://doc.rust-lang.org/std/fmt/\n https://cplusplus.com/reference/cstdio/printf/"
+    after_help = "Examples:\n  printformat \"Hello, {}!\" \"World\"\n  printformat \"{} + {} = {}\" \"1\" \"2\" \"3\"\n  printformat \"{:>10}\" \"right\"\n  printformat \"{:<10}\" \"left\"\n  printformat \"{:*^20}\" \"center\"\n  printformat \"No placeholders\"\n  printformat --format-type CSharp \"{0} is {1} years old\" \"Alice\" \"30\"\n  printformat --format-type CSharp \"{0,-10} | {1,10}\" \"left\" \"right\"\n  printformat --format-type CSharp \"{0:D5}\" \"42\"\n  printformat --format-type CSharp \"{0:N2}\" \"1234567.891\"\n  printformat --format-type CSharp \"{0:X4}\" \"255\"\n  printformat --format-type CSharp --currency \"$\" \"{0:C}\" \"1234.5\"\n  printformat --format-type C \"%s is %d years old\" \"Alice\" \"30\"\n  printformat --format-type C \"%10s | %-10s\" \"right\" \"left\"\n  printformat --format-type C \"%05d\" \"42\"\n  printformat --format-type C \"%.2f\" \"3.14159\"\n\nSee Also:\n https://docs.rs/strfmt/latest/strfmt/\n https://doc.rust-lang.org/std/fmt/\n https://cplusplus.com/reference/cstdio/printf/"
 )]
 struct Args {
     /// Format type to use for the format string
     #[arg(short = 't', long = "format-type", value_enum, default_value_t = FormatType::Rust)]
     format_type: FormatType,
+
+    /// Currency symbol used by the C# 'C' (currency) format specifier
+    #[arg(long = "currency", default_value = "£")]
+    currency: String,
 
     /// The format string (use {} as placeholders)
     #[arg(index = 1, required = true)]
@@ -76,7 +80,9 @@ fn main() -> ExitCode {
 
 fn run(args: &Args) -> io::Result<()> {
     let result = match args.format_type {
-        FormatType::CSharp => apply_csharp_format(&args.format_string, &args.arguments),
+        FormatType::CSharp => {
+            apply_csharp_format(&args.format_string, &args.arguments, &args.currency)
+        }
         FormatType::C => apply_c_format(&args.format_string, &args.arguments),
         FormatType::Rust => apply_format(&args.format_string, &args.arguments),
     };
