@@ -1,0 +1,94 @@
+name: Release
+
+# Tags the commit (primary branch builds) and creates the GitHub release from the
+# build artifacts. The caller must grant contents: write and pull-requests: read.
+on:
+  workflow_call:
+    inputs:
+      executable_version:
+        description: Version used for the tag and release name
+        type: string
+        required: true
+      should_tag:
+        description: "'true' to tag the commit"
+        type: string
+        required: true
+      should_release:
+        description: "'true' to create a release"
+        type: string
+        required: true
+      release_is_draft:
+        description: "'true' for a draft release"
+        type: string
+        required: true
+      release_is_prerelease:
+        description: "'true' for a pre-release"
+        type: string
+        required: true
+
+jobs:
+  tag:
+    name: Tag in GitHub
+    permissions:
+      contents: write
+    if: inputs.should_tag == 'true'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Tag git
+        uses: pkgdeps/git-tag-action@v3.0.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_repo: ${{ github.repository }}
+          git_commit_sha: ${{ github.sha }}
+          git_tag_prefix: "v"
+          version: ${{ inputs.executable_version }}
+
+
+  ##########################################################
+  ## Generate a GitHub Release
+  release:
+    name: Create GitHub Release
+    permissions:
+      contents: write
+      pull-requests: read
+    if: inputs.should_release == 'true'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          path: release
+
+      - name: Debug Files - release
+        shell: pwsh
+        run: Get-ChildItem "release" -recurse
+
+      - name: Build Changelog
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@v6.4.0
+        with:
+          failOnError: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1.21.0
+        with:
+          tag: v${{ inputs.executable_version }}
+          name: Release ${{ inputs.executable_version }}
+          body: ${{ steps.build_changelog.outputs.changelog }}
+          draft: ${{ inputs.release_is_draft }}
+          prerelease: ${{ inputs.release_is_prerelease }}
+          removeArtifacts: true
+          artifacts: 'release/**/*.zip'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

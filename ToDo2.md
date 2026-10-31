@@ -36,7 +36,7 @@ Tick each item as it is completed.
 - [ ] Split the monolithic workflow (641 lines) into reusable workflows (branch `task/ai-recommendations-workflows`; no shared repository)
   - [X] 1. Move the inline scripts into `.github/scripts/` (PowerShell)
   - [X] 2. Extract composite actions (`package-binaries`, `setup-cross-toolchain`; version stamping and the architecture check stay single script calls)
-  - [ ] 3. Split the jobs into reusable workflows (`_setup`, `_build`, `_coverage`, `_audit`, `_release`); `ci-build.yml` only calls them
+  - [X] 3. Split the jobs into reusable workflows (`_setup`, `_build`, `_coverage`, `_audit`, `_release`); `ci-build.yml` only calls them
   - [ ] 4. Consolidate or gate the debug-only steps
 - [x] Add the `cargo` ecosystem to Dependabot
 

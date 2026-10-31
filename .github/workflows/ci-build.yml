@@ -1,18 +1,6 @@
 name: CI Build
 run-name: CIBuild_${{ github.event_name }}_${{ github.ref_name }}_${{ github.run_number }}.${{ github.run_attempt }}
 
-env:
-  PRIMARY_BRANCH_NAME: main
-  APP_MAJOR_VERSION: 1
-  APP_MINOR_VERSION: 8
-  PROJECT_NAME: NativeConsoleApplicationsRUST
-  BUILD_CONFIG: release
-  BRANCH_PREFIX_RELEASE_CANDIDATE: rc/
-  CARGO_TERM_COLOR: always
-  BASE_BUILD_OUTPUT_FOLDER: Output
-  BASE_BUILD_COLLECT_FOLDER: Collect
-  BASE_BUILD_ARTIFACTS_FOLDER: Artifacts
-
 on:
   push:
     branches:
@@ -30,343 +18,53 @@ on:
 
   workflow_dispatch:
 
+# The jobs live in the reusable _*.yml workflows. Called workflows do not inherit
+# env, so the pipeline settings are passed to them as inputs here.
 jobs:
-  ##########################################################
-  ## Pipeline Configuration and Setup
   setup:
-    name: Setup Pipeline
+    name: Setup
+    uses: ./.github/workflows/_setup.yml
+    with:
+      major_version: '1'
+      minor_version: '8'
+      primary_branch: main
+      release_candidate_prefix: rc/
 
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Get Current Build Date
-        run: |
-          echo "build_date=$(date +'%y%j')" >> $GITHUB_ENV
-          echo "build_year=$(date +'%Y')" >> $GITHUB_ENV
-
-      - name: Evaluate pipeline conditions
-        shell: pwsh
-        run: >-
-          ./.github/scripts/Get-PipelineConditions.ps1
-          -Ref '${{ github.ref }}'
-          -EventName '${{ github.event_name }}'
-          -PrimaryBranch '${{ env.PRIMARY_BRANCH_NAME }}'
-          -ReleaseCandidatePrefix '${{ env.BRANCH_PREFIX_RELEASE_CANDIDATE }}'
-
-      - name: Set Product Version
-        run: echo "product_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}" >> $GITHUB_ENV
-
-      - name: Set Executable Version
-        run: echo "executable_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}.${{ env.build_date }}.${{ github.run_number }}${{ github.run_attempt }}${{ env.release_modifier }}" >> $GITHUB_ENV
-
-      - name: Set Executable Build Version (for RUST)
-        run: echo "executable_build_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}.${{ env.build_date }}" >> $GITHUB_ENV
-
-      - name: Discover Buildable Projects
-        shell: pwsh
-        run: ./.github/scripts/Get-BinaryNames.ps1
-
-      - name: Show Configuration
-        run: env | sort
-
-    outputs:
-      build_date: ${{ env.build_date }}
-      build_year: ${{ env.build_year }}
-      executable_version: ${{ env.executable_version }}
-      executable_build_version: ${{ env.executable_build_version }}
-      product_version: ${{ env.product_version }}
-      should_tag: ${{ env.should_tag }}
-      should_release: ${{ env.should_release }}
-      release_is_draft: ${{ env.release_is_draft }}
-      release_is_prerelease: ${{ env.release_is_prerelease }}
-      release_modifier: ${{ env.release_modifier }}
-      binary_names: ${{ env.BINARY_NAMES }}
-
-
-  ##########################################################
-  ## Build for OS
   build:
-    strategy:
-      matrix:
-        os: [ 'windows-latest', 'ubuntu-latest' ]
-        arch: [ 'x64', 'x86' ]
-        # See : https://doc.rust-lang.org/rustc/platform-support.html
-        #     : https://superuser.com/questions/791506/how-to-determine-if-a-linux-binary-file-is-32-bit-or-64-bit
-        #     : https://superuser.com/questions/358434/how-to-check-if-a-binary-is-32-or-64-bit-on-windows
-        #     : https://www.youtube.com/watch?v=YWh06kGvxjo
-        include:
-          - os: windows-latest
-            arch: x64
-            target: x86_64-pc-windows-msvc
-            platform: windows
-            arch_flag: '0x8664'
-          - os: windows-latest
-            arch: x86
-            target: i686-pc-windows-msvc
-            platform: windows
-            arch_flag: '0x014c'
-          - os: ubuntu-latest
-            arch: x64
-            target: x86_64-unknown-linux-gnu
-            platform: linux
-            arch_flag: '02'
-          - os: ubuntu-latest
-            arch: x86
-            target: i686-unknown-linux-gnu
-            platform: linux
-            arch_flag: '01'
-
-    name: Build - ${{ matrix.platform }} - ${{ matrix.arch }}
-
+    name: Build
     needs: setup
+    uses: ./.github/workflows/_build.yml
+    with:
+      project_name: NativeConsoleApplicationsRUST
+      executable_version: ${{ needs.setup.outputs.executable_version }}
+      executable_build_version: ${{ needs.setup.outputs.executable_build_version }}
+      binary_names: ${{ needs.setup.outputs.binary_names }}
 
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-
-      - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v2.0.0
-        with:
-          components:
-            rustfmt
-            clippy
-          # Cache the default target dir (clippy) and the build output dir (build and tests)
-          cache-workspaces: |
-            . -> target
-            . -> ${{ env.BASE_BUILD_OUTPUT_FOLDER }}/${{ matrix.platform }}/${{ matrix.arch }}/${{ matrix.target }}
-
-      - name: Show Rust Version
-        run: rustc --version
-
-      - name: Show Rust Available Targets
-        run: rustc --print target-list
-
-      - name: Show Rust Config
-        run: rustc --print cfg
-
-      - name: Show Rust Available Toolchains
-        run: rustup toolchain list
-
-      - name: Rustfmt Check
-        uses: actions-rust-lang/rustfmt@v1.1.2
-
-      - name: Clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
-
-      - name: Set up cross-compilation toolchain
-        uses: ./.github/actions/setup-cross-toolchain
-        with:
-          platform: ${{ matrix.platform }}
-          arch: ${{ matrix.arch }}
-          target: ${{ matrix.target }}
-
-      - name: Set Cargo TOML Version Values
-        shell: pwsh
-        run: ./.github/scripts/Set-CargoWorkspaceVersion.ps1 -Version '${{ needs.setup.outputs.executable_build_version }}'
-
-      - name: Set Build Parameters
-        shell: pwsh
-        run: |
-          $build_output_folder    = Join-Path "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}" "${{ matrix.target }}"
-          $build_artifacts_folder = Join-Path "${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}" "${{ matrix.target }}"
-
-          echo "BUILD_OUTPUT_FOLDER=$build_output_folder" >> $env:GITHUB_ENV
-          echo "BUILD_ARTIFACTS_FOLDER=$build_artifacts_folder" >> $env:GITHUB_ENV
-
-      - name: Build
-        run: cargo build --all-targets --future-incompat-report --profile ${{ env.BUILD_CONFIG }} --verbose --target ${{ matrix.target }} --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
-
-      - name: Check Build Output
-        shell: pwsh
-        run: |
-          $build_output_folder = "${{ env.BUILD_OUTPUT_FOLDER }}"
-          Write-Host "Checking build output folder: $build_output_folder"
-          if (-not (Test-Path $build_output_folder -PathType Container)) {
-            Write-Error "Build output folder does not exist: $build_output_folder"
-            exit 1
-          }
-
-      - name: Run tests
-        run: cargo test --verbose --profile ${{ env.BUILD_CONFIG }} --target ${{ matrix.target }} --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
-
-      - name: Debug Files - BUILD_OUTPUT_FOLDER
-        shell: pwsh
-        run: Get-ChildItem "${{ env.BUILD_OUTPUT_FOLDER }}" -recurse
-
-      - name: Verify Output Architecture
-        shell: pwsh
-        run: >-
-          ./.github/scripts/Test-BinaryArchitecture.ps1
-          -Folder (Join-Path '${{ env.BUILD_OUTPUT_FOLDER }}' '${{ matrix.target }}' '${{ env.BUILD_CONFIG }}')
-          -Platform '${{ matrix.platform }}'
-          -ExpectedFlag '${{ matrix.arch_flag }}'
-
-      - name: Debug Files - BASE_BUILD_OUTPUT_FOLDER
-        shell: pwsh
-        run: Get-ChildItem "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" -recurse
-
-      - name: Package binaries
-        uses: ./.github/actions/package-binaries
-        with:
-          binary-names: ${{ needs.setup.outputs.binary_names }}
-          source-folder: ${{ env.BUILD_OUTPUT_FOLDER }}/${{ matrix.target }}/${{ env.BUILD_CONFIG }}
-          platform: ${{ matrix.platform }}
-          collect-folder: ${{ env.BASE_BUILD_COLLECT_FOLDER }}
-          artifacts-folder: ${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}
-          package-id: ${{ env.PROJECT_NAME }}.${{ matrix.platform }}.${{ matrix.arch }}
-          version: v${{ needs.setup.outputs.executable_version }}
-          artifact-name: ${{ matrix.platform }}.${{ matrix.arch }}
-
-
-  ##########################################################
-  ## Test Coverage
   coverage:
-    name: Test Coverage
-
-    # Run on Linux — coverage tooling is faster and simpler there
-    runs-on: ubuntu-latest
-
-    # Only needs setup; runs in parallel with the build job
+    name: Coverage
     needs: setup
+    uses: ./.github/workflows/_coverage.yml
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-
-      - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v2.0.0
-        with:
-          components: |
-            rustfmt
-            clippy
-            llvm-tools-preview
-
-      - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@cargo-llvm-cov
-
-      - name: Generate coverage (LCOV)
-        run: cargo llvm-cov --all-targets --lcov --output-path lcov.info
-
-      - name: Write coverage summary to GitHub Step Summary
-        run: |
-          (echo '```text' ; cargo llvm-cov report --summary-only ; echo '```') > /tmp/coverage_summary.txt
-          cat /tmp/coverage_summary.txt >> $GITHUB_STEP_SUMMARY
-          cat /tmp/coverage_summary.txt
-        shell: bash
-
-      - name: Upload coverage report artifact
-        uses: actions/upload-artifact@v7.0.2
-        with:
-          name: coverage-report
-          path: lcov.info
-          if-no-files-found: error
-
-
-  ##########################################################
-  ## Dependency Audit
   audit:
-    name: Dependency Audit
-
-    # Checks Cargo.lock against the RustSec advisory database
-    runs-on: ubuntu-latest
-
-    # Only needs setup; runs in parallel with the build job
+    name: Audit
     needs: setup
+    uses: ./.github/workflows/_audit.yml
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-
-      - name: Install cargo-audit
-        uses: taiki-e/install-action@cargo-audit
-
-      - name: Audit dependencies
-        run: cargo audit
-
-
-  ##########################################################
-  ## Tag in git
-  tag:
-    name: Tag in GitHub
-    permissions:
-      contents: write
-    if: needs.setup.outputs.should_tag == 'true'
-
+  release:
+    name: Release
     needs:
       - setup
       - build
       - coverage
       - audit
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Tag git
-        uses: pkgdeps/git-tag-action@v3.0.1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          github_repo: ${{ github.repository }}
-          git_commit_sha: ${{ github.sha }}
-          git_tag_prefix: "v"
-          version: ${{ needs.setup.outputs.executable_version }}
-
-
-  ##########################################################
-  ## Generate a GitHub Release
-  release:
-    name: Create GitHub Release
+    uses: ./.github/workflows/_release.yml
+    # The only jobs that write to the repository (tags and releases)
     permissions:
       contents: write
       pull-requests: read
-    if: needs.setup.outputs.should_release == 'true'
-
-    needs:
-      - setup
-      - build
-      - coverage
-      - audit
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-
-      - uses: actions/download-artifact@v8.0.2
-        with:
-          path: release
-
-      - name: Debug Files - release
-        shell: pwsh
-        run: Get-ChildItem "release" -recurse
-
-      - name: Build Changelog
-        id: build_changelog
-        uses: mikepenz/release-changelog-builder-action@v6.4.0
-        with:
-          failOnError: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Release
-        uses: ncipollo/release-action@v1.21.0
-        with:
-          tag: v${{ needs.setup.outputs.executable_version }}
-          name: Release ${{ needs.setup.outputs.executable_version }}
-          body: ${{ steps.build_changelog.outputs.changelog }}
-          draft: ${{ needs.setup.outputs.release_is_draft }}
-          prerelease: ${{ needs.setup.outputs.release_is_prerelease }}
-          removeArtifacts: true
-          artifacts: 'release/**/*.zip'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      executable_version: ${{ needs.setup.outputs.executable_version }}
+      should_tag: ${{ needs.setup.outputs.should_tag }}
+      should_release: ${{ needs.setup.outputs.should_release }}
+      release_is_draft: ${{ needs.setup.outputs.release_is_draft }}
+      release_is_prerelease: ${{ needs.setup.outputs.release_is_prerelease }}

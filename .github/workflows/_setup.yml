@@ -1,0 +1,101 @@
+name: Setup
+
+# Works out the build's version numbers, whether it is tagged and released,
+# and which executables the workspace builds.
+on:
+  workflow_call:
+    inputs:
+      major_version:
+        description: Product major version
+        type: string
+        required: true
+      minor_version:
+        description: Product minor version
+        type: string
+        required: true
+      primary_branch:
+        description: Branch whose builds are tagged and fully released
+        type: string
+        required: true
+      release_candidate_prefix:
+        description: Branch prefix for release candidates (e.g. rc/)
+        type: string
+        required: true
+    outputs:
+      build_date:
+        value: ${{ jobs.setup.outputs.build_date }}
+      build_year:
+        value: ${{ jobs.setup.outputs.build_year }}
+      product_version:
+        value: ${{ jobs.setup.outputs.product_version }}
+      executable_version:
+        value: ${{ jobs.setup.outputs.executable_version }}
+      executable_build_version:
+        value: ${{ jobs.setup.outputs.executable_build_version }}
+      should_tag:
+        value: ${{ jobs.setup.outputs.should_tag }}
+      should_release:
+        value: ${{ jobs.setup.outputs.should_release }}
+      release_is_draft:
+        value: ${{ jobs.setup.outputs.release_is_draft }}
+      release_is_prerelease:
+        value: ${{ jobs.setup.outputs.release_is_prerelease }}
+      release_modifier:
+        value: ${{ jobs.setup.outputs.release_modifier }}
+      binary_names:
+        value: ${{ jobs.setup.outputs.binary_names }}
+
+jobs:
+  setup:
+    name: Setup Pipeline
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Get Current Build Date
+        run: |
+          echo "build_date=$(date +'%y%j')" >> $GITHUB_ENV
+          echo "build_year=$(date +'%Y')" >> $GITHUB_ENV
+
+      - name: Evaluate pipeline conditions
+        shell: pwsh
+        run: >-
+          ./.github/scripts/Get-PipelineConditions.ps1
+          -Ref '${{ github.ref }}'
+          -EventName '${{ github.event_name }}'
+          -PrimaryBranch '${{ inputs.primary_branch }}'
+          -ReleaseCandidatePrefix '${{ inputs.release_candidate_prefix }}'
+
+      - name: Set Product Version
+        run: echo "product_version=${{ inputs.major_version }}.${{ inputs.minor_version }}" >> $GITHUB_ENV
+
+      - name: Set Executable Version
+        run: echo "executable_version=${{ inputs.major_version }}.${{ inputs.minor_version }}.${{ env.build_date }}.${{ github.run_number }}${{ github.run_attempt }}${{ env.release_modifier }}" >> $GITHUB_ENV
+
+      - name: Set Executable Build Version (for RUST)
+        run: echo "executable_build_version=${{ inputs.major_version }}.${{ inputs.minor_version }}.${{ env.build_date }}" >> $GITHUB_ENV
+
+      - name: Discover Buildable Projects
+        shell: pwsh
+        run: ./.github/scripts/Get-BinaryNames.ps1
+
+      - name: Show Configuration
+        run: env | sort
+
+    outputs:
+      build_date: ${{ env.build_date }}
+      build_year: ${{ env.build_year }}
+      executable_version: ${{ env.executable_version }}
+      executable_build_version: ${{ env.executable_build_version }}
+      product_version: ${{ env.product_version }}
+      should_tag: ${{ env.should_tag }}
+      should_release: ${{ env.should_release }}
+      release_is_draft: ${{ env.release_is_draft }}
+      release_is_prerelease: ${{ env.release_is_prerelease }}
+      release_modifier: ${{ env.release_modifier }}
+      binary_names: ${{ env.BINARY_NAMES }}
