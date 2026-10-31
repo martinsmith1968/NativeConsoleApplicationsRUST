@@ -388,12 +388,54 @@ fn test_cli_csharp_currency_option() {
         .arg("CSharp")
         .arg("--currency")
         .arg("€")
-        .arg("--")
         .arg("{0:C0}")
         .arg("-1234.5")
         .assert()
         .success()
         .stdout("-€1,235\n");
+}
+
+#[test]
+fn test_cli_negative_number_arguments_without_separator() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("{} and {}")
+        .arg("-5")
+        .arg("-0.25")
+        .assert()
+        .success()
+        .stdout("-5 and -0.25\n");
+
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%05d")
+        .arg("-42")
+        .assert()
+        .success()
+        .stdout("-0042\n");
+}
+
+#[test]
+fn test_cli_options_still_parsed_with_negative_numbers_allowed() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("-t")
+        .arg("CSharp")
+        .arg("{0:N1}")
+        .arg("-1234.56")
+        .assert()
+        .success()
+        .stdout("-1,234.6\n");
+
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("-x")
+        .arg("{}")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("unexpected argument '-x'"));
 }
 
 #[test]
