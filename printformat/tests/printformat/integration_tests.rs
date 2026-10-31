@@ -485,6 +485,63 @@ fn test_cli_csharp_unknown_culture_fails() {
 }
 
 #[test]
+fn test_cli_csharp_culture_file() {
+    let path = std::env::temp_dir().join(format!(
+        "printformat-cli-culture-{}.toml",
+        std::process::id()
+    ));
+    std::fs::write(
+        &path,
+        "base = \"de-DE\"\n\
+         decimal_separator = \".\"\n\
+         group_separator = \"’\"\n\
+         currency_symbol = \"CHF\"\n\
+         currency_position = \"before-space\"\n",
+    )
+    .unwrap();
+
+    let assert = Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("-t")
+        .arg("CSharp")
+        .arg("--culture")
+        .arg(&path)
+        .arg("{0:C} | {1:N1}")
+        .arg("1234.5")
+        .arg("-9876543.21")
+        .assert();
+    std::fs::remove_file(&path).unwrap();
+
+    assert.success().stdout("CHF 1’234.50 | -9’876’543.2\n");
+}
+
+#[test]
+fn test_cli_csharp_culture_file_error_names_the_file() {
+    let path = std::env::temp_dir().join(format!(
+        "printformat-cli-culture-bad-{}.toml",
+        std::process::id()
+    ));
+    std::fs::write(&path, "currency_position = \"prefix\"\n").unwrap();
+
+    let assert = Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("-t")
+        .arg("CSharp")
+        .arg("--culture")
+        .arg(&path)
+        .arg("{0:C}")
+        .arg("1")
+        .assert();
+    std::fs::remove_file(&path).unwrap();
+
+    assert
+        .failure()
+        .stderr(predicate::str::contains(path.to_str().unwrap()))
+        .stderr(predicate::str::contains("line 1"))
+        .stderr(predicate::str::contains("prefix"));
+}
+
+#[test]
 fn test_cli_csharp_separator_overrides() {
     Command::cargo_bin("printformat")
         .unwrap()

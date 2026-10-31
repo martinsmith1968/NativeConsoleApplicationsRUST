@@ -5,7 +5,7 @@ use std::process::ExitCode;
 mod formats;
 use formats::c::apply_c_format;
 use formats::csharp::apply_csharp_format;
-use formats::culture::{Culture, NumberFormat};
+use formats::culture::{NumberFormat, resolve_culture};
 use formats::rust::apply_format;
 
 #[derive(ValueEnum, Clone, Debug, Default)]
@@ -38,9 +38,9 @@ struct Args {
     #[arg(short = 't', long = "format-type", value_enum, default_value_t = FormatType::Rust)]
     format_type: FormatType,
 
-    /// Culture whose separators and currency the C# format type uses
-    #[arg(long = "culture", value_enum, ignore_case = true, default_value_t = Culture::EnGb)]
-    culture: Culture,
+    /// Culture whose separators and currency the C# format type uses: en-GB, en-US, de-DE, fr-FR, or the path to a culture file
+    #[arg(long = "culture", default_value = "en-GB", value_parser = resolve_culture)]
+    culture: NumberFormat,
 
     /// Currency symbol for the C# 'C' format specifier (overrides the culture's)
     #[arg(long = "currency")]
@@ -105,7 +105,7 @@ fn run(args: &Args) -> io::Result<()> {
 
 /// The culture's number format, with any separator or currency overrides applied.
 fn number_format(args: &Args) -> NumberFormat {
-    let mut number_format = args.culture.number_format();
+    let mut number_format = args.culture.clone();
     if let Some(currency) = &args.currency {
         number_format.currency_symbol = currency.clone();
     }

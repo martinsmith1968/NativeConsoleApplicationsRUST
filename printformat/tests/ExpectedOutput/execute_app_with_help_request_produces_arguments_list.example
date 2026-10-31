@@ -9,7 +9,7 @@ Arguments:
 
 Options:
   -t, --format-type <FORMAT_TYPE>              Format type to use for the format string [default: Rust] [possible values: Rust, CSharp, C]
-      --culture <CULTURE>                      Culture whose separators and currency the C# format type uses [default: en-GB] [possible values: en-GB, en-US, de-DE, fr-FR]
+      --culture <CULTURE>                      Culture whose separators and currency the C# format type uses: en-GB, en-US, de-DE, fr-FR, or the path to a culture file [default: en-GB]
       --currency <CURRENCY>                    Currency symbol for the C# 'C' format specifier (overrides the culture's)
       --decimal-separator <DECIMAL_SEPARATOR>  Decimal separator for C# number formats (overrides the culture's)
       --group-separator <GROUP_SEPARATOR>      Group (thousands) separator for the C# 'N' and 'C' format specifiers (overrides the culture's)

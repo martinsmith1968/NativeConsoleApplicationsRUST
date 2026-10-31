@@ -243,7 +243,9 @@ fn format_value(
             let symbol = &number_format.currency_symbol;
             match number_format.currency_position {
                 CurrencyPosition::Before => format!("{}{}{}", sign, symbol, number),
-                CurrencyPosition::AfterWithSpace => format!("{}{} {}", sign, number, symbol),
+                CurrencyPosition::After => format!("{}{}{}", sign, number, symbol),
+                CurrencyPosition::BeforeSpace => format!("{}{} {}", sign, symbol, number),
+                CurrencyPosition::AfterSpace => format!("{}{} {}", sign, number, symbol),
             }
         }
         'E' => {

@@ -18,10 +18,9 @@ Options:
           [possible values: Rust, CSharp, C]
 
       --culture <CULTURE>
-          Culture whose separators and currency the C# format type uses
+          Culture whose separators and currency the C# format type uses: en-GB, en-US, de-DE, fr-FR, or the path to a culture file
           
           [default: en-GB]
-          [possible values: en-GB, en-US, de-DE, fr-FR]
 
       --currency <CURRENCY>
           Currency symbol for the C# 'C' format specifier (overrides the culture's)

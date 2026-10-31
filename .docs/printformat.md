@@ -25,6 +25,48 @@ PrintFormat "Name: {:<20}, Age {:0}" Bob 42
 Name: Bob                 , Age 42
 ```
 
+## C# Cultures
+
+With `--format-type CSharp`, the `N`, `C`, `F`, `E` and `G` format specifiers use the
+separators and currency layout of a culture. `--culture` takes one of the built-in
+names (`en-GB` (the default), `en-US`, `de-DE`, `fr-FR`; case-insensitive) or the path
+to a culture file.
+
+```cmd
+PrintFormat -t CSharp --culture de-DE "{0:N2} | {1:C}" 1234567.891 1234.5
+```
+
+```text
+1.234.567,89 | 1.234,50 €
+```
+
+### Culture Files
+
+A culture file is a TOML file. Every field is optional; missing values come from `base`
+(or `en-GB` if there is no `base`).
+
+```toml
+# swiss.toml
+base = "de-DE"                      # built-in culture to start from
+decimal_separator = "."
+group_separator = "’"
+currency_symbol = "CHF"
+currency_position = "before-space"  # before | after | before-space | after-space
+```
+
+```cmd
+PrintFormat -t CSharp --culture swiss.toml "{0:C}" 1234.5
+```
+
+```text
+CHF 1’234.50
+```
+
+Built-in names are checked first, so to use a file with the same name as a built-in
+culture, prefix it with a path (e.g. `./en-GB`). `--currency`, `--decimal-separator` and
+`--group-separator` override the culture's values. Arguments are always read with `.`
+as the decimal point.
+
 ## Latest Version
 
 [//]: # (APP_LATESTVERSION)
@@ -55,7 +97,7 @@ Arguments:
 
 Options:
   -t, --format-type <FORMAT_TYPE>              Format type to use for the format string [default: Rust] [possible values: Rust, CSharp, C]
-      --culture <CULTURE>                      Culture whose separators and currency the C# format type uses [default: en-GB] [possible values: en-GB, en-US, de-DE, fr-FR]
+      --culture <CULTURE>                      Culture whose separators and currency the C# format type uses: en-GB, en-US, de-DE, fr-FR, or the path to a culture file [default: en-GB]
       --currency <CURRENCY>                    Currency symbol for the C# 'C' format specifier (overrides the culture's)
       --decimal-separator <DECIMAL_SEPARATOR>  Decimal separator for C# number formats (overrides the culture's)
       --group-separator <GROUP_SEPARATOR>      Group (thousands) separator for the C# 'N' and 'C' format specifiers (overrides the culture's)

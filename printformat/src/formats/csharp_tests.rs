@@ -1,5 +1,5 @@
 use super::*;
-use crate::formats::culture::Culture;
+use crate::formats::culture::{Culture, CurrencyPosition};
 
 fn args(values: &[&str]) -> Vec<String> {
     values.iter().map(|value| value.to_string()).collect()
@@ -363,4 +363,27 @@ fn test_separator_overrides() {
         apply_csharp_format("{0:N2}", &args(&["1234567.891"]), &number_format).unwrap(),
         "1'234'567,89"
     );
+}
+
+#[test]
+fn test_currency_positions() {
+    let mut number_format = Culture::EnGb.number_format();
+    number_format.currency_symbol = "X".to_string();
+    let expected = [
+        (CurrencyPosition::Before, "X1,234.50", "-X1,234.50"),
+        (CurrencyPosition::After, "1,234.50X", "-1,234.50X"),
+        (CurrencyPosition::BeforeSpace, "X 1,234.50", "-X 1,234.50"),
+        (CurrencyPosition::AfterSpace, "1,234.50 X", "-1,234.50 X"),
+    ];
+    for (position, positive, negative) in expected {
+        number_format.currency_position = position;
+        assert_eq!(
+            apply_csharp_format("{0:C}", &args(&["1234.5"]), &number_format).unwrap(),
+            positive
+        );
+        assert_eq!(
+            apply_csharp_format("{0:C}", &args(&["-1234.5"]), &number_format).unwrap(),
+            negative
+        );
+    }
 }
