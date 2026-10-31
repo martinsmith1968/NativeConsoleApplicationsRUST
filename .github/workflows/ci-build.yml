@@ -39,81 +39,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
       - name: Get Current Build Date
         run: |
           echo "build_date=$(date +'%y%j')" >> $GITHUB_ENV
           echo "build_year=$(date +'%Y')" >> $GITHUB_ENV
 
       - name: Evaluate pipeline conditions
-        run: |
-          is_primary_branch=false
-          is_pull_request_build=false
-          is_release_candidate_branch=false
-
-          # Primary Branch ?
-          if [ "${{ github.ref }}" == 'refs/heads/${{ env.PRIMARY_BRANCH_NAME }}' ]
-          then
-            is_primary_branch=true
-          fi
-
-          # Pull Request ?
-          if [ "${{ github.event_name }}" == "pull_request" ]
-          then
-            is_pull_request_build=true
-          fi
-
-          # If Release Candidate branch ?
-          if [[ "${{ github.ref }}" == refs/heads/${{ env.BRANCH_PREFIX_RELEASE_CANDIDATE }}* ]]
-          then
-            is_release_candidate_branch=true
-          fi
-
-          # Set for later steps
-          echo "is_primary_branch=${is_primary_branch}" >> $GITHUB_ENV
-          echo "is_pull_request_build=${is_pull_request_build}" >> $GITHUB_ENV
-          echo "is_release_candidate_branch=${is_release_candidate_branch}" >> $GITHUB_ENV
-
-      - name: Determine Tagging
-        run: |
-          should_tag=false
-
-          if $is_primary_branch;
-          then
-              if ! $is_pull_request_build;
-              then
-                  should_tag=true
-              fi
-          fi
-
-          echo "should_tag=${should_tag}" >> $GITHUB_ENV
-
-      - name: Determine GitHub Releasing
-        run: |
-          should_release=true
-          release_is_draft=true
-          release_is_prerelease=false
-          release_modifier='-ci'
-
-          if $is_primary_branch
-          then
-              release_is_draft=false
-              release_is_prerelease=false
-              release_modifier=''
-          fi
-          if $is_release_candidate_branch
-          then
-              release_modifier='-alpha'
-          fi
-          if $is_pull_request_build; then
-              release_is_draft=false
-              release_is_prerelease=true
-              release_modifier='-beta'
-          fi
-
-          echo "should_release=${should_release}" >> $GITHUB_ENV
-          echo "release_is_draft=${release_is_draft}" >> $GITHUB_ENV
-          echo "release_is_prerelease=${release_is_prerelease}" >> $GITHUB_ENV
-          echo "release_modifier=${release_modifier}" >> $GITHUB_ENV
+        shell: pwsh
+        run: >-
+          ./.github/scripts/Get-PipelineConditions.ps1
+          -Ref '${{ github.ref }}'
+          -EventName '${{ github.event_name }}'
+          -PrimaryBranch '${{ env.PRIMARY_BRANCH_NAME }}'
+          -ReleaseCandidatePrefix '${{ env.BRANCH_PREFIX_RELEASE_CANDIDATE }}'
 
       - name: Set Product Version
         run: echo "product_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}" >> $GITHUB_ENV
@@ -124,43 +67,9 @@ jobs:
       - name: Set Executable Build Version (for RUST)
         run: echo "executable_build_version=${{ env.APP_MAJOR_VERSION }}.${{ env.APP_MINOR_VERSION }}.${{ env.build_date }}" >> $GITHUB_ENV
 
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-        with:
-          fetch-depth: 0
-
       - name: Discover Buildable Projects
         shell: pwsh
-        run: |
-          Install-Module -Name PSToml -Force
-
-          $toml_filename = "Cargo.toml"
-          $contents = Get-Content $toml_filename -Raw
-
-          $toml_object = $contents | ConvertFrom-Toml
-
-          $members = $toml_object.workspace.members
-          Write-Host "Found $($members.Count) workspace members"
-
-          # Only members with a src/main.rs produce an executable (skips library crates such as build-support)
-          $projects = @()
-          foreach ($member in $members) {
-            if (Test-Path (Join-Path $member "src" "main.rs") -PathType Leaf) {
-              Write-Host " - $member (binary)"
-              $projects += $member
-            } else {
-              Write-Host " - $member (library, skipped)"
-            }
-          }
-
-          if ($projects.Count -eq 0) {
-            Write-Error "No binary projects found in the workspace"
-            exit 1
-          }
-
-          $binary_names = [string]::join(',', $projects)
-
-          echo "BINARY_NAMES=$binary_names" >> $env:GITHUB_ENV
+        run: ./.github/scripts/Get-BinaryNames.ps1
 
       - name: Show Configuration
         run: env | sort
@@ -275,42 +184,7 @@ jobs:
 
       - name: Set Cargo TOML Version Values
         shell: pwsh
-        run: |
-          $file_path = "Cargo.toml"
-          $new_version = "${{ needs.setup.outputs.executable_build_version }}"
-
-          Write-Host "Setting workspace version in '$file_path' to '$new_version'"
-
-          $lines = Get-Content $file_path
-
-          $section = ""
-          $found = $false
-          for ($i = 0; $i -lt $lines.Length; $i++) {
-            $line = $lines[$i].Trim()
-
-            if ($line -match '^\s*\[.*\]\s*$') {
-              $section = $line.Trim('[', ']')
-            }
-
-            if ($section -eq "workspace.package" -and $line -match '^\s*version\s*=\s*".*"\s*$') {
-              Write-Host "Found version line: $($i): '$line'"
-              $lines[$i] = "version    = `"$new_version`""
-              Write-Host "  Set version line: $($i): '$($lines[$i])'"
-              $found = $true
-              break
-            }
-          }
-
-          if (-not $found) {
-            Write-Error "No version found in [workspace.package] of $file_path"
-            exit 1
-          }
-
-          Set-Content -Path $file_path -Value $lines
-
-          Write-Host
-          Write-Host "$file_path :"
-          Get-Content $file_path
+        run: ./.github/scripts/Set-CargoWorkspaceVersion.ps1 -Version '${{ needs.setup.outputs.executable_build_version }}'
 
       - name: Set Build Parameters
         shell: pwsh
@@ -341,128 +215,22 @@ jobs:
         shell: pwsh
         run: Get-ChildItem "${{ env.BUILD_OUTPUT_FOLDER }}" -recurse
 
-      - name: Verify Output Architecture - Linux
-        if: ${{ matrix.platform  == 'linux' }}
-        run: |
-          # https://superuser.com/questions/791506/how-to-determine-if-a-linux-binary-file-is-32-bit-or-64-bit
-
-          pwd
-
-          filePath='${{ env.BUILD_OUTPUT_FOLDER }}/${{ matrix.target }}/${{ env.BUILD_CONFIG }}'
-          echo "Checking architecture for '$filePath'"
-
-          file_count=0
-          for i in $(find $filePath -maxdepth 1 -type f -executable); do
-            file_count=$((file_count + 1))
-            echo "-- [$file_count]:  Checking: $i"
-
-            flag=$(od -An -t x1 -j 4 -N 1 $i | xargs)
-            echo "   Found architecture flag: $flag"
-            if [ "$flag" != "${{ matrix.arch_flag }}" ]; then
-              echo "   Architecture mismatch for '$i'. Expected: ${{ matrix.arch_flag }}, Actual: $flag"
-              exit 1
-            fi
-
-            echo "   Architecture matches for '$i'. Expected: ${{ matrix.arch_flag }}, Actual: $flag"
-          done
-
-          if (( $file_count == 0 )); then
-            echo "No executable files found in '$filePath'"
-            exit 1
-          fi
-
-      - name: Verify Output Architecture - Windows
-        if: ${{ matrix.platform  == 'windows' }}
+      - name: Verify Output Architecture
         shell: pwsh
-        run: |
-          # https://superuser.com/questions/358434/how-to-check-if-a-binary-is-32-or-64-bit-on-windows
-
-          Get-Location
-
-          $filePath = (Join-Path '${{ env.BUILD_OUTPUT_FOLDER }}' '${{ matrix.target }}' '${{ env.BUILD_CONFIG }}')
-          Write-Host "Checking architecture for '$filePath'"
-
-
-          function PadToMultipleOf {
-              param(
-                [string]$value, 
-                [int32]$multiple
-              )
-
-              while ($value.length % $multiple -ne 0) {
-                  $value = $value.PadLeft($value.length + 1, '0')
-              }
-
-              $value
-          }
-
-          function Get-ArchitectureFlag {
-              param(
-                [string]$FilePath
-              )
-
-              [int32]$MACHINE_OFFSET = 4
-              [int32]$PE_POINTER_OFFSET = 60
-
-              [byte[]]$data = New-Object -TypeName System.Byte[] -ArgumentList 4096
-              $stream = New-Object -TypeName System.IO.FileStream -ArgumentList ($FilePath, 'Open', 'Read')
-              $stream.Read($data, 0, 4096) | Out-Null
-
-              [int32]$PE_HEADER_ADDR = [System.BitConverter]::ToInt32($data, $PE_POINTER_OFFSET)
-              [int32]$machineUint = [System.BitConverter]::ToUInt16($data, $PE_HEADER_ADDR + $MACHINE_OFFSET)
-              $stream.Close()
-
-              $result = "0x" + (PadToMultipleOf ("{0:x}" -f $machineUint) 2)
-
-              $result
-          }
-
-          $file_count = 0;
-          foreach ($file in Get-ChildItem -Path $filePath -File -Filter *.exe)
-          {
-            ++$file_count
-            Write-Host "-- [$file_count]: Checking: $($file.FullName)"
-            $actual_arch_flag = Get-ArchitectureFlag -FilePath $file.FullName
-            $expected_arch_flag = "${{ matrix.arch_flag }}"
-
-            if ($actual_arch_flag -ne $expected_arch_flag) {
-              Write-Host "   Architecture mismatch for '$($file.FullName)'. Expected: 0x$('{0:X}' -f $expected_arch_flag), Actual: 0x$('{0:X}' -f $actual_arch_flag)" -ForegroundColor Red
-              exit 1
-            }
-            
-            Write-Host "   Architecture matches for '$($file.FullName)'. Expected: 0x$('{0:X}' -f $expected_arch_flag), Actual: 0x$('{0:X}' -f $actual_arch_flag)" -ForegroundColor Green
-          }
-
-          if ($file_count -eq 0) {
-            Write-Host "No executable files found in '$filePath'" -ForegroundColor Red
-            exit 1
-          }
+        run: >-
+          ./.github/scripts/Test-BinaryArchitecture.ps1
+          -Folder (Join-Path '${{ env.BUILD_OUTPUT_FOLDER }}' '${{ matrix.target }}' '${{ env.BUILD_CONFIG }}')
+          -Platform '${{ matrix.platform }}'
+          -ExpectedFlag '${{ matrix.arch_flag }}'
 
       - name: Copy relevant files to output folder
         shell: pwsh
-        run: |
-          $executable_extension = ".exe"
-          if ("${{ matrix.platform }}" -ne "windows") {
-            $executable_extension = ""
-          }
-
-          if (-not (Test-Path "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -PathType Container)) {
-            New-Item -path "${{ env.BASE_BUILD_COLLECT_FOLDER }}" -ItemType Directory
-          }
-
-          Copy-Item "README.md" "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
-
-          foreach ($project in "${{ needs.setup.outputs.binary_names }}".Split(',')) {
-            if ([string]::IsNullOrWhiteSpace($project)) {
-              continue
-            }
-
-            $project = $project.Trim()
-            $project_output_path = Join-Path "${{ env.BUILD_OUTPUT_FOLDER }}" "${{ matrix.target }}" "${{ env.BUILD_CONFIG }}" "$($project)$($executable_extension)"
-
-            Write-Host "Copying project to '${{ env.BASE_BUILD_COLLECT_FOLDER }}': $project_output_path"
-            Copy-Item $project_output_path "${{ env.BASE_BUILD_COLLECT_FOLDER }}"
-          }
+        run: >-
+          ./.github/scripts/Copy-ReleaseFiles.ps1
+          -BinaryNames '${{ needs.setup.outputs.binary_names }}'
+          -SourceFolder (Join-Path '${{ env.BUILD_OUTPUT_FOLDER }}' '${{ matrix.target }}' '${{ env.BUILD_CONFIG }}')
+          -Platform '${{ matrix.platform }}'
+          -Destination '${{ env.BASE_BUILD_COLLECT_FOLDER }}'
 
       - name: Debug Files - BASE_BUILD_OUTPUT_FOLDER
         shell: pwsh

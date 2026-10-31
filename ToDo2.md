@@ -33,7 +33,11 @@ Tick each item as it is completed.
 - [x] Add a `cargo audit` or `cargo deny` step
 - [x] Add `Swatinem/rust-cache` (or equivalent) — already enabled by `setup-rust-toolchain`; build output dir now cached and reused by the tests
 - [x] Replace `permissions: write-all` on the tag and release jobs with `contents: write`
-- [ ] Split the 592-line monolithic workflow (consider reusable workflows)
+- [ ] Split the monolithic workflow (641 lines) into reusable workflows (branch `task/ai-recommendations-workflows`; no shared repository)
+  - [X] 1. Move the inline scripts into `.github/scripts/` (PowerShell)
+  - [ ] 2. Extract composite actions (`stamp-version`, `verify-architecture`, `package-binaries`)
+  - [ ] 3. Split the jobs into reusable workflows (`_setup`, `_build`, `_coverage`, `_audit`, `_release`); `ci-build.yml` only calls them
+  - [ ] 4. Consolidate or gate the debug-only steps
 - [x] Add the `cargo` ecosystem to Dependabot
 
 ## Repository and documentation
