@@ -1,10 +1,12 @@
 //! The C# composite format style (`{0,-10:F2}`), rendered directly from the arguments.
 //!
 //! Supports the standard numeric format specifiers C, D, E, F, G, N and X (any case,
-//! with an optional precision), plus alignment. Numbers use `,` for thousands and `.`
-//! for decimals; the currency symbol for `C` is supplied by the caller.
+//! with an optional precision), plus alignment. Separators and the currency layout
+//! come from the caller's [`NumberFormat`]; arguments are always parsed with `.` as
+//! the decimal point.
 
 use super::braces::{BraceToken, brace_tokens};
+use super::culture::{CurrencyPosition, NumberFormat};
 
 /// The largest precision accepted in a format specifier such as `F2`.
 const MAX_PRECISION: usize = 99;
@@ -35,7 +37,7 @@ enum Piece {
 pub(crate) fn apply_csharp_format(
     format_str: &str,
     args: &[String],
-    currency: &str,
+    number_format: &NumberFormat,
 ) -> Result<String, String> {
     let pieces = parse_format(format_str)?;
 
@@ -63,7 +65,7 @@ pub(crate) fn apply_csharp_format(
             Piece::Placeholder(placeholder) => {
                 let arg = &args[placeholder.index];
                 let value = match &placeholder.format {
-                    Some(spec) => format_value(arg, spec, currency)?,
+                    Some(spec) => format_value(arg, spec, number_format)?,
                     None => arg.clone(),
                 };
                 output.push_str(&align(&value, placeholder.alignment));
@@ -185,7 +187,11 @@ fn parse_format_spec(spec: &str) -> Result<Option<FormatSpec>, String> {
     Ok(Some(FormatSpec { kind, precision }))
 }
 
-fn format_value(arg: &str, spec: &FormatSpec, currency: &str) -> Result<String, String> {
+fn format_value(
+    arg: &str,
+    spec: &FormatSpec,
+    number_format: &NumberFormat,
+) -> Result<String, String> {
     let kind = spec.kind;
 
     Ok(match kind.to_ascii_uppercase() {
@@ -209,27 +215,52 @@ fn format_value(arg: &str, spec: &FormatSpec, currency: &str) -> Result<String, 
         }
         'F' => {
             let value = parse_number(arg, kind)?;
-            format_fixed(value, spec.precision.unwrap_or(2))
+            localize(
+                &format_fixed(value, spec.precision.unwrap_or(2)),
+                number_format,
+                false,
+            )
         }
         'N' => {
             let value = parse_number(arg, kind)?;
-            group_thousands(&format_fixed(value, spec.precision.unwrap_or(2)))
+            localize(
+                &format_fixed(value, spec.precision.unwrap_or(2)),
+                number_format,
+                true,
+            )
         }
         'C' => {
             let value = parse_number(arg, kind)?;
-            let number = group_thousands(&format_fixed(value, spec.precision.unwrap_or(2)));
-            match number.strip_prefix('-') {
-                Some(positive) => format!("-{}{}", currency, positive),
-                None => format!("{}{}", currency, number),
+            let number = localize(
+                &format_fixed(value, spec.precision.unwrap_or(2)),
+                number_format,
+                true,
+            );
+            let (sign, number) = match number.strip_prefix('-') {
+                Some(positive) => ("-", positive),
+                None => ("", number.as_str()),
+            };
+            let symbol = &number_format.currency_symbol;
+            match number_format.currency_position {
+                CurrencyPosition::Before => format!("{}{}{}", sign, symbol, number),
+                CurrencyPosition::AfterWithSpace => format!("{}{} {}", sign, number, symbol),
             }
         }
         'E' => {
             let value = parse_number(arg, kind)?;
-            format_exponential(value, spec.precision.unwrap_or(6), kind)
+            localize(
+                &format_exponential(value, spec.precision.unwrap_or(6), kind),
+                number_format,
+                false,
+            )
         }
         'G' => {
             let value = parse_number(arg, kind)?;
-            format_general(value, spec.precision, kind)
+            localize(
+                &format_general(value, spec.precision, kind),
+                number_format,
+                false,
+            )
         }
         _ => return Err(format!("C# format specifier '{}' is not supported", kind)),
     })
@@ -303,8 +334,10 @@ fn increment_last_digit(number: &str) -> String {
     std::iter::once('1').chain(chars).collect()
 }
 
-/// Inserts `,` between each group of three digits before the decimal point.
-fn group_thousands(number: &str) -> String {
+/// Rewrites a number formatted with `.` as the decimal point using the culture's
+/// decimal separator and, when `grouped`, its group separator between each group
+/// of three digits before the decimal point.
+fn localize(number: &str, number_format: &NumberFormat, grouped: bool) -> String {
     let (sign, unsigned) = match number.strip_prefix('-') {
         Some(rest) => ("-", rest),
         None => ("", number),
@@ -314,17 +347,20 @@ fn group_thousands(number: &str) -> String {
         None => (unsigned, None),
     };
 
-    let mut grouped = String::new();
+    let mut digits = String::new();
     for (i, ch) in integer.chars().enumerate() {
-        if i > 0 && (integer.len() - i) % 3 == 0 {
-            grouped.push(',');
+        if grouped && i > 0 && (integer.len() - i) % 3 == 0 {
+            digits.push_str(&number_format.group_separator);
         }
-        grouped.push(ch);
+        digits.push(ch);
     }
 
     match fraction {
-        Some(fraction) => format!("{}{}.{}", sign, grouped, fraction),
-        None => format!("{}{}", sign, grouped),
+        Some(fraction) => format!(
+            "{}{}{}{}",
+            sign, digits, number_format.decimal_separator, fraction
+        ),
+        None => format!("{}{}", sign, digits),
     }
 }
 

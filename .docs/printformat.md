@@ -54,10 +54,13 @@ Arguments:
   [ARGUMENTS]...   Arguments to substitute into the format string
 
 Options:
-  -t, --format-type <FORMAT_TYPE>  Format type to use for the format string [default: Rust] [possible values: Rust, CSharp, C]
-      --currency <CURRENCY>        Currency symbol used by the C# 'C' (currency) format specifier [default: £]
-  -h, --help                       Print help [aliases: -?]
-  -V, --version                    Print version [aliases: -!]
+  -t, --format-type <FORMAT_TYPE>              Format type to use for the format string [default: Rust] [possible values: Rust, CSharp, C]
+      --culture <CULTURE>                      Culture whose separators and currency the C# format type uses [default: en-GB] [possible values: en-GB, en-US, de-DE, fr-FR]
+      --currency <CURRENCY>                    Currency symbol for the C# 'C' format specifier (overrides the culture's)
+      --decimal-separator <DECIMAL_SEPARATOR>  Decimal separator for C# number formats (overrides the culture's)
+      --group-separator <GROUP_SEPARATOR>      Group (thousands) separator for the C# 'N' and 'C' format specifiers (overrides the culture's)
+  -h, --help                                   Print help [aliases: -?]
+  -V, --version                                Print version [aliases: -!]
 
 Examples:
   printformat "Hello, {}!" "World"
@@ -72,6 +75,7 @@ Examples:
   printformat --format-type CSharp "{0:N2}" "1234567.891"
   printformat --format-type CSharp "{0:X4}" "255"
   printformat --format-type CSharp --currency "$" "{0:C}" "1234.5"
+  printformat --format-type CSharp --culture de-DE "{0:N2} | {1:C}" "1234567.891" "1234.5"
   printformat --format-type C "%s is %d years old" "Alice" "30"
   printformat --format-type C "%10s | %-10s" "right" "left"
   printformat --format-type C "%05d" "42"

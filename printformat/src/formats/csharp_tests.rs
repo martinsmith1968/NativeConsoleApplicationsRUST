@@ -1,11 +1,16 @@
 use super::*;
+use crate::formats::culture::Culture;
 
 fn args(values: &[&str]) -> Vec<String> {
     values.iter().map(|value| value.to_string()).collect()
 }
 
 fn format(format_str: &str, values: &[&str]) -> Result<String, String> {
-    apply_csharp_format(format_str, &args(values), "£")
+    format_in(Culture::EnGb, format_str, values)
+}
+
+fn format_in(culture: Culture, format_str: &str, values: &[&str]) -> Result<String, String> {
+    apply_csharp_format(format_str, &args(values), &culture.number_format())
 }
 
 // ===== Placeholders, escapes and argument counts =====
@@ -202,11 +207,21 @@ fn test_n_small_and_negative() {
 // ===== C (currency) =====
 
 #[test]
-fn test_c_uses_supplied_symbol() {
+fn test_c_uses_culture_symbol() {
     assert_eq!(format("{0:C}", &["1234.5"]).unwrap(), "£1,234.50");
     assert_eq!(
-        apply_csharp_format("{0:C0}", &args(&["1234.5"]), "$").unwrap(),
+        format_in(Culture::EnUs, "{0:C0}", &["1234.5"]).unwrap(),
         "$1,235"
+    );
+}
+
+#[test]
+fn test_c_uses_overridden_symbol() {
+    let mut number_format = Culture::EnGb.number_format();
+    number_format.currency_symbol = "GBP ".to_string();
+    assert_eq!(
+        apply_csharp_format("{0:C}", &args(&["1234.5"]), &number_format).unwrap(),
+        "GBP 1,234.50"
     );
 }
 
@@ -263,4 +278,89 @@ fn test_g_with_precision() {
     assert_eq!(format("{0:G2}", &["12345"]).unwrap(), "1.2E+04");
     assert_eq!(format("{0:g2}", &["12345"]).unwrap(), "1.2e+04");
     assert_eq!(format("{0:G4}", &["2.5"]).unwrap(), "2.5");
+}
+
+// ===== Cultures =====
+
+#[test]
+fn test_de_de_number_and_currency() {
+    assert_eq!(
+        format_in(Culture::DeDe, "{0:N2}", &["1234567.891"]).unwrap(),
+        "1.234.567,89"
+    );
+    assert_eq!(
+        format_in(Culture::DeDe, "{0:C}", &["1234.5"]).unwrap(),
+        "1.234,50 €"
+    );
+    assert_eq!(
+        format_in(Culture::DeDe, "{0:C}", &["-1234.5"]).unwrap(),
+        "-1.234,50 €"
+    );
+}
+
+#[test]
+fn test_fr_fr_number_and_currency() {
+    assert_eq!(
+        format_in(Culture::FrFr, "{0:N2}", &["1234567.891"]).unwrap(),
+        "1 234 567,89"
+    );
+    assert_eq!(
+        format_in(Culture::FrFr, "{0:C}", &["1234.5"]).unwrap(),
+        "1 234,50 €"
+    );
+}
+
+#[test]
+fn test_en_us_currency() {
+    assert_eq!(
+        format_in(Culture::EnUs, "{0:C}", &["-1234.5"]).unwrap(),
+        "-$1,234.50"
+    );
+}
+
+#[test]
+fn test_culture_decimal_separator_in_f_e_and_g() {
+    assert_eq!(
+        format_in(Culture::DeDe, "{0:F2}", &["3.14159"]).unwrap(),
+        "3,14"
+    );
+    assert_eq!(
+        format_in(Culture::DeDe, "{0:E3}", &["3.14159"]).unwrap(),
+        "3,142E+000"
+    );
+    assert_eq!(
+        format_in(Culture::DeDe, "{0:G}", &["3.14159"]).unwrap(),
+        "3,14159"
+    );
+}
+
+#[test]
+fn test_culture_does_not_change_d_or_x() {
+    assert_eq!(
+        format_in(Culture::DeDe, "{0:D6}", &["1234"]).unwrap(),
+        "001234"
+    );
+    assert_eq!(
+        format_in(Culture::DeDe, "{0:X}", &["4660"]).unwrap(),
+        "1234"
+    );
+}
+
+#[test]
+fn test_f_does_not_group_thousands() {
+    assert_eq!(
+        format_in(Culture::DeDe, "{0:F1}", &["1234567.25"]).unwrap(),
+        "1234567,3"
+    );
+}
+
+#[test]
+fn test_separator_overrides() {
+    let mut number_format = Culture::EnGb.number_format();
+    number_format.decimal_separator = ",".to_string();
+    number_format.group_separator = "'".to_string();
+    assert_eq!(
+        apply_csharp_format("{0:N2}", &args(&["1234567.891"]), &number_format).unwrap(),
+        "1'234'567,89"
+    );
 }

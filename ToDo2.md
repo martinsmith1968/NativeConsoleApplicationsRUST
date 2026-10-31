@@ -11,7 +11,7 @@ Tick each item as it is completed.
 - [X] Remove `impl Display for FormatType`, which duplicates what `ValueEnum` provides
 - [X] Make `%c` reject (or warn about) arguments longer than one character instead of silently using the first
 - [X] Accept negative numbers as arguments (e.g. `printformat -t CSharp "{0:C}" -1234.5`) without needing `--`; they are currently read as unknown options
-- [ ] Add a `--culture` option for C# formats (e.g. `en-GB`, `en-US`, `de-DE`, `fr-FR`): a built-in table of decimal separator, group separator, currency symbol and currency pattern (symbol before/after the number), default `en-GB`; `--currency` (and optional separator options) override individual values
+- [X] Add a `--culture` option for C# formats (e.g. `en-GB`, `en-US`, `de-DE`, `fr-FR`): a built-in table of decimal separator, group separator, currency symbol and currency pattern (symbol before/after the number), default `en-GB`; `--currency` (and optional separator options) override individual values
 
 ## Cargo and workspace (priority 3)
 

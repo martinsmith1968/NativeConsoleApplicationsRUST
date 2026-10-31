@@ -3,7 +3,10 @@ use std::io::{self, Write};
 use std::process::ExitCode;
 
 mod formats;
-use formats::{c::apply_c_format, csharp::apply_csharp_format, rust::apply_format};
+use formats::c::apply_c_format;
+use formats::csharp::apply_csharp_format;
+use formats::culture::{Culture, NumberFormat};
+use formats::rust::apply_format;
 
 #[derive(ValueEnum, Clone, Debug, Default)]
 enum FormatType {
@@ -28,16 +31,28 @@ enum FormatType {
     allow_negative_numbers = true,
     disable_help_flag = true,
     disable_version_flag = true,
-    after_help = "Examples:\n  printformat \"Hello, {}!\" \"World\"\n  printformat \"{} + {} = {}\" \"1\" \"2\" \"3\"\n  printformat \"{:>10}\" \"right\"\n  printformat \"{:<10}\" \"left\"\n  printformat \"{:*^20}\" \"center\"\n  printformat \"No placeholders\"\n  printformat --format-type CSharp \"{0} is {1} years old\" \"Alice\" \"30\"\n  printformat --format-type CSharp \"{0,-10} | {1,10}\" \"left\" \"right\"\n  printformat --format-type CSharp \"{0:D5}\" \"42\"\n  printformat --format-type CSharp \"{0:N2}\" \"1234567.891\"\n  printformat --format-type CSharp \"{0:X4}\" \"255\"\n  printformat --format-type CSharp --currency \"$\" \"{0:C}\" \"1234.5\"\n  printformat --format-type C \"%s is %d years old\" \"Alice\" \"30\"\n  printformat --format-type C \"%10s | %-10s\" \"right\" \"left\"\n  printformat --format-type C \"%05d\" \"42\"\n  printformat --format-type C \"%.2f\" \"3.14159\"\n\nSee Also:\n https://docs.rs/strfmt/latest/strfmt/\n https://doc.rust-lang.org/std/fmt/\n https://cplusplus.com/reference/cstdio/printf/"
+    after_help = "Examples:\n  printformat \"Hello, {}!\" \"World\"\n  printformat \"{} + {} = {}\" \"1\" \"2\" \"3\"\n  printformat \"{:>10}\" \"right\"\n  printformat \"{:<10}\" \"left\"\n  printformat \"{:*^20}\" \"center\"\n  printformat \"No placeholders\"\n  printformat --format-type CSharp \"{0} is {1} years old\" \"Alice\" \"30\"\n  printformat --format-type CSharp \"{0,-10} | {1,10}\" \"left\" \"right\"\n  printformat --format-type CSharp \"{0:D5}\" \"42\"\n  printformat --format-type CSharp \"{0:N2}\" \"1234567.891\"\n  printformat --format-type CSharp \"{0:X4}\" \"255\"\n  printformat --format-type CSharp --currency \"$\" \"{0:C}\" \"1234.5\"\n  printformat --format-type CSharp --culture de-DE \"{0:N2} | {1:C}\" \"1234567.891\" \"1234.5\"\n  printformat --format-type C \"%s is %d years old\" \"Alice\" \"30\"\n  printformat --format-type C \"%10s | %-10s\" \"right\" \"left\"\n  printformat --format-type C \"%05d\" \"42\"\n  printformat --format-type C \"%.2f\" \"3.14159\"\n\nSee Also:\n https://docs.rs/strfmt/latest/strfmt/\n https://doc.rust-lang.org/std/fmt/\n https://cplusplus.com/reference/cstdio/printf/"
 )]
 struct Args {
     /// Format type to use for the format string
     #[arg(short = 't', long = "format-type", value_enum, default_value_t = FormatType::Rust)]
     format_type: FormatType,
 
-    /// Currency symbol used by the C# 'C' (currency) format specifier
-    #[arg(long = "currency", default_value = "£")]
-    currency: String,
+    /// Culture whose separators and currency the C# format type uses
+    #[arg(long = "culture", value_enum, ignore_case = true, default_value_t = Culture::EnGb)]
+    culture: Culture,
+
+    /// Currency symbol for the C# 'C' format specifier (overrides the culture's)
+    #[arg(long = "currency")]
+    currency: Option<String>,
+
+    /// Decimal separator for C# number formats (overrides the culture's)
+    #[arg(long = "decimal-separator")]
+    decimal_separator: Option<String>,
+
+    /// Group (thousands) separator for the C# 'N' and 'C' format specifiers (overrides the culture's)
+    #[arg(long = "group-separator")]
+    group_separator: Option<String>,
 
     /// The format string (use {} as placeholders)
     #[arg(index = 1, required = true)]
@@ -72,7 +87,7 @@ fn main() -> ExitCode {
 fn run(args: &Args) -> io::Result<()> {
     let result = match args.format_type {
         FormatType::CSharp => {
-            apply_csharp_format(&args.format_string, &args.arguments, &args.currency)
+            apply_csharp_format(&args.format_string, &args.arguments, &number_format(args))
         }
         FormatType::C => apply_c_format(&args.format_string, &args.arguments),
         FormatType::Rust => apply_format(&args.format_string, &args.arguments),
@@ -86,4 +101,19 @@ fn run(args: &Args) -> io::Result<()> {
         }
         Err(error) => Err(io::Error::other(error)),
     }
+}
+
+/// The culture's number format, with any separator or currency overrides applied.
+fn number_format(args: &Args) -> NumberFormat {
+    let mut number_format = args.culture.number_format();
+    if let Some(currency) = &args.currency {
+        number_format.currency_symbol = currency.clone();
+    }
+    if let Some(separator) = &args.decimal_separator {
+        number_format.decimal_separator = separator.clone();
+    }
+    if let Some(separator) = &args.group_separator {
+        number_format.group_separator = separator.clone();
+    }
+    number_format
 }

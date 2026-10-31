@@ -439,6 +439,71 @@ fn test_cli_options_still_parsed_with_negative_numbers_allowed() {
 }
 
 #[test]
+fn test_cli_csharp_culture() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("CSharp")
+        .arg("--culture")
+        .arg("de-DE")
+        .arg("{0:N2} | {1:C}")
+        .arg("1234567.891")
+        .arg("1234.5")
+        .assert()
+        .success()
+        .stdout("1.234.567,89 | 1.234,50 €\n");
+}
+
+#[test]
+fn test_cli_csharp_culture_is_case_insensitive() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("-t")
+        .arg("CSharp")
+        .arg("--culture")
+        .arg("EN-us")
+        .arg("{0:C}")
+        .arg("1234.5")
+        .assert()
+        .success()
+        .stdout("$1,234.50\n");
+}
+
+#[test]
+fn test_cli_csharp_unknown_culture_fails() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("-t")
+        .arg("CSharp")
+        .arg("--culture")
+        .arg("xx-XX")
+        .arg("{0}")
+        .arg("1")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("invalid value 'xx-XX'"));
+}
+
+#[test]
+fn test_cli_csharp_separator_overrides() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("-t")
+        .arg("CSharp")
+        .arg("--culture")
+        .arg("de-DE")
+        .arg("--group-separator")
+        .arg(" ")
+        .arg("--currency")
+        .arg("EUR")
+        .arg("{0:C}")
+        .arg("1234567.5")
+        .assert()
+        .success()
+        .stdout("1 234 567,50 EUR\n");
+}
+
+#[test]
 fn test_cli_csharp_non_numeric_argument_fails() {
     let mut cmd = Command::cargo_bin("printformat").unwrap();
     cmd.arg("--format-type")
