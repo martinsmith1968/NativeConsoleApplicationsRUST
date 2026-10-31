@@ -111,6 +111,23 @@ fn test_apply_c_format_char() {
 }
 
 #[test]
+fn test_apply_c_format_char_non_ascii() {
+    assert_eq!(apply_c_format("[%c]", &args(&["é"])).unwrap(), "[é]");
+}
+
+#[test]
+fn test_apply_c_format_char_rejects_multiple_characters() {
+    let err = apply_c_format("%c", &args(&["AB"])).unwrap_err();
+    assert_eq!(err, "argument 'AB' for %c must be a single character");
+}
+
+#[test]
+fn test_apply_c_format_char_rejects_empty() {
+    let err = apply_c_format("%c", &args(&[""])).unwrap_err();
+    assert_eq!(err, "argument for %c cannot be empty");
+}
+
+#[test]
 fn test_apply_c_format_multiple_mixed() {
     assert_eq!(
         apply_c_format("%s is %d years old", &args(&["Alice", "30"])).unwrap(),

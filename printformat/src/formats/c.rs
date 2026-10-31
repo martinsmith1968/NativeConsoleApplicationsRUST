@@ -128,11 +128,17 @@ fn arg_to_printf(s: &str, spec: char) -> Result<Box<dyn SprintfPrintf>, String> 
         }
         's' => Box::new(s.to_string()) as Box<dyn SprintfPrintf>,
         'c' => {
-            let c = s
-                .chars()
-                .next()
-                .ok_or_else(|| "argument for %c cannot be empty".to_string())?;
-            Box::new(c) as Box<dyn SprintfPrintf>
+            let mut chars = s.chars();
+            match (chars.next(), chars.next()) {
+                (Some(c), None) => Box::new(c) as Box<dyn SprintfPrintf>,
+                (None, _) => return Err("argument for %c cannot be empty".to_string()),
+                (Some(_), Some(_)) => {
+                    return Err(format!(
+                        "argument '{}' for %c must be a single character",
+                        s
+                    ));
+                }
+            }
         }
         _ => return Err(format!("unsupported specifier '%{}'", spec)),
     })

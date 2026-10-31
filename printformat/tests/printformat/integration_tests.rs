@@ -570,6 +570,20 @@ fn test_c_format_invalid_integer_fails() {
 }
 
 #[test]
+fn test_c_format_char_with_multiple_characters_fails() {
+    Command::cargo_bin("printformat")
+        .unwrap()
+        .arg("--format-type")
+        .arg("C")
+        .arg("%c")
+        .arg("Hello")
+        .assert()
+        .failure()
+        .code(1)
+        .stderr(predicate::str::contains("must be a single character"));
+}
+
+#[test]
 fn test_c_format_unsupported_n_specifier_fails() {
     Command::cargo_bin("printformat")
         .unwrap()
