@@ -45,7 +45,7 @@ The full help text looks something like this :
 
 ```text
 printformat v0.1.0-dev - Format and print text using a format string and arguments
-Copyright ┬® 2025-2026 Martin Smith
+Copyright © 2025-2026 Martin Smith
 
 Usage: printformat [OPTIONS] <FORMAT_STRING> [ARGUMENTS]...
 
@@ -55,6 +55,7 @@ Arguments:
 
 Options:
   -t, --format-type <FORMAT_TYPE>  Format type to use for the format string [default: Rust] [possible values: Rust, CSharp, C]
+      --currency <CURRENCY>        Currency symbol used by the C# 'C' (currency) format specifier [default: £]
   -h, --help                       Print help [aliases: -?]
   -V, --version                    Print version [aliases: -!]
 
@@ -68,6 +69,9 @@ Examples:
   printformat --format-type CSharp "{0} is {1} years old" "Alice" "30"
   printformat --format-type CSharp "{0,-10} | {1,10}" "left" "right"
   printformat --format-type CSharp "{0:D5}" "42"
+  printformat --format-type CSharp "{0:N2}" "1234567.891"
+  printformat --format-type CSharp "{0:X4}" "255"
+  printformat --format-type CSharp --currency "$" "{0:C}" "1234.5"
   printformat --format-type C "%s is %d years old" "Alice" "30"
   printformat --format-type C "%10s | %-10s" "right" "left"
   printformat --format-type C "%05d" "42"

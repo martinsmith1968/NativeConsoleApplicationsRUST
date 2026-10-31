@@ -64,15 +64,15 @@ The full help text looks something like this :
 
 ```text
 hashcalc v0.1.0-dev - Generate a hash of text or file contents
-Copyright ┬® 2025-2026 Martin Smith
+Copyright © 2025-2026 Martin Smith
 
-Usage: hashcalc [OPTIONS]
+Usage: hashcalc [OPTIONS] <--text <TEXT>|--file <FILE>>
 
 Options:
   -t, --text <TEXT>            The text to generate a hash for (mutually exclusive with --file)
   -f, --file <FILE>            Path to file to hash
   -w, --write                  Write output to file instead of stdout (requires --file)
-  -a, --algorithm <ALGORITHM>  Hash algorithm to use: sha1, md5, sha256, sha512, base64 [default: sha256]
+  -a, --algorithm <ALGORITHM>  Hash algorithm to use [default: sha256] [possible values: sha1, md5, sha256, sha512, base64]
   -h, --help                   Print help [aliases: -?]
   -V, --version                Print version [aliases: -!]
 
