@@ -53,11 +53,11 @@ Tick each item as it is completed.
 ## Shared code and tests (priorities 5 and 6)
 
 - [ ] Extract the duplicated clap boilerplate (`-h/-?`, `-V/-!`, `about`/`long_about`, `help_expected`, `after_help`) into a shared crate
-- [ ] Move each app's logic into `lib.rs` and keep `main.rs` thin
-  - [ ] bannertext
-  - [ ] hashcalc
-  - [ ] printformat
-  - [ ] uuidgen
+- [X] Move each app's logic into `lib.rs` and keep `main.rs` thin — `lib.rs` exposes `Args` and `run`; `main.rs` only parses and maps the result to an exit code; `main_tests.rs` renamed `lib_tests.rs`
+  - [X] bannertext
+  - [X] hashcalc
+  - [X] printformat
+  - [X] uuidgen
 - [ ] Make the test layout consistent (`src/main_tests.rs`, `#[path]` hasher modules, `tests/<app>.rs` stubs)
 - [ ] Consider insta snapshots for the 42 expected-output `.example` files
 - [ ] Add property-based tests with `proptest` (banner width invariant, format parsers)
