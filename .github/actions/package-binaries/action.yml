@@ -50,6 +50,7 @@ runs:
           *
 
     - name: Show packaged files
+      if: runner.debug == '1'
       shell: pwsh
       run: Get-ChildItem '${{ inputs.collect-folder }}', '${{ inputs.artifacts-folder }}' -Recurse
 

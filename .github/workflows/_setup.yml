@@ -85,6 +85,7 @@ jobs:
         run: ./.github/scripts/Get-BinaryNames.ps1
 
       - name: Show Configuration
+        if: runner.debug == '1'
         run: env | sort
 
     outputs:

@@ -79,17 +79,16 @@ jobs:
             . -> target
             . -> ${{ env.BASE_BUILD_OUTPUT_FOLDER }}/${{ matrix.platform }}/${{ matrix.arch }}/${{ matrix.target }}
 
-      - name: Show Rust Version
-        run: rustc --version
-
-      - name: Show Rust Available Targets
-        run: rustc --print target-list
-
-      - name: Show Rust Config
-        run: rustc --print cfg
-
-      - name: Show Rust Available Toolchains
-        run: rustup toolchain list
+      - name: Show Rust Toolchain
+        shell: pwsh
+        run: |
+          rustc --version
+          cargo --version
+          if ($env:RUNNER_DEBUG -eq '1') {
+            rustup toolchain list
+            rustc --print cfg
+            rustc --print target-list
+          }
 
       - name: Rustfmt Check
         uses: actions-rust-lang/rustfmt@v1.1.2
@@ -133,10 +132,6 @@ jobs:
       - name: Run tests
         run: cargo test --verbose --profile ${{ env.BUILD_CONFIG }} --target ${{ matrix.target }} --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
 
-      - name: Debug Files - BUILD_OUTPUT_FOLDER
-        shell: pwsh
-        run: Get-ChildItem "${{ env.BUILD_OUTPUT_FOLDER }}" -recurse
-
       - name: Verify Output Architecture
         shell: pwsh
         run: >-
@@ -146,6 +141,7 @@ jobs:
           -ExpectedFlag '${{ matrix.arch_flag }}'
 
       - name: Debug Files - BASE_BUILD_OUTPUT_FOLDER
+        if: runner.debug == '1'
         shell: pwsh
         run: Get-ChildItem "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" -recurse
 

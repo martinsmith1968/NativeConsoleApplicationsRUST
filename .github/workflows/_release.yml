@@ -69,6 +69,7 @@ jobs:
           path: release
 
       - name: Debug Files - release
+        if: runner.debug == '1'
         shell: pwsh
         run: Get-ChildItem "release" -recurse
 

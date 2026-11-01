@@ -20,6 +20,8 @@ on:
 
 # The jobs live in the reusable _*.yml workflows. Called workflows do not inherit
 # env, so the pipeline settings are passed to them as inputs here.
+# Diagnostic steps (file listings, environment, toolchain details) only run with
+# debug logging on: re-run with "Enable debug logging", or set ACTIONS_STEP_DEBUG.
 jobs:
   setup:
     name: Setup
