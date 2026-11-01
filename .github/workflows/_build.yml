@@ -1,0 +1,162 @@
+name: Build
+
+# Builds, checks, tests and packages the workspace for each platform and architecture.
+on:
+  workflow_call:
+    inputs:
+      project_name:
+        description: Prefix for the release zip names
+        type: string
+        required: true
+      executable_version:
+        description: Full version, used in the zip names (e.g. 1.8.26304.2101-ci)
+        type: string
+        required: true
+      executable_build_version:
+        description: Version stamped into Cargo.toml (e.g. 1.8.26304)
+        type: string
+        required: true
+      binary_names:
+        description: Comma-separated executables to package
+        type: string
+        required: true
+
+env:
+  BUILD_CONFIG: release
+  CARGO_TERM_COLOR: always
+  BASE_BUILD_OUTPUT_FOLDER: Output
+  BASE_BUILD_COLLECT_FOLDER: Collect
+  BASE_BUILD_ARTIFACTS_FOLDER: Artifacts
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ 'windows-latest', 'ubuntu-latest' ]
+        arch: [ 'x64', 'x86' ]
+        # See : https://doc.rust-lang.org/rustc/platform-support.html
+        #     : https://superuser.com/questions/791506/how-to-determine-if-a-linux-binary-file-is-32-bit-or-64-bit
+        #     : https://superuser.com/questions/358434/how-to-check-if-a-binary-is-32-or-64-bit-on-windows
+        #     : https://www.youtube.com/watch?v=YWh06kGvxjo
+        include:
+          - os: windows-latest
+            arch: x64
+            target: x86_64-pc-windows-msvc
+            platform: windows
+            arch_flag: '0x8664'
+          - os: windows-latest
+            arch: x86
+            target: i686-pc-windows-msvc
+            platform: windows
+            arch_flag: '0x014c'
+          - os: ubuntu-latest
+            arch: x64
+            target: x86_64-unknown-linux-gnu
+            platform: linux
+            arch_flag: '02'
+          - os: ubuntu-latest
+            arch: x86
+            target: i686-unknown-linux-gnu
+            platform: linux
+            arch_flag: '01'
+
+    name: Build - ${{ matrix.platform }} - ${{ matrix.arch }}
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v2.0.0
+        with:
+          components:
+            rustfmt
+            clippy
+          # Cache the default target dir (clippy) and the build output dir (build and tests)
+          cache-workspaces: |
+            . -> target
+            . -> ${{ env.BASE_BUILD_OUTPUT_FOLDER }}/${{ matrix.platform }}/${{ matrix.arch }}/${{ matrix.target }}
+
+      - name: Show Rust Version
+        run: rustc --version
+
+      - name: Show Rust Available Targets
+        run: rustc --print target-list
+
+      - name: Show Rust Config
+        run: rustc --print cfg
+
+      - name: Show Rust Available Toolchains
+        run: rustup toolchain list
+
+      - name: Rustfmt Check
+        uses: actions-rust-lang/rustfmt@v1.1.2
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Set up cross-compilation toolchain
+        uses: ./.github/actions/setup-cross-toolchain
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          target: ${{ matrix.target }}
+
+      - name: Set Cargo TOML Version Values
+        shell: pwsh
+        run: ./.github/scripts/Set-CargoWorkspaceVersion.ps1 -Version '${{ inputs.executable_build_version }}'
+
+      - name: Set Build Parameters
+        shell: pwsh
+        run: |
+          $build_output_folder    = Join-Path "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}" "${{ matrix.target }}"
+          $build_artifacts_folder = Join-Path "${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}" "${{ matrix.platform }}" "${{ matrix.arch }}" "${{ matrix.target }}"
+
+          echo "BUILD_OUTPUT_FOLDER=$build_output_folder" >> $env:GITHUB_ENV
+          echo "BUILD_ARTIFACTS_FOLDER=$build_artifacts_folder" >> $env:GITHUB_ENV
+
+      - name: Build
+        run: cargo build --all-targets --future-incompat-report --profile ${{ env.BUILD_CONFIG }} --verbose --target ${{ matrix.target }} --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
+
+      - name: Check Build Output
+        shell: pwsh
+        run: |
+          $build_output_folder = "${{ env.BUILD_OUTPUT_FOLDER }}"
+          Write-Host "Checking build output folder: $build_output_folder"
+          if (-not (Test-Path $build_output_folder -PathType Container)) {
+            Write-Error "Build output folder does not exist: $build_output_folder"
+            exit 1
+          }
+
+      - name: Run tests
+        run: cargo test --verbose --profile ${{ env.BUILD_CONFIG }} --target ${{ matrix.target }} --target-dir ${{ env.BUILD_OUTPUT_FOLDER }}
+
+      - name: Debug Files - BUILD_OUTPUT_FOLDER
+        shell: pwsh
+        run: Get-ChildItem "${{ env.BUILD_OUTPUT_FOLDER }}" -recurse
+
+      - name: Verify Output Architecture
+        shell: pwsh
+        run: >-
+          ./.github/scripts/Test-BinaryArchitecture.ps1
+          -Folder (Join-Path '${{ env.BUILD_OUTPUT_FOLDER }}' '${{ matrix.target }}' '${{ env.BUILD_CONFIG }}')
+          -Platform '${{ matrix.platform }}'
+          -ExpectedFlag '${{ matrix.arch_flag }}'
+
+      - name: Debug Files - BASE_BUILD_OUTPUT_FOLDER
+        shell: pwsh
+        run: Get-ChildItem "${{ env.BASE_BUILD_OUTPUT_FOLDER }}" -recurse
+
+      - name: Package binaries
+        uses: ./.github/actions/package-binaries
+        with:
+          binary-names: ${{ inputs.binary_names }}
+          source-folder: ${{ env.BUILD_OUTPUT_FOLDER }}/${{ matrix.target }}/${{ env.BUILD_CONFIG }}
+          platform: ${{ matrix.platform }}
+          collect-folder: ${{ env.BASE_BUILD_COLLECT_FOLDER }}
+          artifacts-folder: ${{ env.BASE_BUILD_ARTIFACTS_FOLDER }}
+          package-id: ${{ inputs.project_name }}.${{ matrix.platform }}.${{ matrix.arch }}
+          version: v${{ inputs.executable_version }}
+          artifact-name: ${{ matrix.platform }}.${{ matrix.arch }}

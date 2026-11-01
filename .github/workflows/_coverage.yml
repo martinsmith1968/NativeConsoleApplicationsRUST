@@ -1,0 +1,47 @@
+name: Coverage
+
+# Measures test coverage with cargo-llvm-cov and uploads the LCOV report.
+on:
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  coverage:
+    name: Test Coverage
+
+    # Run on Linux — coverage tooling is faster and simpler there
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v2.0.0
+        with:
+          components: |
+            rustfmt
+            clippy
+            llvm-tools-preview
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Generate coverage (LCOV)
+        run: cargo llvm-cov --all-targets --lcov --output-path lcov.info
+
+      - name: Write coverage summary to GitHub Step Summary
+        run: |
+          (echo '```text' ; cargo llvm-cov report --summary-only ; echo '```') > /tmp/coverage_summary.txt
+          cat /tmp/coverage_summary.txt >> $GITHUB_STEP_SUMMARY
+          cat /tmp/coverage_summary.txt
+        shell: bash
+
+      - name: Upload coverage report artifact
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: coverage-report
+          path: lcov.info
+          if-no-files-found: error
