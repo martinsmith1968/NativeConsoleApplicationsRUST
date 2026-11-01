@@ -118,4 +118,5 @@ fn write_output_file(input_path: &Path, algorithm: Algorithm, output_line: &str)
 }
 
 #[cfg(test)]
-mod lib_tests;
+#[path = "lib_tests.rs"]
+mod tests;

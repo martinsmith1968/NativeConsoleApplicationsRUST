@@ -296,4 +296,5 @@ pub fn run(args: &Args) -> io::Result<()> {
 }
 
 #[cfg(test)]
-mod lib_tests;
+#[path = "lib_tests.rs"]
+mod tests;

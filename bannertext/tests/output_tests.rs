@@ -5,7 +5,7 @@ use test_support::{get_current_function_name, load_expected_output, normalize_ou
 fn expected_output(filename: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
-        .join("Expectedoutput")
+        .join("ExpectedOutput")
         .join(format!("{filename}.example"));
 
     load_expected_output(
