@@ -387,3 +387,101 @@ fn test_currency_positions() {
         );
     }
 }
+
+// ===== Property Tests =====
+
+mod properties {
+    use super::*;
+    use proptest::prelude::*;
+
+    fn format_one(format_str: &str, value: &str) -> String {
+        format(format_str, &[value]).unwrap()
+    }
+
+    /// Amounts small enough that an f64 still resolves hundredths.
+    fn amount() -> impl Strategy<Value = f64> {
+        -1e12f64..1e12f64
+    }
+
+    proptest! {
+        #[test]
+        fn escaped_text_formats_back_to_itself(text in r"\PC{0,40}") {
+            let escaped = text.replace('{', "{{").replace('}', "}}");
+            prop_assert_eq!(format(&escaped, &[]), Ok(text));
+        }
+
+        #[test]
+        fn indexed_placeholders_take_the_arguments_in_order(
+            values in proptest::collection::vec(r"\PC{0,10}", 0..6),
+        ) {
+            let format_str: String = (0..values.len()).map(|i| format!("{{{}}}", i)).collect();
+            let refs: Vec<&str> = values.iter().map(String::as_str).collect();
+            prop_assert_eq!(format(&format_str, &refs), Ok(values.concat()));
+        }
+
+        #[test]
+        fn alignment_pads_to_the_width(value in "[a-z]{0,20}", width in -30..30i32) {
+            let result = format_one(&format!("{{0,{}}}", width), &value);
+            let padding = " ".repeat((width.unsigned_abs() as usize).saturating_sub(value.len()));
+            let expected = if width < 0 {
+                format!("{}{}", value, padding)
+            } else {
+                format!("{}{}", padding, value)
+            };
+            prop_assert_eq!(result, expected);
+        }
+
+        #[test]
+        fn d_matches_the_integer(value: i64) {
+            prop_assert_eq!(format_one("{0:D}", &value.to_string()), value.to_string());
+        }
+
+        #[test]
+        fn d_precision_is_a_minimum_digit_count(value: i64, precision in 0..30usize) {
+            let result = format_one(&format!("{{0:D{}}}", precision), &value.to_string());
+            let digits = result.trim_start_matches('-');
+            prop_assert!(digits.len() >= precision);
+            prop_assert_eq!(digits.parse::<u64>().unwrap(), value.unsigned_abs());
+        }
+
+        #[test]
+        fn x_parses_back_to_the_integer(value in 0..=i64::MAX) {
+            let result = format_one("{0:X}", &value.to_string());
+            prop_assert_eq!(i64::from_str_radix(&result, 16).unwrap(), value);
+            prop_assert_eq!(result.to_uppercase(), result);
+        }
+
+        #[test]
+        fn f2_is_within_half_a_hundredth(value in amount()) {
+            let result = format_one("{0:F2}", &value.to_string());
+            let (_, fraction) = result.split_once('.').unwrap();
+            prop_assert_eq!(fraction.len(), 2);
+            // Half a hundredth, plus the f64 spacing at the top of the range
+            let difference = (result.parse::<f64>().unwrap() - value).abs();
+            prop_assert!(difference <= 0.0052, "{} formatted as {}", value, result);
+        }
+
+        #[test]
+        fn n_is_f_with_group_separators(value in amount(), precision in 0..6usize) {
+            let fixed = format_one(&format!("{{0:F{}}}", precision), &value.to_string());
+            let grouped = format_one(&format!("{{0:N{}}}", precision), &value.to_string());
+            prop_assert_eq!(grouped.replace(',', ""), fixed);
+
+            let integer = grouped.trim_start_matches('-').split('.').next().unwrap();
+            let mut groups = integer.split(',');
+            let first = groups.next().unwrap();
+            prop_assert!((1..=3).contains(&first.len()));
+            prop_assert!(groups.all(|group| group.len() == 3));
+        }
+
+        #[test]
+        fn c_is_n2_with_the_currency_symbol(value in amount()) {
+            let number = format_one("{0:N2}", &value.to_string());
+            let expected = match number.strip_prefix('-') {
+                Some(positive) => format!("-£{}", positive),
+                None => format!("£{}", number),
+            };
+            prop_assert_eq!(format_one("{0:C}", &value.to_string()), expected);
+        }
+    }
+}

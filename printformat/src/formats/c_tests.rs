@@ -158,3 +158,43 @@ fn test_apply_c_format_invalid_float() {
     let err = apply_c_format("%f", &args(&["notanumber"])).unwrap_err();
     assert!(err.contains("number"));
 }
+
+// ===== Property Tests =====
+
+mod properties {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn escaped_text_formats_back_to_itself(text in r"\PC{0,40}") {
+            let escaped = text.replace('%', "%%");
+            prop_assert_eq!(apply_c_format(&escaped, &[]), Ok(text));
+        }
+
+        #[test]
+        fn s_inserts_the_argument_unchanged(value in r"\PC{0,40}") {
+            prop_assert_eq!(apply_c_format("%s", std::slice::from_ref(&value)), Ok(value));
+        }
+
+        #[test]
+        fn d_matches_the_integer(value: i64) {
+            prop_assert_eq!(apply_c_format("%d", &[value.to_string()]), Ok(value.to_string()));
+        }
+
+        #[test]
+        fn x_matches_the_unsigned_integer(value: u64) {
+            prop_assert_eq!(apply_c_format("%x", &[value.to_string()]), Ok(format!("{:x}", value)));
+        }
+
+        #[test]
+        fn width_pads_strings_to_at_least_that_width(value in "[a-z]{0,20}", width in 0..30usize) {
+            let right = apply_c_format(&format!("%{}s", width), std::slice::from_ref(&value)).unwrap();
+            let left = apply_c_format(&format!("%-{}s", width), std::slice::from_ref(&value)).unwrap();
+            prop_assert_eq!(right.len(), width.max(value.len()));
+            prop_assert_eq!(right.trim_start(), value.as_str());
+            prop_assert_eq!(left.trim_end(), value.as_str());
+            prop_assert_eq!(left.len(), right.len());
+        }
+    }
+}

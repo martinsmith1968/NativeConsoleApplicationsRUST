@@ -100,3 +100,40 @@ fn test_apply_format_multiple_with_alignment() {
     let actual = apply_format("{:>5} | {:<5}", &args(&["a", "b"])).unwrap();
     assert_eq!(actual, "    a | b    ");
 }
+
+// ===== Property Tests =====
+
+mod properties {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #[test]
+        fn escaped_text_formats_back_to_itself(text in r"\PC{0,40}") {
+            let escaped = text.replace('{', "{{").replace('}', "}}");
+            prop_assert_eq!(apply_format(&escaped, &[]), Ok(text));
+        }
+
+        #[test]
+        fn automatic_placeholders_take_the_arguments_in_order(
+            values in proptest::collection::vec(r"\PC{0,10}", 0..6),
+        ) {
+            let format_str = "{}".repeat(values.len());
+            prop_assert_eq!(apply_format(&format_str, &values), Ok(values.concat()));
+        }
+
+        #[test]
+        fn the_wrong_number_of_arguments_is_an_error(
+            values in proptest::collection::vec("[a-z]{0,5}", 0..6),
+            difference in 1..4usize,
+            fewer: bool,
+        ) {
+            let placeholders = match values.len().checked_sub(difference) {
+                Some(count) if fewer => count,
+                _ => values.len() + difference,
+            };
+            let format_str = "{}".repeat(placeholders);
+            prop_assert!(apply_format(&format_str, &values).is_err());
+        }
+    }
+}

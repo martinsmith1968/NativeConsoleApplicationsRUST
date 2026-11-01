@@ -23,6 +23,7 @@ build-support.workspace = true
 [dev-dependencies]
 assert_cmd.workspace   = true
 predicates.workspace   = true
+proptest.workspace     = true
 test-support.workspace = true
 
 [lints]

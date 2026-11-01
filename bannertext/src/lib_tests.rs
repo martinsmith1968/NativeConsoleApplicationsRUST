@@ -579,3 +579,140 @@ fn test_max_affix_sizes_produce_expected_width() {
     let expected = (MAX_AFFIX_SIZE * 4) as usize + 1;
     assert_eq!(line.chars().count(), expected);
 }
+
+// ===== Property Tests =====
+
+mod properties {
+    use super::*;
+    use proptest::prelude::*;
+
+    fn alignment() -> impl Strategy<Value = TextAlignment> {
+        prop_oneof![
+            Just(TextAlignment::Left),
+            Just(TextAlignment::Right),
+            Just(TextAlignment::Center),
+        ]
+    }
+
+    /// Banner options without a maximum length.
+    fn options() -> impl Strategy<Value = BannerOptions> {
+        (
+            (proptest::char::range('!', '~'), 0..5u32),
+            (proptest::char::range('!', '~'), 0..5u32),
+            proptest::char::range('!', '~'),
+            (0..6u32, 0..6u32, 0..6u32, 0..6u32),
+            alignment(),
+            0..120u32,
+        )
+            .prop_map(
+                |(
+                    (header_line_char, header_line_count),
+                    (footer_line_char, footer_line_count),
+                    text_line_char,
+                    (prefix_count, suffix_count, prefix_gap, suffix_gap),
+                    text_alignment,
+                    min_total_length,
+                )| BannerOptions {
+                    header_line_char,
+                    header_line_count,
+                    footer_line_char,
+                    footer_line_count,
+                    text_line_char,
+                    title_prefix_count: prefix_count,
+                    title_suffix_count: suffix_count,
+                    title_prefix_gap_size: prefix_gap,
+                    title_suffix_gap_size: suffix_gap,
+                    text_alignment,
+                    min_total_length,
+                    max_total_length: 0,
+                },
+            )
+    }
+
+    /// One or more lines of printable text (no control characters, so no line breaks).
+    fn texts() -> impl Strategy<Value = Vec<String>> {
+        proptest::collection::vec(r"\PC{0,30}", 1..5)
+    }
+
+    fn affix_total(options: &BannerOptions) -> usize {
+        (options.title_prefix_count
+            + options.title_prefix_gap_size
+            + options.title_suffix_count
+            + options.title_suffix_gap_size) as usize
+    }
+
+    fn banner(texts: &[String], options: &BannerOptions) -> String {
+        let refs: Vec<&str> = texts.iter().map(String::as_str).collect();
+        generate_banner(&refs, options)
+    }
+
+    proptest! {
+        #[test]
+        fn every_line_has_the_natural_or_minimum_width(texts in texts(), options in options()) {
+            let longest = texts.iter().map(|t| t.chars().count()).max().unwrap();
+            let natural = affix_total(&options) + longest;
+            let expected = natural.max(options.min_total_length as usize);
+
+            for line in banner(&texts, &options).lines() {
+                prop_assert_eq!(line.chars().count(), expected);
+            }
+        }
+
+        #[test]
+        fn every_line_has_the_clamped_width_with_a_maximum(
+            texts in texts(),
+            options in options(),
+            extra in 0..100u32,
+        ) {
+            // validate_args rejects min > max, and a maximum below the prefix and
+            // suffix cannot be honoured by the text lines
+            let max_total_length = options.min_total_length.max(affix_total(&options) as u32) + extra;
+            let options = BannerOptions { max_total_length, ..options };
+
+            let longest = texts.iter().map(|t| t.chars().count()).max().unwrap();
+            let natural = affix_total(&options) + longest;
+            let expected = natural
+                .max(options.min_total_length as usize)
+                .min(max_total_length as usize);
+
+            for line in banner(&texts, &options).lines() {
+                prop_assert_eq!(line.chars().count(), expected);
+            }
+        }
+
+        #[test]
+        fn line_count_is_headers_plus_texts_plus_footers(texts in texts(), options in options()) {
+            let expected = options.header_line_count as usize
+                + texts.len()
+                + options.footer_line_count as usize;
+
+            prop_assert_eq!(banner(&texts, &options).split('\n').count(), expected);
+        }
+
+        #[test]
+        fn text_lines_keep_the_text_and_honour_the_alignment(
+            texts in texts(),
+            options in options(),
+        ) {
+            let result = banner(&texts, &options);
+            let lines: Vec<&str> = result.split('\n').collect();
+            let first_text_line = options.header_line_count as usize;
+            let prefix = (options.title_prefix_count + options.title_prefix_gap_size) as usize;
+            let suffix = (options.title_suffix_count + options.title_suffix_gap_size) as usize;
+
+            for (text, line) in texts.iter().zip(&lines[first_text_line..]) {
+                let width = line.chars().count() - prefix - suffix;
+                let middle: String = line.chars().skip(prefix).take(width).collect();
+                let padding = width - text.chars().count();
+                // Centring puts any odd padding space on the right
+                let left = match options.text_alignment {
+                    TextAlignment::Left => 0,
+                    TextAlignment::Right => padding,
+                    TextAlignment::Center => padding / 2,
+                };
+                let expected = format!("{}{}{}", " ".repeat(left), text, " ".repeat(padding - left));
+                prop_assert_eq!(middle, expected);
+            }
+        }
+    }
+}

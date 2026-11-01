@@ -60,7 +60,7 @@ Tick each item as it is completed.
   - [X] uuidgen
 - [X] Make the test layout consistent (`src/main_tests.rs`, `#[path]` hasher modules, `tests/<app>.rs` stubs) — every module's unit tests are `#[path = "<module>_tests.rs"] mod tests;` (including `lib.rs`); each app has `tests/integration_tests.rs`, `tests/output_tests.rs` and `tests/ExpectedOutput/` with no stub; hashcalc's `cargo run` CLI tests moved from the unit tests into `tests/` (using `assert_cmd`, duplicates dropped)
 - [ ] Consider insta snapshots for the 42 expected-output `.example` files
-- [ ] Add property-based tests with `proptest` (banner width invariant, format parsers)
+- [X] Add property-based tests with `proptest` (banner width invariant, format parsers) — `Property Tests` sections in `bannertext/src/lib_tests.rs` (width with and without a maximum, line count, alignment) and the printformat `braces`, `rust`, `csharp` and `c` test files (round trips, argument order and count, alignment, D/X/F/N/C numeric formats)
 
 ## Minor
 
