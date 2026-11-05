@@ -27,8 +27,8 @@ jobs:
     name: Setup
     uses: ./.github/workflows/_setup.yml
     with:
-      major_version: '1'
-      minor_version: '8'
+      major_version: '2'
+      minor_version: '0'
       primary_branch: main
       release_candidate_prefix: rc/
 
