@@ -15,11 +15,12 @@ repository.workspace   = true
 LegalCopyright = "Copyright © 2025-2026 Martin Smith"
 
 [dependencies]
-clap.workspace   = true
-sprintf          = "0.4"
-strfmt.workspace = true
-serde            = { version = "1", features = ["derive"] }
-toml             = "1"
+cli-support.workspace = true
+clap.workspace        = true
+sprintf               = "0.4"
+strfmt.workspace      = true
+serde                 = { version = "1", features = ["derive"] }
+toml                  = "1"
 
 [build-dependencies]
 build-support.workspace = true

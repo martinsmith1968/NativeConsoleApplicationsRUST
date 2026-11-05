@@ -746,8 +746,7 @@ fn test_end_to_end_v4_simple() {
         uppercase: false,
         output_template: "{uuid}".to_string(),
         guid_v6_seed: [1, 2, 3, 4, 5, 6],
-        help: None,
-        version: None,
+        standard: Default::default(),
     };
 
     let uuid_formatted = generate_uuid(&args);
@@ -773,8 +772,7 @@ fn test_end_to_end_v6_with_seed() {
         uppercase: false,
         output_template: "{uuid}".to_string(),
         guid_v6_seed: [100, 101, 102, 103, 104, 105],
-        help: None,
-        version: None,
+        standard: Default::default(),
     };
 
     let uuid_formatted = generate_uuid(&args);
@@ -795,8 +793,7 @@ fn test_end_to_end_nanoid_generation() {
         uppercase: false,
         output_template: "{uuid}".to_string(),
         guid_v6_seed: [1, 2, 3, 4, 5, 6],
-        help: None,
-        version: None,
+        standard: Default::default(),
     };
 
     let nanoid = generate_uuid(&args);
@@ -821,8 +818,7 @@ fn test_end_to_end_template_with_sequence() {
         uppercase: false,
         output_template: "ID-{sequence}-{uuid}".to_string(),
         guid_v6_seed: [1, 2, 3, 4, 5, 6],
-        help: None,
-        version: None,
+        standard: Default::default(),
     };
 
     let uuid_formatted = generate_uuid(&args);
@@ -881,8 +877,7 @@ fn test_end_to_end_full_pipeline_uppercase_non_hyphenated_template() {
         uppercase: true,
         output_template: "PREFIX-{uuid}-SUFFIX".to_string(),
         guid_v6_seed: [1, 2, 3, 4, 5, 6],
-        help: None,
-        version: None,
+        standard: Default::default(),
     };
 
     let uuid_formatted = generate_uuid(&args);

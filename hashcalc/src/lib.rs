@@ -11,12 +11,9 @@ use hashers::{Algorithm, hash_content};
 #[command(
     version,
     bin_name = env!("CARGO_PKG_NAME"),
-    about = concat!("hashcalc v", env!("CARGO_PKG_VERSION"), " - Generate a hash of text or file contents\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
-    long_about = concat!("hashcalc v", env!("CARGO_PKG_VERSION"), " - Generate a hash of text or file contents\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
+    about = cli_support::banner!(),
+    long_about = cli_support::banner!(),
     author,
-    help_expected = true,
-    disable_help_flag = true,
-    disable_version_flag = true,
     group = ArgGroup::new("input").required(true).args(["text", "file"]),
     after_help = "Examples:\n  hashcalc --text \"Hello World\"\n  hashcalc --text \"Hello World\" --algorithm md5\n  hashcalc --file myfile.txt\n  hashcalc --file myfile.txt --algorithm sha512\n  hashcalc --file myfile.txt --write"
 )]
@@ -43,13 +40,8 @@ pub struct Args {
     )]
     algorithm: Algorithm,
 
-    /// Print help
-    #[arg(short = 'h', long, visible_short_alias = '?', action = clap::ArgAction::Help)]
-    help: Option<bool>,
-
-    /// Print version
-    #[arg(short = 'V', long, visible_short_alias = '!', action = clap::ArgAction::Version)]
-    version: Option<bool>,
+    #[command(flatten)]
+    standard: cli_support::StandardArgs,
 }
 
 /// Turn a file I/O error into a message that names the file and keeps the error kind.

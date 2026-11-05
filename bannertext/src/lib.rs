@@ -43,12 +43,9 @@ impl std::fmt::Display for TextAlignment {
 #[command(
     version,
     bin_name = env!("CARGO_PKG_NAME"),
-    about = concat!("bannertext v", env!("CARGO_PKG_VERSION"), " - Display a Text Banner in the console\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
-    long_about = concat!("bannertext v", env!("CARGO_PKG_VERSION"), " - Display a Text Banner in the console\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
+    about = cli_support::banner!(),
+    long_about = cli_support::banner!(),
     author,
-    help_expected = true,
-    disable_help_flag = true,
-    disable_version_flag = true,
     after_help = "Examples:\n  bannertext \"Hello World\"\n  bannertext \"Hello World\" --min-total-length 80\n  bannertext \"Hello World\" --min-total-length 80 --text-alignment Center\n  bannertext \"Hello World\" --header-line-char '#' --footer-line-char '#' --text-line-char '#'"
 )]
 pub struct Args {
@@ -144,13 +141,8 @@ pub struct Args {
     )]
     max_total_length: u32,
 
-    /// Print help
-    #[arg(short = 'h', long, visible_short_alias = '?', action = clap::ArgAction::Help)]
-    help: Option<bool>,
-
-    /// Print version
-    #[arg(short = 'V', long, visible_short_alias = '!', action = clap::ArgAction::Version)]
-    version: Option<bool>,
+    #[command(flatten)]
+    standard: cli_support::StandardArgs,
 }
 
 /// Every setting that controls the generated banner.

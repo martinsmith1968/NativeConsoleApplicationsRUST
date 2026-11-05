@@ -15,7 +15,8 @@ repository.workspace   = true
 LegalCopyright = "Copyright © 2025-2026 Martin Smith"
 
 [dependencies]
-clap.workspace = true
+cli-support.workspace = true
+clap.workspace        = true
 
 [build-dependencies]
 build-support.workspace = true

@@ -52,7 +52,7 @@ Tick each item as it is completed.
 
 ## Shared code and tests (priorities 5 and 6)
 
-- [ ] Extract the duplicated clap boilerplate (`-h/-?`, `-V/-!`, `about`/`long_about`, `help_expected`, `after_help`) into a shared crate
+- [X] Extract the duplicated clap boilerplate (`-h/-?`, `-V/-!`, `about`/`long_about`, `help_expected`, `after_help`) into a shared crate — `cli-support`: `banner!()` builds `about`/`long_about` from each app's package metadata, and the flattened `StandardArgs` supplies `-h/-?`, `-V/-!`, `disable_help_flag`, `disable_version_flag` and `help_expected`; `after_help` stays per app (its examples differ)
 - [X] Move each app's logic into `lib.rs` and keep `main.rs` thin — `lib.rs` exposes `Args` and `run`; `main.rs` only parses and maps the result to an exit code; `main_tests.rs` renamed `lib_tests.rs`
   - [X] bannertext
   - [X] hashcalc

@@ -15,12 +15,13 @@ repository.workspace   = true
 LegalCopyright = "Copyright © 2025-2026 Martin Smith"
 
 [dependencies]
-clap.workspace = true
-sha2           = "0.11.0"
-sha1           = "0.11.0"
-md5            = "0.8.0"
-hex            = "0.4.3"
-base64         = "0.22"
+cli-support.workspace = true
+clap.workspace        = true
+sha2                  = "0.11.0"
+sha1                  = "0.11.0"
+md5                   = "0.8.0"
+hex                   = "0.4.3"
+base64                = "0.22"
 
 [build-dependencies]
 build-support.workspace = true

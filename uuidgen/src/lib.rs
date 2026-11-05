@@ -31,12 +31,9 @@ enum UUIDType {
 #[command(
     version,
     bin_name = env!("CARGO_PKG_NAME"),
-    about = concat!("uuidgen v", env!("CARGO_PKG_VERSION"), " - Generate Unique IDs (UUIDs) with controlled output and formatting\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
-    long_about = concat!("uuidgen v", env!("CARGO_PKG_VERSION"), " - Generate Unique IDs (UUIDs) with controlled output and formatting\nCopyright \u{00A9} 2025-", env!("BUILD_YEAR"), " Martin Smith"),
+    about = cli_support::banner!(),
+    long_about = cli_support::banner!(),
     author,
-    help_expected = true,
-    disable_help_flag = true,
-    disable_version_flag = true,
     after_help = "NOTE:\noutput-template supports: {uuid}, {sequence} dynamic values\n(See also : https://github.com/vitiral/strfmt)\n\nExamples:\n  uuidgen\n  uuidgen --count 5\n  uuidgen --count 3 --uppercase\n  uuidgen --uuid-type nanoid\n  uuidgen --count 5 --output-template \"{sequence}: {uuid}\""
 )]
 pub struct Args {
@@ -77,13 +74,8 @@ pub struct Args {
     )]
     guid_v6_seed: UuidSeed,
 
-    /// Print help
-    #[arg(short = 'h', long, visible_short_alias = '?', action = clap::ArgAction::Help)]
-    help: Option<bool>,
-
-    /// Print version
-    #[arg(short = 'V', long, visible_short_alias = '!', action = clap::ArgAction::Version)]
-    version: Option<bool>,
+    #[command(flatten)]
+    standard: cli_support::StandardArgs,
 }
 
 struct FormatOptions {

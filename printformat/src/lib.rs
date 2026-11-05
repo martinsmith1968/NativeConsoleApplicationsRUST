@@ -23,13 +23,10 @@ enum FormatType {
 #[command(
     version,
     bin_name = env!("CARGO_PKG_NAME"),
-    about = concat!("printformat v", env!("CARGO_PKG_VERSION"), " - Format and print text using a format string and arguments\nCopyright © 2025-", env!("BUILD_YEAR"), " Martin Smith"),
-    long_about = concat!("printformat v", env!("CARGO_PKG_VERSION"), " - Format and print text using a format string and arguments\nCopyright © 2025-", env!("BUILD_YEAR"), " Martin Smith"),
+    about = cli_support::banner!(),
+    long_about = cli_support::banner!(),
     author,
-    help_expected = true,
     allow_negative_numbers = true,
-    disable_help_flag = true,
-    disable_version_flag = true,
     after_help = "Examples:\n  printformat \"Hello, {}!\" \"World\"\n  printformat \"{} + {} = {}\" \"1\" \"2\" \"3\"\n  printformat \"{:>10}\" \"right\"\n  printformat \"{:<10}\" \"left\"\n  printformat \"{:*^20}\" \"center\"\n  printformat \"No placeholders\"\n  printformat --format-type CSharp \"{0} is {1} years old\" \"Alice\" \"30\"\n  printformat --format-type CSharp \"{0,-10} | {1,10}\" \"left\" \"right\"\n  printformat --format-type CSharp \"{0:D5}\" \"42\"\n  printformat --format-type CSharp \"{0:N2}\" \"1234567.891\"\n  printformat --format-type CSharp \"{0:X4}\" \"255\"\n  printformat --format-type CSharp --currency \"$\" \"{0:C}\" \"1234.5\"\n  printformat --format-type CSharp --culture de-DE \"{0:N2} | {1:C}\" \"1234567.891\" \"1234.5\"\n  printformat --format-type C \"%s is %d years old\" \"Alice\" \"30\"\n  printformat --format-type C \"%10s | %-10s\" \"right\" \"left\"\n  printformat --format-type C \"%05d\" \"42\"\n  printformat --format-type C \"%.2f\" \"3.14159\"\n\nSee Also:\n https://docs.rs/strfmt/latest/strfmt/\n https://doc.rust-lang.org/std/fmt/\n https://cplusplus.com/reference/cstdio/printf/"
 )]
 pub struct Args {
@@ -61,13 +58,8 @@ pub struct Args {
     #[arg(index = 2, num_args(0..))]
     arguments: Vec<String>,
 
-    /// Print help
-    #[arg(short = 'h', long, visible_short_alias = '?', action = clap::ArgAction::Help)]
-    help: Option<bool>,
-
-    /// Print version
-    #[arg(short = 'V', long, visible_short_alias = '!', action = clap::ArgAction::Version)]
-    version: Option<bool>,
+    #[command(flatten)]
+    standard: cli_support::StandardArgs,
 }
 
 /// Run the application with the parsed command-line arguments.

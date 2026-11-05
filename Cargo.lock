@@ -113,6 +113,7 @@ dependencies = [
  "assert_cmd",
  "build-support",
  "clap",
+ "cli-support",
  "predicates",
  "proptest",
  "test-support",
@@ -314,6 +315,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
+name = "cli-support"
+version = "0.1.0-dev"
+dependencies = [
+ "clap",
+]
+
+[[package]]
 name = "colorchoice"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -494,6 +502,7 @@ dependencies = [
  "base64",
  "build-support",
  "clap",
+ "cli-support",
  "hex",
  "md5",
  "predicates",
@@ -724,6 +733,7 @@ dependencies = [
  "assert_cmd",
  "build-support",
  "clap",
+ "cli-support",
  "predicates",
  "proptest",
  "serde",
@@ -1200,6 +1210,7 @@ dependencies = [
  "assert_cmd",
  "build-support",
  "clap",
+ "cli-support",
  "nanoid",
  "predicates",
  "regex",

@@ -2,6 +2,7 @@
 members  = [
     "bannertext",
     "build-support",
+    "cli-support",
     "hashcalc",
     "printformat",
     "test-support",
@@ -32,6 +33,7 @@ proptest   = "1.12.0"
 
 # Workspace crates
 build-support = { path = "build-support" }
+cli-support   = { path = "cli-support" }
 test-support  = { path = "test-support" }
 
 [workspace.lints.rust]
