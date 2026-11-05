@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn test_sha256_known_vector_hello() {
     assert_eq!(
-        hash(b"hello").unwrap(),
+        hash(b"hello"),
         "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
     );
 }
@@ -11,7 +11,7 @@ fn test_sha256_known_vector_hello() {
 #[test]
 fn test_sha256_known_vector_empty() {
     assert_eq!(
-        hash(b"").unwrap(),
+        hash(b""),
         "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     );
 }
@@ -19,7 +19,7 @@ fn test_sha256_known_vector_empty() {
 #[test]
 fn test_sha256_known_vector_abc() {
     assert_eq!(
-        hash(b"abc").unwrap(),
+        hash(b"abc"),
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
     );
 }
@@ -27,7 +27,7 @@ fn test_sha256_known_vector_abc() {
 #[test]
 fn test_sha256_known_vector_hello_world() {
     assert_eq!(
-        hash(b"hello world").unwrap(),
+        hash(b"hello world"),
         "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
     );
 }
@@ -36,20 +36,18 @@ fn test_sha256_known_vector_hello_world() {
 fn test_sha256_binary_data() {
     let data = vec![0x00, 0x01, 0x02, 0xFF];
     let result = hash(&data);
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap().len(), 64); // SHA256 produces 64 hex chars
+    assert_eq!(result.len(), 64); // SHA256 produces 64 hex chars
 }
 
 #[test]
 fn test_sha256_large_data() {
     let large_data = vec![b'a'; 1_000_000];
     let result = hash(&large_data);
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap().len(), 64);
+    assert_eq!(result.len(), 64);
 }
 
 #[test]
 fn test_sha256_unicode() {
-    let result = hash("hello世界".as_bytes()).unwrap();
+    let result = hash("hello世界".as_bytes());
     assert_eq!(result.len(), 64);
 }

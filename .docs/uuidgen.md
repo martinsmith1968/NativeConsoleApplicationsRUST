@@ -68,7 +68,7 @@ The full help text looks something like this :
 
 ```text
 uuidgen v0.1.0-dev - Generate Unique IDs (UUIDs) with controlled output and formatting
-Copyright ┬® 2025-2026 Martin Smith
+Copyright © 2025-2026 Martin Smith
 
 Usage: uuidgen [OPTIONS]
 

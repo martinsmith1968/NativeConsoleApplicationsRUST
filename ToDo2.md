@@ -1,0 +1,68 @@
+# ToDo 2
+
+Outstanding findings from [Recommendations.md](Recommendations.md) (review of 2026-10-26, branch `task/ai-recommendations`).
+Tick each item as it is completed.
+
+## printformat structure and gaps
+
+- [X] Extract one tokenizer for the `{}` scanning loop repeated in `preprocess_format`, `count_required_args` and `translate_csharp_format`
+- [X] Split `printformat/src/main.rs` (534 lines) into modules, the way `hashcalc` splits its hashers
+- [X] Support C# `X` (hex), `N` (thousands separator) and `C` (currency) in `translate_csharp_specifier` — C# placeholders are now rendered directly (also fixes F, E and G); `--currency` sets the `C` symbol (default £)
+- [X] Remove `impl Display for FormatType`, which duplicates what `ValueEnum` provides
+- [X] Make `%c` reject (or warn about) arguments longer than one character instead of silently using the first
+- [X] Accept negative numbers as arguments (e.g. `printformat -t CSharp "{0:C}" -1234.5`) without needing `--`; they are currently read as unknown options
+- [X] Add a `--culture` option for C# formats (e.g. `en-GB`, `en-US`, `de-DE`, `fr-FR`): a built-in table of decimal separator, group separator, currency symbol and currency pattern (symbol before/after the number), default `en-GB`; `--currency` (and optional separator options) override individual values
+- [X] Allow `--culture` to take the path to a TOML culture file (`base`, `decimal_separator`, `group_separator`, `currency_symbol`, `currency_position`)
+- [ ] Culture files: support a negative currency pattern (e.g. `(£1.00)`, `€ -1,00`) instead of always a leading `-`
+- [ ] Culture files: support non-uniform digit grouping (e.g. Indian `12,34,567`)
+
+## Cargo and workspace (priority 3)
+
+- [x] Add `[workspace.package]` and hoist the shared package metadata (including a single workspace `version`, stamped by CI)
+- [x] Add `[workspace.dependencies]` and hoist shared versions (`clap`, `assert_cmd`, `predicates`, `winresource`, `build-print`, …)
+- [x] Change `repository` from `http://` to `https://` in all four manifests
+- [x] Resolve the license: add the Apache-2.0 text, or declare `MIT` only — declared `MIT`
+- [x] Fix `readme = "../README.md"` so it no longer points outside each crate — now `readme.workspace = true`; current Cargo copies the root README into the package, so packaging was not actually broken
+- [x] Add `[profile.release]` tuning (`lto`, `strip`, `panic = "abort"`, `codegen-units`)
+- [x] Add `rust-version` (MSRV; `edition = "2024"` requires Rust 1.85) — set to 1.85
+- [x] Add `[workspace.lints]`
+
+## CI and repository (priority 4)
+
+- [x] Add a `cargo clippy --all-targets -- -D warnings` step (clippy is installed but never run)
+- [x] Add a `cargo audit` or `cargo deny` step
+- [x] Add `Swatinem/rust-cache` (or equivalent) — already enabled by `setup-rust-toolchain`; build output dir now cached and reused by the tests
+- [x] Replace `permissions: write-all` on the tag and release jobs with `contents: write`
+- [X] Split the monolithic workflow (641 lines) into reusable workflows (branch `task/ai-recommendations-workflows`; no shared repository)
+  - [X] 1. Move the inline scripts into `.github/scripts/` (PowerShell)
+  - [X] 2. Extract composite actions (`package-binaries`, `setup-cross-toolchain`; version stamping and the architecture check stay single script calls)
+  - [X] 3. Split the jobs into reusable workflows (`_setup`, `_build`, `_coverage`, `_audit`, `_release`); `ci-build.yml` only calls them
+  - [X] 4. Consolidate or gate the debug-only steps — the four Rust toolchain steps are now one; file listings and `env` dumps run only with debug logging (`runner.debug`)
+- [x] Add the `cargo` ecosystem to Dependabot
+
+## Repository and documentation
+
+- [x] Make the project name consistent (`PROJECT_NAME` in the workflow, the repository name, the README title)
+- [x] Fix README typos: "framworks", "sonsumption", "bulids", "currenly"
+- [x] Rewrite the garbled README overview ("...as the complemented and are consumed by...")
+- [x] Remove README references to PauseN and per-user file storage
+- [x] Decide whether `.squad/` (118 files) and `.copilot/` (33 files) belong in this repository
+- [x] Decide whether to add non-PowerShell scripts (currently PowerShell-only with `.cmd` wrappers) — decided: not needed
+- [x] Check `.vscode/`: commit it or add it to `.gitignore` (in the original analysis, missing from the 2026-10-26 review)
+
+## Shared code and tests (priorities 5 and 6)
+
+- [X] Extract the duplicated clap boilerplate (`-h/-?`, `-V/-!`, `about`/`long_about`, `help_expected`, `after_help`) into a shared crate — `cli-support`: `banner!()` builds `about`/`long_about` from each app's package metadata, and the flattened `StandardArgs` supplies `-h/-?`, `-V/-!`, `disable_help_flag`, `disable_version_flag` and `help_expected`; `after_help` stays per app (its examples differ)
+- [X] Move each app's logic into `lib.rs` and keep `main.rs` thin — `lib.rs` exposes `Args` and `run`; `main.rs` only parses and maps the result to an exit code; `main_tests.rs` renamed `lib_tests.rs`
+  - [X] bannertext
+  - [X] hashcalc
+  - [X] printformat
+  - [X] uuidgen
+- [X] Make the test layout consistent (`src/main_tests.rs`, `#[path]` hasher modules, `tests/<app>.rs` stubs) — every module's unit tests are `#[path = "<module>_tests.rs"] mod tests;` (including `lib.rs`); each app has `tests/integration_tests.rs`, `tests/output_tests.rs` and `tests/ExpectedOutput/` with no stub; hashcalc's `cargo run` CLI tests moved from the unit tests into `tests/` (using `assert_cmd`, duplicates dropped)
+- [ ] Consider insta snapshots for the 42 expected-output `.example` files
+- [X] Add property-based tests with `proptest` (banner width invariant, format parsers) — `Property Tests` sections in `bannertext/src/lib_tests.rs` (width with and without a maximum, line count, alignment) and the printformat `braces`, `rust`, `csharp` and `c` test files (round trips, argument order and count, alignment, D/X/F/N/C numeric formats)
+
+## Minor
+
+- [X] Stop treating base64 as a hash: rename the `hash_content`/`hash_reader` abstraction (e.g. `convert`/`transform`) or keep the encoding path separate, and revisit the `[base64]` output line
+  - Base64 is a hash, and is valid for this app

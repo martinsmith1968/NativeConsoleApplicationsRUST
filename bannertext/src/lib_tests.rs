@@ -1,0 +1,718 @@
+use super::*;
+
+fn default_banner(texts: &[&str]) -> String {
+    generate_banner(texts, &BannerOptions::default())
+}
+
+// ===== Default Banner Tests =====
+
+#[test]
+fn test_default_hello_world() {
+    let result = default_banner(&["Hello World"]);
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines.len(), 3);
+    assert_eq!(lines[0], "*******************");
+    assert_eq!(lines[1], "**  Hello World  **");
+    assert_eq!(lines[2], "*******************");
+}
+
+#[test]
+fn test_default_total_length() {
+    // natural_length = 2+2+11+2+2 = 19
+    let result = default_banner(&["Hello World"]);
+    let first_line = result.lines().next().unwrap();
+    assert_eq!(first_line.len(), 19);
+}
+
+#[test]
+fn test_text_line_correct_format() {
+    let result = default_banner(&["Hello World"]);
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines[1], "**  Hello World  **");
+    assert_eq!(lines[1].len(), 19);
+}
+
+// ===== Min Length Tests =====
+
+#[test]
+fn test_min_total_length_expansion() {
+    let result = generate_banner(
+        &["Hello World"],
+        &BannerOptions {
+            min_total_length: 80,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines[0].len(), 80);
+    assert_eq!(lines[2].len(), 80);
+    assert_eq!(lines[1].len(), 80);
+    // Text left-aligned, padded to fill
+    assert!(lines[1].starts_with("**  Hello World"));
+    assert!(lines[1].ends_with("**"));
+}
+
+#[test]
+fn test_min_total_length_no_effect_when_smaller() {
+    // min=5 is smaller than natural 19, so no change
+    let result = generate_banner(
+        &["Hello World"],
+        &BannerOptions {
+            min_total_length: 5,
+            ..Default::default()
+        },
+    );
+    let first_line = result.lines().next().unwrap();
+    assert_eq!(first_line.len(), 19);
+}
+
+// ===== Alignment Tests =====
+
+#[test]
+fn test_center_alignment() {
+    let result = generate_banner(
+        &["Hello World"],
+        &BannerOptions {
+            text_alignment: TextAlignment::Center,
+            min_total_length: 80,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    let text_line = lines[1];
+    assert_eq!(text_line.len(), 80);
+    // Strip prefix "**  " and suffix "  **"
+    let inner = &text_line[4..76];
+    assert_eq!(inner.trim(), "Hello World");
+    // Centered: equal (or near-equal) padding on each side
+    let left_pad = inner.len() - inner.trim_start().len();
+    let right_pad = inner.len() - inner.trim_end().len();
+    // For centering, left and right pad should differ by at most 1
+    assert!((left_pad as i32 - right_pad as i32).abs() <= 1);
+}
+
+#[test]
+fn test_right_alignment() {
+    let result = generate_banner(
+        &["Hello World"],
+        &BannerOptions {
+            text_alignment: TextAlignment::Right,
+            min_total_length: 80,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    let text_line = lines[1];
+    assert_eq!(text_line.len(), 80);
+    // Should end with "Hello World  **"
+    assert!(text_line.ends_with("Hello World  **"));
+}
+
+#[test]
+fn test_left_alignment_default() {
+    let result = generate_banner(
+        &["Hello World"],
+        &BannerOptions {
+            min_total_length: 80,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    let text_line = lines[1];
+    // Should start with "**  Hello World"
+    assert!(text_line.starts_with("**  Hello World"));
+}
+
+// ===== Custom Chars Tests =====
+
+#[test]
+fn test_custom_header_char() {
+    let result = generate_banner(
+        &["Test"],
+        &BannerOptions {
+            header_line_char: '#',
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    assert!(lines[0].chars().all(|c| c == '#'));
+    assert!(lines[2].chars().all(|c| c == '*'));
+}
+
+#[test]
+fn test_custom_footer_char() {
+    let result = generate_banner(
+        &["Test"],
+        &BannerOptions {
+            footer_line_char: '-',
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    assert!(lines[0].chars().all(|c| c == '*'));
+    assert!(lines[2].chars().all(|c| c == '-'));
+}
+
+#[test]
+fn test_custom_text_line_char() {
+    let result = generate_banner(
+        &["Test"],
+        &BannerOptions {
+            text_line_char: '=',
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    assert!(lines[1].starts_with("==  "));
+    assert!(lines[1].ends_with("  =="));
+}
+
+// ===== Prefix/Suffix Count Tests =====
+
+#[test]
+fn test_different_prefix_suffix_counts() {
+    let result = generate_banner(
+        &["Hi"],
+        &BannerOptions {
+            title_prefix_count: 3,
+            title_suffix_count: 3,
+            title_prefix_gap_size: 1,
+            title_suffix_gap_size: 1,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    // natural = 3+1+2+1+3 = 10
+    assert_eq!(lines[0].len(), 10);
+    assert!(lines[1].starts_with("*** "));
+    assert!(lines[1].ends_with(" ***"));
+}
+
+#[test]
+fn test_zero_prefix_count() {
+    let result = generate_banner(
+        &["Hi"],
+        &BannerOptions {
+            title_prefix_count: 0,
+            title_suffix_count: 0,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    // natural = 0+2+2+2+0 = 6
+    assert_eq!(lines[0].len(), 6);
+    assert_eq!(lines[1], "  Hi  ");
+}
+
+// ===== Gap Size Tests =====
+
+#[test]
+fn test_different_gap_sizes() {
+    let result = generate_banner(
+        &["Hi"],
+        &BannerOptions {
+            title_prefix_gap_size: 4,
+            title_suffix_gap_size: 4,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    // natural = 2+4+2+4+2 = 14
+    assert_eq!(lines[0].len(), 14);
+    assert!(lines[1].starts_with("**    "));
+    assert!(lines[1].ends_with("    **"));
+}
+
+#[test]
+fn test_zero_gap_sizes() {
+    let result = generate_banner(
+        &["Hi"],
+        &BannerOptions {
+            title_prefix_gap_size: 0,
+            title_suffix_gap_size: 0,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    // natural = 2+0+2+0+2 = 6
+    assert_eq!(lines[0].len(), 6);
+    assert_eq!(lines[1], "**Hi**");
+}
+
+// ===== Max Length Truncation Tests =====
+
+#[test]
+fn test_max_total_length_truncation() {
+    let result = generate_banner(
+        &["Hello World"],
+        &BannerOptions {
+            max_total_length: 15,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    // max=15, prefix_total=4, suffix_total=4, text_area=7
+    // text "Hello World" truncated to 7 chars = "Hello W"
+    assert_eq!(lines[0].len(), 15);
+    assert_eq!(lines[1].len(), 15);
+    assert!(lines[1].starts_with("**  Hello W"));
+}
+
+#[test]
+fn test_max_length_smaller_than_natural() {
+    let result = generate_banner(
+        &["Hello World"],
+        &BannerOptions {
+            max_total_length: 10,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    // max=10, prefix_total=4, suffix_total=4, text_area=2
+    assert_eq!(lines[0].len(), 10);
+    assert_eq!(lines[1].len(), 10);
+}
+
+// ===== Empty Text Tests =====
+
+#[test]
+fn test_empty_text() {
+    let result = generate_banner(&[""], &BannerOptions::default());
+    let lines: Vec<&str> = result.lines().collect();
+    // natural = 2+2+0+2+2 = 8
+    assert_eq!(lines[0].len(), 8);
+    assert_eq!(lines[1], "**    **");
+}
+
+// ===== Multiple Header/Footer Lines Tests =====
+
+#[test]
+fn test_multiple_header_lines() {
+    let result = generate_banner(
+        &["Hi"],
+        &BannerOptions {
+            header_line_count: 3,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines.len(), 5); // 3 header + 1 text + 1 footer
+    assert!(lines[0].chars().all(|c| c == '*'));
+    assert!(lines[1].chars().all(|c| c == '*'));
+    assert!(lines[2].chars().all(|c| c == '*'));
+    assert!(lines[3].contains("Hi"));
+    assert!(lines[4].chars().all(|c| c == '*'));
+}
+
+#[test]
+fn test_multiple_footer_lines() {
+    let result = generate_banner(
+        &["Hi"],
+        &BannerOptions {
+            footer_line_count: 3,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines.len(), 5); // 1 header + 1 text + 3 footer
+    assert!(lines[0].chars().all(|c| c == '*'));
+    assert!(lines[1].contains("Hi"));
+    assert!(lines[2].chars().all(|c| c == '*'));
+    assert!(lines[3].chars().all(|c| c == '*'));
+    assert!(lines[4].chars().all(|c| c == '*'));
+}
+
+// ===== Zero Header/Footer Lines Tests =====
+
+#[test]
+fn test_zero_header_lines() {
+    let result = generate_banner(
+        &["Hi"],
+        &BannerOptions {
+            header_line_count: 0,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines.len(), 2); // 0 header + 1 text + 1 footer
+    assert!(lines[0].contains("Hi"));
+    assert!(lines[1].chars().all(|c| c == '*'));
+}
+
+#[test]
+fn test_zero_footer_lines() {
+    let result = generate_banner(
+        &["Hi"],
+        &BannerOptions {
+            footer_line_count: 0,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines.len(), 2); // 1 header + 1 text + 0 footer
+    assert!(lines[0].chars().all(|c| c == '*'));
+    assert!(lines[1].contains("Hi"));
+}
+
+#[test]
+fn test_zero_header_and_footer_lines() {
+    let result = generate_banner(
+        &["Hi"],
+        &BannerOptions {
+            header_line_count: 0,
+            footer_line_count: 0,
+            ..Default::default()
+        },
+    );
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines.len(), 1);
+    assert!(lines[0].contains("Hi"));
+}
+
+// ===== Multi-Text Tests =====
+
+#[test]
+fn test_multi_text_two_equal_length() {
+    // "Hello" and "World" are both 5 chars → natural = prefix(4) + 5 + suffix(4) = 13
+    let result = generate_banner(&["Hello", "World"], &BannerOptions::default());
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines.len(), 4); // 1 header + 2 text + 1 footer
+    assert_eq!(lines[0].len(), 13);
+    assert_eq!(lines[1], "**  Hello  **");
+    assert_eq!(lines[2], "**  World  **");
+    assert_eq!(lines[3], "*************");
+}
+
+#[test]
+fn test_multi_text_second_longer() {
+    // "Hi" (2) and "Hello" (5) → width driven by "Hello", natural = 13
+    let result = generate_banner(&["Hi", "Hello"], &BannerOptions::default());
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines.len(), 4);
+    assert_eq!(lines[0].len(), 13);
+    assert_eq!(lines[1].len(), 13);
+    assert!(
+        lines[1].starts_with("**  Hi"),
+        "First line should start with '**  Hi'"
+    );
+    assert_eq!(lines[2], "**  Hello  **");
+    assert_eq!(lines[3], "*************");
+}
+
+#[test]
+fn test_multi_text_first_longer() {
+    // "Hello" (5) and "Hi" (2) → width driven by "Hello", natural = 13
+    let result = generate_banner(&["Hello", "Hi"], &BannerOptions::default());
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines.len(), 4);
+    assert_eq!(lines[0].len(), 13);
+    assert_eq!(lines[1], "**  Hello  **");
+    assert_eq!(lines[2].len(), 13);
+    assert!(
+        lines[2].starts_with("**  Hi"),
+        "Second line should start with '**  Hi'"
+    );
+    assert_eq!(lines[3], "*************");
+}
+
+#[test]
+fn test_multi_text_three_texts() {
+    // "A" (1), "BB" (2), "CCC" (3) → width driven by "CCC", natural = 4+3+4 = 11
+    let result = generate_banner(&["A", "BB", "CCC"], &BannerOptions::default());
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines.len(), 5); // 1 header + 3 text + 1 footer
+    assert_eq!(lines[0].len(), 11);
+    assert_eq!(lines[4].len(), 11);
+    assert!(
+        lines[1].starts_with("**  A"),
+        "First text line should start with '**  A'"
+    );
+    assert!(
+        lines[2].starts_with("**  BB"),
+        "Second text line should start with '**  BB'"
+    );
+    assert_eq!(lines[3], "**  CCC  **");
+}
+
+#[test]
+fn test_multi_text_with_empty_entry() {
+    // "Hello" (5) and "" (0) → width driven by "Hello", natural = 13
+    let result = generate_banner(&["Hello", ""], &BannerOptions::default());
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines.len(), 4);
+    assert_eq!(lines[0].len(), 13);
+    assert_eq!(lines[1], "**  Hello  **");
+    // Empty text left-aligned in width 5 → 5 spaces
+    assert_eq!(lines[2].len(), 13);
+    assert_eq!(lines[2], "**         **"); // "**" + "  " + "     " + "  " + "**"
+}
+
+#[test]
+fn test_single_text_slice_matches_original_behaviour() {
+    // Regression: single-element slice should produce same output as before
+    let result = generate_banner(&["Hello World"], &BannerOptions::default());
+    let lines: Vec<&str> = result.lines().collect();
+    assert_eq!(lines.len(), 3);
+    assert_eq!(lines[0], "*******************");
+    assert_eq!(lines[1], "**  Hello World  **");
+    assert_eq!(lines[2], "*******************");
+}
+
+// ===== Argument Validation Tests =====
+
+fn parse_args(args: &[&str]) -> Result<Args, clap::Error> {
+    let mut full = vec!["bannertext"];
+    full.extend_from_slice(args);
+    Args::try_parse_from(full)
+}
+
+#[test]
+fn test_cli_rejects_excessive_header_line_count() {
+    assert!(parse_args(&["text", "-n", "4000000000"]).is_err());
+}
+
+#[test]
+fn test_cli_rejects_excessive_footer_line_count() {
+    assert!(parse_args(&["text", "-N", "4000000000"]).is_err());
+}
+
+#[test]
+fn test_cli_rejects_excessive_affix_counts() {
+    assert!(parse_args(&["text", "-p", "4000000000"]).is_err());
+    assert!(parse_args(&["text", "-s", "4000000000"]).is_err());
+    assert!(parse_args(&["text", "-P", "4000000000"]).is_err());
+    assert!(parse_args(&["text", "-S", "4000000000"]).is_err());
+}
+
+#[test]
+fn test_cli_accepts_maximum_header_line_count() {
+    let args = parse_args(&["text", "-n", &MAX_LINE_COUNT.to_string()]).unwrap();
+    assert_eq!(args.header_line_count, MAX_LINE_COUNT);
+}
+
+#[test]
+fn test_cli_rejects_excessive_total_length() {
+    assert!(parse_args(&["text", "-m", "4000000000"]).is_err());
+    assert!(parse_args(&["text", "-M", "4000000000"]).is_err());
+}
+
+#[test]
+fn test_cli_rejects_min_greater_than_max() {
+    let args = parse_args(&["text", "-m", "80", "-M", "40"]).unwrap();
+    let error = validate_args(&args).unwrap_err();
+    assert!(error.contains("--min-total-length"));
+    assert!(error.contains("--max-total-length"));
+}
+
+#[test]
+fn test_cli_accepts_min_equal_to_max() {
+    let args = parse_args(&["text", "-m", "40", "-M", "40"]).unwrap();
+    assert!(validate_args(&args).is_ok());
+}
+
+#[test]
+fn test_cli_accepts_max_without_min() {
+    let args = parse_args(&["text", "-M", "40"]).unwrap();
+    assert!(validate_args(&args).is_ok());
+}
+
+#[test]
+fn test_text_alignment_defaults_to_left() {
+    assert_eq!(TextAlignment::default(), TextAlignment::Left);
+    assert_eq!(TextAlignment::default().to_string(), "Left");
+    assert_eq!(TextAlignment::Right.to_string(), "Right");
+
+    let args = parse_args(&["text"]).unwrap();
+    assert_eq!(args.text_alignment, TextAlignment::Left);
+}
+
+#[test]
+fn test_banner_options_default_matches_cli_defaults() {
+    let args = parse_args(&["text"]).unwrap();
+
+    assert_eq!(BannerOptions::from_args(&args), BannerOptions::default());
+}
+
+#[test]
+fn test_banner_options_from_args_copies_every_field() {
+    let args = parse_args(&[
+        "text", "-H", "#", "-n", "3", "-F", "=", "-N", "4", "-L", "+", "-p", "5", "-s", "6", "-P",
+        "7", "-S", "8", "-a", "Right", "-m", "20", "-M", "40",
+    ])
+    .unwrap();
+
+    let options = BannerOptions::from_args(&args);
+
+    assert_eq!(
+        options,
+        BannerOptions {
+            header_line_char: '#',
+            header_line_count: 3,
+            footer_line_char: '=',
+            footer_line_count: 4,
+            text_line_char: '+',
+            title_prefix_count: 5,
+            title_suffix_count: 6,
+            title_prefix_gap_size: 7,
+            title_suffix_gap_size: 8,
+            text_alignment: TextAlignment::Right,
+            min_total_length: 20,
+            max_total_length: 40,
+        }
+    );
+}
+
+#[test]
+fn test_max_affix_sizes_produce_expected_width() {
+    let result = generate_banner(
+        &["X"],
+        &BannerOptions {
+            header_line_count: 0,
+            title_prefix_count: MAX_AFFIX_SIZE,
+            title_suffix_count: MAX_AFFIX_SIZE,
+            title_prefix_gap_size: MAX_AFFIX_SIZE,
+            title_suffix_gap_size: MAX_AFFIX_SIZE,
+            ..Default::default()
+        },
+    );
+    let line = result.lines().next().unwrap();
+    let expected = (MAX_AFFIX_SIZE * 4) as usize + 1;
+    assert_eq!(line.chars().count(), expected);
+}
+
+// ===== Property Tests =====
+
+mod properties {
+    use super::*;
+    use proptest::prelude::*;
+
+    fn alignment() -> impl Strategy<Value = TextAlignment> {
+        prop_oneof![
+            Just(TextAlignment::Left),
+            Just(TextAlignment::Right),
+            Just(TextAlignment::Center),
+        ]
+    }
+
+    /// Banner options without a maximum length.
+    fn options() -> impl Strategy<Value = BannerOptions> {
+        (
+            (proptest::char::range('!', '~'), 0..5u32),
+            (proptest::char::range('!', '~'), 0..5u32),
+            proptest::char::range('!', '~'),
+            (0..6u32, 0..6u32, 0..6u32, 0..6u32),
+            alignment(),
+            0..120u32,
+        )
+            .prop_map(
+                |(
+                    (header_line_char, header_line_count),
+                    (footer_line_char, footer_line_count),
+                    text_line_char,
+                    (prefix_count, suffix_count, prefix_gap, suffix_gap),
+                    text_alignment,
+                    min_total_length,
+                )| BannerOptions {
+                    header_line_char,
+                    header_line_count,
+                    footer_line_char,
+                    footer_line_count,
+                    text_line_char,
+                    title_prefix_count: prefix_count,
+                    title_suffix_count: suffix_count,
+                    title_prefix_gap_size: prefix_gap,
+                    title_suffix_gap_size: suffix_gap,
+                    text_alignment,
+                    min_total_length,
+                    max_total_length: 0,
+                },
+            )
+    }
+
+    /// One or more lines of printable text (no control characters, so no line breaks).
+    fn texts() -> impl Strategy<Value = Vec<String>> {
+        proptest::collection::vec(r"\PC{0,30}", 1..5)
+    }
+
+    fn affix_total(options: &BannerOptions) -> usize {
+        (options.title_prefix_count
+            + options.title_prefix_gap_size
+            + options.title_suffix_count
+            + options.title_suffix_gap_size) as usize
+    }
+
+    fn banner(texts: &[String], options: &BannerOptions) -> String {
+        let refs: Vec<&str> = texts.iter().map(String::as_str).collect();
+        generate_banner(&refs, options)
+    }
+
+    proptest! {
+        #[test]
+        fn every_line_has_the_natural_or_minimum_width(texts in texts(), options in options()) {
+            let longest = texts.iter().map(|t| t.chars().count()).max().unwrap();
+            let natural = affix_total(&options) + longest;
+            let expected = natural.max(options.min_total_length as usize);
+
+            for line in banner(&texts, &options).lines() {
+                prop_assert_eq!(line.chars().count(), expected);
+            }
+        }
+
+        #[test]
+        fn every_line_has_the_clamped_width_with_a_maximum(
+            texts in texts(),
+            options in options(),
+            extra in 0..100u32,
+        ) {
+            // validate_args rejects min > max, and a maximum below the prefix and
+            // suffix cannot be honoured by the text lines
+            let max_total_length = options.min_total_length.max(affix_total(&options) as u32) + extra;
+            let options = BannerOptions { max_total_length, ..options };
+
+            let longest = texts.iter().map(|t| t.chars().count()).max().unwrap();
+            let natural = affix_total(&options) + longest;
+            let expected = natural
+                .max(options.min_total_length as usize)
+                .min(max_total_length as usize);
+
+            for line in banner(&texts, &options).lines() {
+                prop_assert_eq!(line.chars().count(), expected);
+            }
+        }
+
+        #[test]
+        fn line_count_is_headers_plus_texts_plus_footers(texts in texts(), options in options()) {
+            let expected = options.header_line_count as usize
+                + texts.len()
+                + options.footer_line_count as usize;
+
+            prop_assert_eq!(banner(&texts, &options).split('\n').count(), expected);
+        }
+
+        #[test]
+        fn text_lines_keep_the_text_and_honour_the_alignment(
+            texts in texts(),
+            options in options(),
+        ) {
+            let result = banner(&texts, &options);
+            let lines: Vec<&str> = result.split('\n').collect();
+            let first_text_line = options.header_line_count as usize;
+            let prefix = (options.title_prefix_count + options.title_prefix_gap_size) as usize;
+            let suffix = (options.title_suffix_count + options.title_suffix_gap_size) as usize;
+
+            for (text, line) in texts.iter().zip(&lines[first_text_line..]) {
+                let width = line.chars().count() - prefix - suffix;
+                let middle: String = line.chars().skip(prefix).take(width).collect();
+                let padding = width - text.chars().count();
+                // Centring puts any odd padding space on the right
+                let left = match options.text_alignment {
+                    TextAlignment::Left => 0,
+                    TextAlignment::Right => padding,
+                    TextAlignment::Center => padding / 2,
+                };
+                let expected = format!("{}{}{}", " ".repeat(left), text, " ".repeat(padding - left));
+                prop_assert_eq!(middle, expected);
+            }
+        }
+    }
+}

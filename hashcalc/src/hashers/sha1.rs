@@ -1,10 +1,18 @@
 use sha1::{Digest, Sha1};
+use std::io::{self, Read};
 
-pub fn hash(data: &[u8]) -> Result<String, String> {
+pub fn hash_reader(reader: &mut dyn Read) -> io::Result<String> {
     let mut hasher = Sha1::new();
-    hasher.update(data);
-    let result = hasher.finalize();
-    Ok(hex::encode(result))
+    super::read_chunks(reader, |chunk| {
+        hasher.update(chunk);
+        Ok(())
+    })?;
+    Ok(hex::encode(hasher.finalize()))
+}
+
+#[cfg(test)]
+fn hash(data: &[u8]) -> String {
+    hash_reader(&mut &data[..]).expect("reading from a byte slice cannot fail")
 }
 
 #[cfg(test)]
