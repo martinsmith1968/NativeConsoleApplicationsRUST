@@ -1,4 +1,4 @@
-# Set update schedules for GitHub Actions and Cargo dependencies
+# Set update schedules for GitHub Actions. Cargo dependencies are upgraded by hand.
 # See : https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/secure-your-dependencies/keeping-your-actions-up-to-date-with-dependabot
 
 version: 2
@@ -14,11 +14,3 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "gh-action"
-
-  # Check for updates to Cargo dependencies every week
-  - package-ecosystem: "cargo"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    commit-message:
-      prefix: "cargo"
