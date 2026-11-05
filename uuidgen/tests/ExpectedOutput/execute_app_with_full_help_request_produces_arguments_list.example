@@ -45,12 +45,12 @@ Options:
   -h, --help
           Print help
           
-          [aliases: -?]
+          [alias: -?]
 
   -V, --version
           Print version
           
-          [aliases: -!]
+          [alias: -!]
 
 NOTE:
 output-template supports: {uuid}, {sequence} dynamic values

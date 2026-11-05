@@ -101,8 +101,8 @@ Options:
       --currency <CURRENCY>                    Currency symbol for the C# 'C' format specifier (overrides the culture's)
       --decimal-separator <DECIMAL_SEPARATOR>  Decimal separator for C# number formats (overrides the culture's)
       --group-separator <GROUP_SEPARATOR>      Group (thousands) separator for the C# 'N' and 'C' format specifiers (overrides the culture's)
-  -h, --help                                   Print help [aliases: -?]
-  -V, --version                                Print version [aliases: -!]
+  -h, --help                                   Print help [alias: -?]
+  -V, --version                                Print version [alias: -!]
 
 Examples:
   printformat "Hello, {}!" "World"
