@@ -1,0 +1,10 @@
+---
+source: bannertext/tests/output_tests.rs
+---
+*************
+**    a    **
+**   bb    **
+**   ccc   **
+**  dddd   **
+**  eeeee  **
+*************

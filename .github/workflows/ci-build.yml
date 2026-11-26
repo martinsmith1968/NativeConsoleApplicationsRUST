@@ -1,6 +1,13 @@
 name: CI Build
 run-name: CIBuild_${{ github.event_name }}_${{ github.ref_name }}_${{ github.run_number }}.${{ github.run_attempt }}
 
+env:
+  PROJECT_NAME: NativeWindowsConsoleApplicationsRUST
+  PRIMARY_BRANCH_NAME: main
+  APP_MAJOR_VERSION: 2
+  APP_MINOR_VERSION: 1
+  BRANCH_PREFIX_RELEASE_CANDIDATE: rc/
+
 on:
   push:
     branches:
@@ -27,17 +34,17 @@ jobs:
     name: Setup
     uses: ./.github/workflows/_setup.yml
     with:
-      major_version: '2'
-      minor_version: '0'
-      primary_branch: main
-      release_candidate_prefix: rc/
+      major_version: '${{ env.APP_MAJOR_VERSION }}'
+      minor_version: '${{ env.APP_MINOR_VERSION }}'
+      primary_branch: '${{ env.PRIMARY_BRANCH_NAME }}''
+      release_candidate_prefix: '${{ env.BRANCH_PREFIX_RELEASE_CANDIDATE }}'
 
   build:
     name: Build
     needs: setup
     uses: ./.github/workflows/_build.yml
     with:
-      project_name: NativeConsoleApplicationsRUST
+      project_name: ${{ env.PROJECT_NAME }}
       executable_version: ${{ needs.setup.outputs.executable_version }}
       executable_build_version: ${{ needs.setup.outputs.executable_build_version }}
       binary_names: ${{ needs.setup.outputs.binary_names }}

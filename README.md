@@ -48,6 +48,18 @@ These include :
 - [PrintFormat](.docs/printformat.md)
 - [UUIDGen](.docs/uuidgen.md)
 
+## Testing
+
+Application output is covered by [insta](https://insta.rs) snapshot tests (`<app>/tests/snapshots/`). The version, build
+year and random GUID / NanoId values are replaced with placeholders by filters in `test-support`, so snapshots stay
+stable.
+
+```text
+cargo test                  # run everything; a changed snapshot fails the test
+cargo install cargo-insta   # one-off: the snapshot review tool
+cargo insta test --review   # run the tests, then accept / reject changed snapshots
+```
+
 ## Additional Docs
 
 - [Future To Do](TODO.md)
