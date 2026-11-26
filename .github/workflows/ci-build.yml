@@ -30,21 +30,39 @@ on:
 # Diagnostic steps (file listings, environment, toolchain details) only run with
 # debug logging on: re-run with "Enable debug logging", or set ACTIONS_STEP_DEBUG.
 jobs:
+  # The env context is not available in the "with" of a reusable workflow call, but job
+  # outputs can read it, and "needs" is available there. So the settings above are
+  # published as outputs of this job and consumed from needs.config.outputs below.
+  config:
+    name: Config
+    runs-on: ubuntu-latest
+    outputs:
+      project_name: ${{ env.PROJECT_NAME }}
+      primary_branch: ${{ env.PRIMARY_BRANCH_NAME }}
+      major_version: ${{ env.APP_MAJOR_VERSION }}
+      minor_version: ${{ env.APP_MINOR_VERSION }}
+      release_candidate_prefix: ${{ env.BRANCH_PREFIX_RELEASE_CANDIDATE }}
+    steps:
+      - run: echo "Pipeline settings published as outputs"
+
   setup:
     name: Setup
+    needs: config
     uses: ./.github/workflows/_setup.yml
     with:
-      major_version: '${{ env.APP_MAJOR_VERSION }}'
-      minor_version: '${{ env.APP_MINOR_VERSION }}'
-      primary_branch: '${{ env.PRIMARY_BRANCH_NAME }}'
-      release_candidate_prefix: '${{ env.BRANCH_PREFIX_RELEASE_CANDIDATE }}'
+      major_version: '${{ needs.config.outputs.major_version }}'
+      minor_version: '${{ needs.config.outputs.minor_version }}'
+      primary_branch: '${{ needs.config.outputs.primary_branch }}'
+      release_candidate_prefix: '${{ needs.config.outputs.release_candidate_prefix }}'
 
   build:
     name: Build
-    needs: setup
+    needs:
+      - config
+      - setup
     uses: ./.github/workflows/_build.yml
     with:
-      project_name: ${{ env.PROJECT_NAME }}
+      project_name: ${{ needs.config.outputs.project_name }}
       executable_version: ${{ needs.setup.outputs.executable_version }}
       executable_build_version: ${{ needs.setup.outputs.executable_build_version }}
       binary_names: ${{ needs.setup.outputs.binary_names }}
