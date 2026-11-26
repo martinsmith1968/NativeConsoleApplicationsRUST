@@ -47,19 +47,19 @@ fn test_cli_v4_uppercase() {
 }
 
 #[test]
-fn test_cli_v4_non_hyphenated() {
+fn test_cli_v4_no_dashes() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    cmd.arg("--non-hyphenated")
+    cmd.arg("--no-dashes")
         .assert()
         .success()
         .stdout(predicate::str::is_match(r"^[0-9a-f]{32}\n$").unwrap());
 }
 
 #[test]
-fn test_cli_v4_uppercase_non_hyphenated() {
+fn test_cli_v4_uppercase_no_dashes() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
     cmd.arg("--uppercase")
-        .arg("--non-hyphenated")
+        .arg("--no-dashes")
         .assert()
         .success()
         .stdout(predicate::str::is_match(r"^[0-9A-F]{32}\n$").unwrap());
@@ -252,7 +252,7 @@ fn test_cli_short_options() {
         .arg("-v")
         .arg("v4")
         .arg("-u")
-        .arg("-y")
+        .arg("-d")
         .assert()
         .success()
         .stdout(predicate::str::is_match(r"^[0-9A-F]{32}\n$").unwrap());
@@ -292,12 +292,12 @@ fn test_cli_invalid_count_negative() {
 // ===== Combined Options Tests =====
 
 #[test]
-fn test_cli_v6_uppercase_non_hyphenated_with_template() {
+fn test_cli_v6_uppercase_no_dashes_with_template() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
     cmd.arg("-v")
         .arg("v6")
         .arg("-u")
-        .arg("-y")
+        .arg("-d")
         .arg("-o")
         .arg("ID:{uuid}")
         .assert()

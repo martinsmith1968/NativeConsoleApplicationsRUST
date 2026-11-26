@@ -34,7 +34,7 @@ enum UUIDType {
     about = cli_support::banner!(),
     long_about = cli_support::banner!(),
     author,
-    after_help = "NOTE:\noutput-template supports: {uuid}, {sequence} dynamic values\n(See also : https://github.com/vitiral/strfmt)\n\nExamples:\n  uuidgen\n  uuidgen --count 5\n  uuidgen --count 3 --uppercase\n  uuidgen --uuid-type nanoid\n  uuidgen --count 5 --output-template \"{sequence}: {uuid}\""
+    after_help = "NOTE:\noutput-template supports: {uuid}, {sequence} dynamic values\n(See also : https://github.com/vitiral/strfmt)\n\nExamples:\n  uuidgen\n  uuidgen --count 5\n  uuidgen --count 3 --uppercase\n  uuidgen --uuid-type nanoid\n  uuidgen --count 3 --copy\n  uuidgen --count 5 --output-template \"{sequence}: {uuid}\""
 )]
 pub struct Args {
     /// Number of times to generate
@@ -53,9 +53,9 @@ pub struct Args {
     #[arg(short = 'l', long, default_value_t = 21)]
     nanoid_length: usize,
 
-    /// Format the GUID without Hyphens (GUID only)
-    #[arg(short = 'y', long, default_value_t = false)]
-    non_hyphenated: bool,
+    /// Format the GUID without dashes (GUID only)
+    #[arg(short = 'd', long, default_value_t = false)]
+    no_dashes: bool,
 
     /// Covert the GUID to Upper case values (GUID only)
     #[arg(short = 'u', long, default_value_t = false)]
@@ -64,6 +64,10 @@ pub struct Args {
     /// The template to use when writing the output
     #[arg(short = 'o', long, default_value = "{uuid}")]
     output_template: String,
+
+    /// Copy the generated value(s) to the clipboard
+    #[arg(short = 'y', long, default_value_t = false)]
+    copy: bool,
 
     /// The seed to use when generating a v6 Guid (6 values)
     #[arg(
@@ -96,14 +100,31 @@ pub fn run(args: &Args) -> io::Result<()> {
     let stdout = io::stdout();
     let mut handle = stdout.lock();
 
+    let mut copied: Vec<String> = Vec::new();
+
     for sequence in 1..=args.count {
         let uuid_formatted = generate_uuid(args);
         let output = format_output(&args.output_template, &uuid_formatted, sequence);
 
         writeln!(handle, "{}", output)?;
+
+        if args.copy {
+            copied.push(output);
+        }
+    }
+
+    if args.copy {
+        copy_to_clipboard(&copied.join("\n")).map_err(io::Error::other)?;
     }
 
     Ok(())
+}
+
+/// Place the text on the system clipboard.
+fn copy_to_clipboard(text: &str) -> Result<(), String> {
+    arboard::Clipboard::new()
+        .and_then(|mut clipboard| clipboard.set_text(text))
+        .map_err(|e| format!("Unable to copy to clipboard - {}", e))
 }
 
 /// Parse and validate the v6 node seed once, when the arguments are parsed.
@@ -146,7 +167,7 @@ fn generate_uuid(args: &Args) -> String {
     match args.uuid_type {
         UUIDType::Guid => {
             let format_options = FormatOptions {
-                hyphenated: !args.non_hyphenated,
+                hyphenated: !args.no_dashes,
                 uppercase: args.uppercase,
             };
 
