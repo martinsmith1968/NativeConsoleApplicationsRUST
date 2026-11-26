@@ -1,5 +1,10 @@
 . $PSScriptRoot\Include-Scripts.ps1
 
+# The apps write UTF-8 (e.g. the © in the about text); decode their output as UTF-8
+# rather than the console code page, and use a wide width so clap does not wrap the help.
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:COLUMNS = 500
+
 #---------------------------------------------------------------------------------------------------
 
 $latest_version_slug        = "[//]: # (APP_LATESTVERSION)"

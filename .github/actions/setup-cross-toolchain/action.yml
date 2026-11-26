@@ -1,0 +1,34 @@
+name: Set up cross-compilation toolchain
+description: Installs what a 32-bit build needs (Linux multilib packages or the x86 MSVC tools) and adds the Rust target.
+
+inputs:
+  platform:
+    description: windows or linux
+    required: true
+  arch:
+    description: x64 or x86
+    required: true
+  target:
+    description: Rust target triple, e.g. i686-unknown-linux-gnu
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install 32-bit build dependencies (Linux)
+      if: inputs.platform == 'linux' && inputs.arch == 'x86'
+      shell: bash
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        sudo apt-get install -y gcc-multilib g++-multilib libc6-dev-i386
+
+    - name: Install Visual C++ build tools (Windows 32-bit)
+      if: inputs.platform == 'windows' && inputs.arch == 'x86'
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x86
+
+    - name: Add Rust target
+      shell: bash
+      run: rustup target add ${{ inputs.target }}

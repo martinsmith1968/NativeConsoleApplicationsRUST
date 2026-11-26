@@ -1,34 +1,18 @@
-pub fn hash(data: &[u8]) -> Result<String, String> {
-    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut result = String::new();
-    let mut i = 0;
+use base64::engine::general_purpose::STANDARD;
+use base64::write::EncoderWriter;
+use std::io::{self, Read, Write};
 
-    while i < data.len() {
-        let b1 = data[i];
-        let b2 = if i + 1 < data.len() { data[i + 1] } else { 0 };
-        let b3 = if i + 2 < data.len() { data[i + 2] } else { 0 };
+pub fn hash_reader(reader: &mut dyn Read) -> io::Result<String> {
+    let mut encoder = EncoderWriter::new(Vec::new(), &STANDARD);
+    super::read_chunks(reader, |chunk| encoder.write_all(chunk))?;
 
-        let n = ((b1 as u32) << 16) | ((b2 as u32) << 8) | (b3 as u32);
+    let encoded = encoder.finish()?;
+    String::from_utf8(encoded).map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
+}
 
-        result.push(CHARSET[((n >> 18) & 63) as usize] as char);
-        result.push(CHARSET[((n >> 12) & 63) as usize] as char);
-
-        if i + 1 < data.len() {
-            result.push(CHARSET[((n >> 6) & 63) as usize] as char);
-        } else {
-            result.push('=');
-        }
-
-        if i + 2 < data.len() {
-            result.push(CHARSET[(n & 63) as usize] as char);
-        } else {
-            result.push('=');
-        }
-
-        i += 3;
-    }
-
-    Ok(result)
+#[cfg(test)]
+fn hash(data: &[u8]) -> String {
+    hash_reader(&mut &data[..]).expect("reading from a byte slice cannot fail")
 }
 
 #[cfg(test)]

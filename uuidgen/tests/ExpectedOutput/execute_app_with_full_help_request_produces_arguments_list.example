@@ -1,5 +1,5 @@
 uuidgen v%APP_VERSION% - Generate Unique IDs (UUIDs) with controlled output and formatting
-Copyright ┬® 2025-%CURRENT_YEAR% Martin Smith
+Copyright © 2025-%CURRENT_YEAR% Martin Smith
 
 Usage: uuidgen [OPTIONS]
 
@@ -26,8 +26,8 @@ Options:
           
           [default: 21]
 
-  -y, --non-hyphenated
-          Format the GUID without Hyphens (GUID only)
+  -d, --no-dashes
+          Format the GUID without dashes (GUID only)
 
   -u, --uppercase
           Covert the GUID to Upper case values (GUID only)
@@ -37,6 +37,9 @@ Options:
           
           [default: {uuid}]
 
+  -y, --copy
+          Copy the generated value(s) to the clipboard
+
   -6, --guid-v6-seed <GUID_V6_SEED>
           The seed to use when generating a v6 Guid (6 values)
           
@@ -45,12 +48,12 @@ Options:
   -h, --help
           Print help
           
-          [aliases: -?]
+          [alias: -?]
 
   -V, --version
           Print version
           
-          [aliases: -!]
+          [alias: -!]
 
 NOTE:
 output-template supports: {uuid}, {sequence} dynamic values
@@ -61,4 +64,5 @@ Examples:
   uuidgen --count 5
   uuidgen --count 3 --uppercase
   uuidgen --uuid-type nanoid
+  uuidgen --count 3 --copy
   uuidgen --count 5 --output-template "{sequence}: {uuid}"

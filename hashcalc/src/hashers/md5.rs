@@ -1,6 +1,17 @@
-pub fn hash(data: &[u8]) -> Result<String, String> {
-    let digest = md5::compute(data);
-    Ok(format!("{:x}", digest))
+use std::io::{self, Read};
+
+pub fn hash_reader(reader: &mut dyn Read) -> io::Result<String> {
+    let mut context = md5::Context::new();
+    super::read_chunks(reader, |chunk| {
+        context.consume(chunk);
+        Ok(())
+    })?;
+    Ok(format!("{:x}", context.finalize()))
+}
+
+#[cfg(test)]
+fn hash(data: &[u8]) -> String {
+    hash_reader(&mut &data[..]).expect("reading from a byte slice cannot fail")
 }
 
 #[cfg(test)]
