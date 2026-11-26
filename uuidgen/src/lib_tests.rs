@@ -48,7 +48,7 @@ fn test_v4_uuid_hyphenated_format() {
 }
 
 #[test]
-fn test_v4_uuid_non_hyphenated_format() {
+fn test_v4_uuid_no_dashes_format() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
         v6_seed: [1, 2, 3, 4, 5, 6],
@@ -138,7 +138,7 @@ fn test_v4_uuid_uniqueness() {
 }
 
 #[test]
-fn test_v4_uuid_uppercase_non_hyphenated() {
+fn test_v4_uuid_uppercase_no_dashes() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
         v6_seed: [1, 2, 3, 4, 5, 6],
@@ -571,7 +571,7 @@ fn test_format_combination_uppercase_hyphenated() {
 }
 
 #[test]
-fn test_format_combination_lowercase_non_hyphenated() {
+fn test_format_combination_lowercase_no_dashes() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
         v6_seed: [1, 2, 3, 4, 5, 6],
@@ -597,7 +597,7 @@ fn test_format_combination_lowercase_non_hyphenated() {
 }
 
 #[test]
-fn test_format_combination_uppercase_non_hyphenated() {
+fn test_format_combination_uppercase_no_dashes() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
         v6_seed: [1, 2, 3, 4, 5, 6],
@@ -742,9 +742,10 @@ fn test_end_to_end_v4_simple() {
         uuid_type: UUIDType::Guid,
         guid_version: GuidVersionType::V4,
         nanoid_length: 21,
-        non_hyphenated: false,
+        no_dashes: false,
         uppercase: false,
         output_template: "{uuid}".to_string(),
+        copy: false,
         guid_v6_seed: [1, 2, 3, 4, 5, 6],
         standard: Default::default(),
     };
@@ -768,9 +769,10 @@ fn test_end_to_end_v6_with_seed() {
         uuid_type: UUIDType::Guid,
         guid_version: GuidVersionType::V6,
         nanoid_length: 21,
-        non_hyphenated: false,
+        no_dashes: false,
         uppercase: false,
         output_template: "{uuid}".to_string(),
+        copy: false,
         guid_v6_seed: [100, 101, 102, 103, 104, 105],
         standard: Default::default(),
     };
@@ -789,9 +791,10 @@ fn test_end_to_end_nanoid_generation() {
         uuid_type: UUIDType::NanoId,
         guid_version: GuidVersionType::V4,
         nanoid_length: 21,
-        non_hyphenated: false,
+        no_dashes: false,
         uppercase: false,
         output_template: "{uuid}".to_string(),
+        copy: false,
         guid_v6_seed: [1, 2, 3, 4, 5, 6],
         standard: Default::default(),
     };
@@ -814,9 +817,10 @@ fn test_end_to_end_template_with_sequence() {
         uuid_type: UUIDType::Guid,
         guid_version: GuidVersionType::V4,
         nanoid_length: 21,
-        non_hyphenated: false,
+        no_dashes: false,
         uppercase: false,
         output_template: "ID-{sequence}-{uuid}".to_string(),
+        copy: false,
         guid_v6_seed: [1, 2, 3, 4, 5, 6],
         standard: Default::default(),
     };
@@ -867,15 +871,16 @@ fn test_format_output_whitespace_only_template() {
 }
 
 #[test]
-fn test_end_to_end_full_pipeline_uppercase_non_hyphenated_template() {
+fn test_end_to_end_full_pipeline_uppercase_no_dashes_template() {
     let args = Args {
         count: 1,
         uuid_type: UUIDType::Guid,
         guid_version: GuidVersionType::V4,
         nanoid_length: 21,
-        non_hyphenated: true,
+        no_dashes: true,
         uppercase: true,
         output_template: "PREFIX-{uuid}-SUFFIX".to_string(),
+        copy: false,
         guid_v6_seed: [1, 2, 3, 4, 5, 6],
         standard: Default::default(),
     };
