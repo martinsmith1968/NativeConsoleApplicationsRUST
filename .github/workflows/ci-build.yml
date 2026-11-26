@@ -36,7 +36,7 @@ jobs:
     with:
       major_version: '${{ env.APP_MAJOR_VERSION }}'
       minor_version: '${{ env.APP_MINOR_VERSION }}'
-      primary_branch: '${{ env.PRIMARY_BRANCH_NAME }}''
+      primary_branch: '${{ env.PRIMARY_BRANCH_NAME }}'
       release_candidate_prefix: '${{ env.BRANCH_PREFIX_RELEASE_CANDIDATE }}'
 
   build:
