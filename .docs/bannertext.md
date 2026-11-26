@@ -63,7 +63,7 @@ The full help text looks something like this :
 
 ```text
 bannertext v0.1.0-dev - Display a Text Banner in the console
-Copyright ┬® 2025-2026 Martin Smith
+Copyright © 2025-2026 Martin Smith
 
 Usage: bannertext [OPTIONS] <MESSAGE_TEXT>...
 

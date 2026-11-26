@@ -13,7 +13,7 @@ function Set-ExpectedOutput {
     $app_name = [System.IO.Path]::GetFileNameWithoutExtension($app_name)
 
     if ( [string]::IsNullOrEmpty($expected_output_path) ) {
-        $expected_output_path = [System.IO.Path]::GetFullPath((Join-Path -Path $PSScriptRoot -ChildPath ".." $app_name "tests" "Expectedoutput"))
+        $expected_output_path = [System.IO.Path]::GetFullPath((Join-Path -Path $PSScriptRoot -ChildPath ".." $app_name "tests" "ExpectedOutput"))
     }
     if ( -not (Test-Path -Path $expected_output_path -PathType Container) ) {
         New-Item -Path $expected_output_path -ItemType Directory -Force | Out-Null
@@ -53,7 +53,7 @@ function Clear-ExpectedOutput {
 
     $app_name = [System.IO.Path]::GetFileNameWithoutExtension($app_full_name)
 
-    $expected_output_path = [System.IO.Path]::GetFullPath((Join-Path -Path $PSScriptRoot -ChildPath ".." $app_name "tests" "Expectedoutput"))
+    $expected_output_path = [System.IO.Path]::GetFullPath((Join-Path -Path $PSScriptRoot -ChildPath ".." $app_name "tests" "ExpectedOutput"))
 
     if ( Test-Path -Path $expected_output_path) {
         Remove-Item -Path $expected_output_path -Include *.example -Recurse -Force

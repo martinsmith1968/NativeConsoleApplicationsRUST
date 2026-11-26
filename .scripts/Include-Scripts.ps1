@@ -11,6 +11,9 @@ function Build-AppsList {
 
     $allfiles = $allfiles | Where-Object { -Not $_.FullName.contains("deps") } | Where-Object { -Not $_.FullName.contains("_build-") }
 
+    # Skip Cargo build-script executables (target/<profile>/build/*/build-script-build.exe)
+    $allfiles = $allfiles | Where-Object { -Not $_.Name.StartsWith("build-script-") }
+
     $apps = @{}
 
     foreach ($file in $allfiles | Where-Object { $_.FullName.contains("release") }) {
