@@ -20,12 +20,7 @@ fn app_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
-fn validate_guid_format(
-    output: &str,
-    expected_version: &str,
-    uppercase: bool,
-    no_dashes: bool,
-) {
+fn validate_guid_format(output: &str, expected_version: &str, uppercase: bool, no_dashes: bool) {
     let output = output.trim();
     let pattern = if no_dashes {
         if uppercase {
