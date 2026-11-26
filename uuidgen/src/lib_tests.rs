@@ -18,14 +18,14 @@ fn test_v4_uuid_generation_basic() {
         },
     );
 
-    // V4 UUIDs should be 36 characters with hyphens
+    // V4 UUIDs should be 36 characters with dashes
     assert_eq!(formatted.len(), 36);
     // Should match pattern: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
     assert_eq!(formatted.chars().nth(14).unwrap(), '4');
 }
 
 #[test]
-fn test_v4_uuid_hyphenated_format() {
+fn test_v4_uuid_with_dashes_format() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
         v6_seed: [1, 2, 3, 4, 5, 6],
@@ -40,7 +40,7 @@ fn test_v4_uuid_hyphenated_format() {
         },
     );
 
-    // Verify hyphens at correct positions
+    // Verify dashes at correct positions
     assert_eq!(formatted.chars().nth(8).unwrap(), '-');
     assert_eq!(formatted.chars().nth(13).unwrap(), '-');
     assert_eq!(formatted.chars().nth(18).unwrap(), '-');
@@ -63,9 +63,9 @@ fn test_v4_uuid_no_dashes_format() {
         },
     );
 
-    // Non-hyphenated should be 32 characters
+    // Without dashes should be 32 characters
     assert_eq!(formatted.len(), 32);
-    // Should not contain hyphens
+    // Should not contain dashes
     assert!(!formatted.contains('-'));
     // Should only contain hex characters
     assert!(formatted.chars().all(|c| c.is_ascii_hexdigit()));
@@ -153,7 +153,7 @@ fn test_v4_uuid_uppercase_no_dashes() {
         },
     );
 
-    // Should be 32 chars, no hyphens, uppercase
+    // Should be 32 chars, no dashes, uppercase
     assert_eq!(formatted.len(), 32);
     assert!(!formatted.contains('-'));
     let hex_chars: String = formatted
@@ -181,7 +181,7 @@ fn test_v6_uuid_generation_basic() {
         },
     );
 
-    // V6 UUIDs should be 36 characters with hyphens
+    // V6 UUIDs should be 36 characters with dashes
     assert_eq!(formatted.len(), 36);
     // Should be valid hex
     let hex_chars: String = formatted
@@ -304,7 +304,7 @@ fn test_v7_uuid_generation_basic() {
         },
     );
 
-    // V7 UUIDs should be 36 characters with hyphens
+    // V7 UUIDs should be 36 characters with dashes
     assert_eq!(formatted.len(), 36);
     // Should be valid hex
     let hex_chars: String = formatted
@@ -545,7 +545,7 @@ fn test_multiple_uuid_generation_count_thousand() {
 // ===== Format Combinations Tests =====
 
 #[test]
-fn test_format_combination_uppercase_hyphenated() {
+fn test_format_combination_uppercase_with_dashes() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
         v6_seed: [1, 2, 3, 4, 5, 6],
@@ -560,7 +560,7 @@ fn test_format_combination_uppercase_hyphenated() {
         },
     );
 
-    // Should have hyphens
+    // Should have dashes
     assert!(formatted.contains('-'));
     // Should be uppercase
     let hex_chars: String = formatted
@@ -586,7 +586,7 @@ fn test_format_combination_lowercase_no_dashes() {
         },
     );
 
-    // Should not have hyphens
+    // Should not have dashes
     assert!(!formatted.contains('-'));
     // Should be lowercase
     let hex_chars: String = formatted
@@ -612,7 +612,7 @@ fn test_format_combination_uppercase_no_dashes() {
         },
     );
 
-    // Should not have hyphens
+    // Should not have dashes
     assert!(!formatted.contains('-'));
     // Should be uppercase
     let hex_chars: String = formatted
@@ -623,7 +623,7 @@ fn test_format_combination_uppercase_no_dashes() {
 }
 
 #[test]
-fn test_format_combination_lowercase_hyphenated() {
+fn test_format_combination_lowercase_with_dashes() {
     let options = GuidGenerateOptions {
         guid_version: GuidVersionType::V4,
         v6_seed: [1, 2, 3, 4, 5, 6],
@@ -638,7 +638,7 @@ fn test_format_combination_lowercase_hyphenated() {
         },
     );
 
-    // Should have hyphens
+    // Should have dashes
     assert!(formatted.contains('-'));
     // Should be lowercase
     let hex_chars: String = formatted
@@ -888,8 +888,8 @@ fn test_end_to_end_full_pipeline_uppercase_no_dashes_template() {
     let uuid_formatted = generate_uuid(&args);
     let output = format_output(&args.output_template, &uuid_formatted, 1);
 
-    // UUID should be uppercase and non-hyphenated
-    assert_eq!(uuid_formatted.len(), 32); // No hyphens
+    // UUID should be uppercase and without dashes
+    assert_eq!(uuid_formatted.len(), 32); // No dashes
     assert!(!uuid_formatted.contains('-'));
     let hex_chars: String = uuid_formatted
         .chars()

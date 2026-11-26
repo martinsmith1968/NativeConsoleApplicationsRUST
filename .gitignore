@@ -44,3 +44,7 @@ output/
 .squad-workstream
 .copilot/
 .vscode/
+
+# insta snapshot testing (pending / rejected snapshots)
+*.snap.new
+.pending-snap

@@ -28,6 +28,7 @@ strfmt = "0.2.5"
 
 # Shared test dependencies
 assert_cmd = "2.2.2"
+insta      = { version = "1.49.0", features = [ "filters" ] }
 predicates = "3.1.4"
 proptest   = "1.12.0"
 

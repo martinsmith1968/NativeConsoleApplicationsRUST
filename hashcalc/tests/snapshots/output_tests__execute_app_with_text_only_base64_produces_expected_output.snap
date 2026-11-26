@@ -1,0 +1,4 @@
+---
+source: hashcalc/tests/output_tests.rs
+---
+Hello World [base64] : SGVsbG8gV29ybGQ=

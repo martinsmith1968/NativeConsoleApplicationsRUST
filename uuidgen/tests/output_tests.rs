@@ -1,81 +1,15 @@
 use assert_cmd::Command;
-use std::path::PathBuf;
-use test_support::{get_current_function_name, load_expected_output, normalize_output};
-
-fn expected_output(filename: &str) -> String {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests")
-        .join("ExpectedOutput")
-        .join(format!("{filename}.example"));
-
-    load_expected_output(
-        &path,
-        env!("CARGO_PKG_VERSION"),
-        env!("BUILD_YEAR"),
-        normalize_output,
-    )
-}
+use test_support::{GUID_FILTERS, NANOID_FILTERS, assert_output_snapshot, normalize_output};
 
 fn app_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
-fn validate_guid_format(output: &str, expected_version: &str, uppercase: bool, no_dashes: bool) {
-    let output = output.trim();
-    let pattern = if no_dashes {
-        if uppercase {
-            r"^[0-9A-F]{32}$".to_string()
-        } else {
-            r"^[0-9a-f]{32}$".to_string()
-        }
-    } else {
-        let version_digit = match expected_version {
-            "v4" => "4",
-            "v6" => "6",
-            "v7" => "7",
-            _ => "4",
-        };
-        if uppercase {
-            format!(
-                r"^[0-9A-F]{{8}}-[0-9A-F]{{4}}-[{}][0-9A-F]{{3}}-[89AB][0-9A-F]{{3}}-[0-9A-F]{{12}}$",
-                version_digit
-            )
-        } else {
-            format!(
-                r"^[0-9a-f]{{8}}-[0-9a-f]{{4}}-[{}][0-9a-f]{{3}}-[89ab][0-9a-f]{{3}}-[0-9a-f]{{12}}$",
-                version_digit
-            )
-        }
-    };
-
-    let re = regex::Regex::new(&pattern).unwrap();
-    assert!(
-        re.is_match(output),
-        "Output '{}' does not match expected format pattern '{}'",
-        output,
-        pattern
-    );
-}
-
-fn validate_nanoid_format(output: &str, count: usize) {
-    let lines: Vec<&str> = output.trim().lines().collect();
-    assert_eq!(
-        lines.len(),
-        count,
-        "Expected {} nanoids, got {}",
-        count,
-        lines.len()
-    );
-
-    for line in lines {
-        assert!(
-            line.chars()
-                .all(|c| c.is_alphanumeric() || c == '_' || c == '-'),
-            "Nanoid '{}' contains invalid characters",
-            line
-        );
-        assert_eq!(line.len(), 21, "Nanoid '{}' has incorrect length", line);
-    }
+/// Run uuidgen with the given arguments and return its normalised stdout.
+fn run_uuidgen(args: &[&str]) -> String {
+    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
+    let output = cmd.args(args).env("COLUMNS", "500").output().unwrap();
+    normalize_output(String::from_utf8(output.stdout).unwrap())
 }
 
 #[test]
@@ -105,209 +39,91 @@ fn test_help_request_produces_arguments_list() {
 
 #[test]
 fn execute_app_with_help_request_produces_arguments_list() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd.arg("-?").env("COLUMNS", "500").output().unwrap();
-    let actual = normalize_output(String::from_utf8(output.stdout).unwrap());
-    let expected = expected_output(get_current_function_name!());
-
-    assert_eq!(actual, expected, "Help output does not match expected");
+    assert_output_snapshot!(run_uuidgen(&["-?"]));
 }
 
 #[test]
-fn test_default_type_guid_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd.arg("-t").arg("guid").output().unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_guid_format(&actual, "v4", false, false);
+fn execute_app_with_full_help_request_produces_arguments_list() {
+    assert_output_snapshot!(run_uuidgen(&["--help"]));
 }
 
 #[test]
-fn test_5_instance_default_type_guid_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("guid")
-        .arg("-c")
-        .arg("5")
-        .output()
-        .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-
-    let lines: Vec<&str> = actual.trim().lines().collect();
-    assert_eq!(lines.len(), 5, "Expected 5 GUIDs, got {}", lines.len());
-    for line in lines {
-        validate_guid_format(line, "v4", false, false);
-    }
+fn execute_app_for_default_type_guid_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "guid"]), GUID_FILTERS);
 }
 
 #[test]
-fn test_default_type_guid_hyphenated_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd.arg("-t").arg("guid").arg("-d").output().unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_guid_format(&actual, "v4", false, true);
+fn execute_app_for_5_instance_default_type_guid_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "guid", "-c", "5"]), GUID_FILTERS);
 }
 
 #[test]
-fn test_default_type_guid_uppercase_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd.arg("-t").arg("guid").arg("-u").output().unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_guid_format(&actual, "v4", true, false);
+fn execute_app_for_default_type_guid_no_dashes_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "guid", "-d"]), GUID_FILTERS);
 }
 
 #[test]
-fn test_default_type_guid_hyphenated_uppercase_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("guid")
-        .arg("-d")
-        .arg("-u")
-        .output()
-        .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_guid_format(&actual, "v4", true, true);
+fn execute_app_for_default_type_guid_uppercase_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "guid", "-u"]), GUID_FILTERS);
 }
 
 #[test]
-fn test_v6_guid_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("guid")
-        .arg("-v")
-        .arg("v6")
-        .output()
-        .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_guid_format(&actual, "v6", false, false);
+fn execute_app_for_default_type_guid_no_dashes_uppercase_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "guid", "-d", "-u"]), GUID_FILTERS);
 }
 
 #[test]
-fn test_v6_guid_hyphenated_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("guid")
-        .arg("-v")
-        .arg("v6")
-        .arg("-d")
-        .output()
-        .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_guid_format(&actual, "v6", false, true);
+fn execute_app_for_v6_guid_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "guid", "-v", "v6"]), GUID_FILTERS);
 }
 
 #[test]
-fn test_v6_guid_uppercase_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("guid")
-        .arg("-v")
-        .arg("v6")
-        .arg("-u")
-        .output()
-        .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_guid_format(&actual, "v6", true, false);
+fn execute_app_for_v6_guid_no_dashes_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "guid", "-v", "v6", "-d"]), GUID_FILTERS);
 }
 
 #[test]
-fn test_v6_guid_hyphenated_uppercase_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("guid")
-        .arg("-v")
-        .arg("v6")
-        .arg("-d")
-        .arg("-u")
-        .output()
-        .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_guid_format(&actual, "v6", true, true);
+fn execute_app_for_v6_guid_uppercase_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "guid", "-v", "v6", "-u"]), GUID_FILTERS);
 }
 
 #[test]
-fn test_v7_guid_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("guid")
-        .arg("-v")
-        .arg("v7")
-        .output()
-        .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_guid_format(&actual, "v7", false, false);
+fn execute_app_for_v6_guid_no_dashes_uppercase_produces_expected_output() {
+    assert_output_snapshot!(
+        run_uuidgen(&["-t", "guid", "-v", "v6", "-d", "-u"]),
+        GUID_FILTERS
+    );
 }
 
 #[test]
-fn test_v7_guid_hyphenated_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("guid")
-        .arg("-v")
-        .arg("v7")
-        .arg("-d")
-        .output()
-        .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_guid_format(&actual, "v7", false, true);
+fn execute_app_for_v7_guid_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "guid", "-v", "v7"]), GUID_FILTERS);
 }
 
 #[test]
-fn test_v7_guid_uppercase_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("guid")
-        .arg("-v")
-        .arg("v7")
-        .arg("-u")
-        .output()
-        .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_guid_format(&actual, "v7", true, false);
+fn execute_app_for_v7_guid_no_dashes_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "guid", "-v", "v7", "-d"]), GUID_FILTERS);
 }
 
 #[test]
-fn test_v7_guid_hyphenated_uppercase_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("guid")
-        .arg("-v")
-        .arg("v7")
-        .arg("-d")
-        .arg("-u")
-        .output()
-        .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_guid_format(&actual, "v7", true, true);
+fn execute_app_for_v7_guid_uppercase_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "guid", "-v", "v7", "-u"]), GUID_FILTERS);
 }
 
 #[test]
-fn test_nanoid_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd.arg("-t").arg("nanoid").output().unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_nanoid_format(&actual, 1);
+fn execute_app_for_v7_guid_no_dashes_uppercase_produces_expected_output() {
+    assert_output_snapshot!(
+        run_uuidgen(&["-t", "guid", "-v", "v7", "-d", "-u"]),
+        GUID_FILTERS
+    );
 }
 
 #[test]
-fn test_5_instance_nanoid_produces_expected_output() {
-    let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd
-        .arg("-t")
-        .arg("nanoid")
-        .arg("-c")
-        .arg("5")
-        .output()
-        .unwrap();
-    let actual = String::from_utf8(output.stdout).unwrap();
-    validate_nanoid_format(&actual, 5);
+fn execute_app_for_nanoid_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "nanoid"]), NANOID_FILTERS);
+}
+
+#[test]
+fn execute_app_for_5_instance_nanoid_produces_expected_output() {
+    assert_output_snapshot!(run_uuidgen(&["-t", "nanoid", "-c", "5"]), NANOID_FILTERS);
 }
