@@ -20,14 +20,9 @@ fn app_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
-fn validate_guid_format(
-    output: &str,
-    expected_version: &str,
-    uppercase: bool,
-    non_hyphenated: bool,
-) {
+fn validate_guid_format(output: &str, expected_version: &str, uppercase: bool, no_dashes: bool) {
     let output = output.trim();
-    let pattern = if non_hyphenated {
+    let pattern = if no_dashes {
         if uppercase {
             r"^[0-9A-F]{32}$".to_string()
         } else {
@@ -148,7 +143,7 @@ fn test_5_instance_default_type_guid_produces_expected_output() {
 #[test]
 fn test_default_type_guid_hyphenated_produces_expected_output() {
     let mut cmd = Command::cargo_bin("uuidgen").unwrap();
-    let output = cmd.arg("-t").arg("guid").arg("-y").output().unwrap();
+    let output = cmd.arg("-t").arg("guid").arg("-d").output().unwrap();
     let actual = String::from_utf8(output.stdout).unwrap();
     validate_guid_format(&actual, "v4", false, true);
 }
@@ -167,7 +162,7 @@ fn test_default_type_guid_hyphenated_uppercase_produces_expected_output() {
     let output = cmd
         .arg("-t")
         .arg("guid")
-        .arg("-y")
+        .arg("-d")
         .arg("-u")
         .output()
         .unwrap();
@@ -197,7 +192,7 @@ fn test_v6_guid_hyphenated_produces_expected_output() {
         .arg("guid")
         .arg("-v")
         .arg("v6")
-        .arg("-y")
+        .arg("-d")
         .output()
         .unwrap();
     let actual = String::from_utf8(output.stdout).unwrap();
@@ -227,7 +222,7 @@ fn test_v6_guid_hyphenated_uppercase_produces_expected_output() {
         .arg("guid")
         .arg("-v")
         .arg("v6")
-        .arg("-y")
+        .arg("-d")
         .arg("-u")
         .output()
         .unwrap();
@@ -257,7 +252,7 @@ fn test_v7_guid_hyphenated_produces_expected_output() {
         .arg("guid")
         .arg("-v")
         .arg("v7")
-        .arg("-y")
+        .arg("-d")
         .output()
         .unwrap();
     let actual = String::from_utf8(output.stdout).unwrap();
@@ -287,7 +282,7 @@ fn test_v7_guid_hyphenated_uppercase_produces_expected_output() {
         .arg("guid")
         .arg("-v")
         .arg("v7")
-        .arg("-y")
+        .arg("-d")
         .arg("-u")
         .output()
         .unwrap();
